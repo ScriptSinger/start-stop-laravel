@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
-use MoonShine\Laravel\Layouts\AppLayout;
-use MoonShine\ColorManager\Palettes\PurplePalette;
+use App\MoonShine\Resources\Attribute\AttributeResource;
+use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use App\MoonShine\Resources\Category\CategoryResource;
+use App\MoonShine\Resources\Customer\CustomerResource;
+use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
+use App\MoonShine\Resources\Order\OrderResource;
+use App\MoonShine\Resources\Page\PageResource;
+use App\MoonShine\Resources\Product\ProductResource;
 use MoonShine\ColorManager\ColorManager;
+use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
-use App\MoonShine\Resources\Product\ProductResource;
+use MoonShine\Laravel\Layouts\AppLayout;
+use MoonShine\MenuManager\MenuGroup;
 use MoonShine\MenuManager\MenuItem;
-use App\MoonShine\Resources\Category\CategoryResource;
-use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
-use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -33,15 +38,21 @@ final class MoonShineLayout extends AppLayout
     {
         return [
             ...parent::menu(),
-            MenuItem::make(ProductResource::class, 'Products'),
-            MenuItem::make(CategoryResource::class, 'Categories'),
-            MenuItem::make(BatteryFitmentResource::class, 'BatteryFitments'),
-            MenuItem::make(ManufacturerResource::class, 'Manufacturers'),
+            MenuItem::make(OrderResource::class, 'Заказы'),
+            MenuItem::make(CustomerResource::class, 'Клиенты'),
+            MenuGroup::make('Каталог', [
+                MenuItem::make(ProductResource::class, 'Товары'),
+                MenuItem::make(CategoryResource::class, 'Категории'),
+                MenuItem::make(ManufacturerResource::class, 'Производители'),
+                MenuItem::make(AttributeResource::class, 'Характеристики'),
+                MenuItem::make(BatteryFitmentResource::class, 'Подбор АКБ'),
+            ]),
+            MenuItem::make(PageResource::class, 'Страницы'),
         ];
     }
 
     /**
-     * @param ColorManager $colorManager
+     * @param  ColorManager  $colorManager
      */
     protected function colors(ColorManagerContract $colorManager): void
     {

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\BatteryFitment;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\BatteryFitment;
-use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentIndexPage;
-use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentFormPage;
 use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentDetailPage;
-
-use MoonShine\Laravel\Resources\ModelResource;
+use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentFormPage;
+use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentIndexPage;
 use MoonShine\Contracts\Core\PageContract;
+use MoonShine\Laravel\Resources\ModelResource;
 
 /**
  * @extends ModelResource<BatteryFitment, BatteryFitmentIndexPage, BatteryFitmentFormPage, BatteryFitmentDetailPage>
@@ -23,7 +21,15 @@ class BatteryFitmentResource extends ModelResource
     protected string $title = 'База АКБ по авто';
 
     protected string $column = 'brand';
-    
+
+    /**
+     * @return string[]
+     */
+    protected function search(): array
+    {
+        return ['brand', 'model', 'generation'];
+    }
+
     /**
      * @return list<class-string<PageContract>>
      */

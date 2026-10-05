@@ -30,7 +30,7 @@ class ImportLegacyCategories extends Command
                 ['id' => $row->category_id],
                 [
                     'name' => $row->name,
-                    'slug' => $this->resolveSlug("category_id={$row->category_id}", $row->name, 'categories'),
+                    'slug' => $this->resolveSlug("category_id={$row->category_id}", $row->name, 'categories', $row->category_id),
                     'description' => $row->description ?: null,
                     'image' => $row->image ?: null,
                     'sort_order' => $row->sort_order,

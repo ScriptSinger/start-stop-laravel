@@ -38,6 +38,14 @@ class Category extends Model
         return $this->hasMany(self::class, 'parent_id');
     }
 
+    /**
+     * Не attributes(): это имя занято свойством Eloquent-модели.
+     */
+    public function productAttributes(): BelongsToMany
+    {
+        return $this->belongsToMany(Attribute::class);
+    }
+
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class);

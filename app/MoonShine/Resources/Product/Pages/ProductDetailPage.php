@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Product\Pages;
 
-use MoonShine\Laravel\Pages\Crud\DetailPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\UI\Components\Table\TableBuilder;
-use MoonShine\Contracts\UI\FieldContract;
+use App\MoonShine\Resources\Category\CategoryResource;
+use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
-use MoonShine\Support\ListOf;
-use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\Textarea;
-use MoonShine\UI\Fields\Number;
-use MoonShine\UI\Fields\Image;
-use MoonShine\UI\Fields\Switcher;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
-use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
-use App\MoonShine\Resources\Category\CategoryResource;
+use MoonShine\Laravel\Pages\Crud\DetailPage;
+use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\Table\TableBuilder;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Textarea;
 use Throwable;
-
 
 /**
  * @extends DetailPage<ProductResource>
@@ -38,11 +37,14 @@ class ProductDetailPage extends DetailPage
             Image::make('Фото', 'image'),
             Text::make('Название', 'name'),
             Text::make('Slug', 'slug'),
+            Text::make('Код товара', 'code'),
             Text::make('Артикул', 'sku'),
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class),
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class),
             Number::make('Цена', 'price'),
             Number::make('Остаток', 'quantity'),
+            Number::make('Остаток у поставщика', 'supplier_quantity'),
+            Number::make('Цена под заказ', 'supplier_price'),
             Textarea::make('Описание', 'description'),
             Switcher::make('Активен', 'status'),
         ];
@@ -55,7 +57,6 @@ class ProductDetailPage extends DetailPage
 
     /**
      * @param  TableBuilder  $component
-     *
      * @return TableBuilder
      */
     protected function modifyDetailComponent(ComponentContract $component): ComponentContract
@@ -65,34 +66,37 @@ class ProductDetailPage extends DetailPage
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Manufacturer\Pages;
 
-use MoonShine\Laravel\Pages\Crud\IndexPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\UI\Components\Table\TableBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\QueryTags\QueryTag;
-use MoonShine\UI\Components\Metrics\Wrapped\Metric;
-use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\Image;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
+use Illuminate\Database\Eloquent\Builder;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Pages\Crud\IndexPage;
+use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\Metrics\Wrapped\Metric;
+use MoonShine\UI\Components\Table\TableBuilder;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Text;
 use Throwable;
-
 
 /**
  * @extends IndexPage<ManufacturerResource>
@@ -35,6 +37,7 @@ class ManufacturerIndexPage extends IndexPage
             Image::make('Логотип', 'image'),
             Text::make('Название', 'name'),
             Text::make('Slug', 'slug'),
+            Number::make('Товаров', 'products_count')->sortable(),
         ];
     }
 
@@ -51,7 +54,17 @@ class ManufacturerIndexPage extends IndexPage
      */
     protected function filters(): iterable
     {
-        return [];
+        return [
+            Text::make('Название', 'name'),
+            Select::make('Товары', 'has_products')
+                ->options(['with' => 'С товарами', 'without' => 'Без товаров'])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => match ($value) {
+                    'with' => $query->has('products'),
+                    'without' => $query->doesntHave('products'),
+                    default => $query,
+                }),
+        ];
     }
 
     /**
@@ -72,7 +85,6 @@ class ManufacturerIndexPage extends IndexPage
 
     /**
      * @param  TableBuilder  $component
-     *
      * @return TableBuilder
      */
     protected function modifyListComponent(ComponentContract $component): ComponentContract
@@ -82,34 +94,37 @@ class ManufacturerIndexPage extends IndexPage
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

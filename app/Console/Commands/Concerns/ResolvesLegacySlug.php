@@ -11,8 +11,11 @@ trait ResolvesLegacySlug
      * Берём готовый keyword из oc_seo_url старого проекта как стартовый slug —
      * меньше работы, не нужно генерировать заново. Сайт сейчас не проиндексирован,
      * так что совпадение 1:1 со старыми URL не требование, только стартовые данные.
+     *
+     * $id — запись, для которой подбираем slug: её собственный slug не считается
+     * занятым, иначе повторный импорт дописывал бы всем "-2", "-3"...
      */
-    protected function resolveSlug(string $query, string $fallbackName, string $table): string
+    protected function resolveSlug(string $query, string $fallbackName, string $table, int $id): string
     {
         $keyword = DB::connection('legacy')
             ->table('oc_seo_url')
@@ -30,7 +33,7 @@ trait ResolvesLegacySlug
         $original = $slug;
         $i = 2;
 
-        while (DB::table($table)->where('slug', $slug)->exists()) {
+        while (DB::table($table)->where('slug', $slug)->where('id', '!=', $id)->exists()) {
             $slug = $original.'-'.$i++;
         }
 

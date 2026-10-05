@@ -28,7 +28,7 @@ class ImportLegacyPages extends Command
                 ['id' => $row->information_id],
                 [
                     'title' => $row->title,
-                    'slug' => $this->resolveSlug("information_id={$row->information_id}", $row->title, 'pages'),
+                    'slug' => $this->resolveSlug("information_id={$row->information_id}", $row->title, 'pages', $row->information_id),
                     'description' => $row->description ?: null,
                     'show_in_top' => (bool) $row->bottom,
                     'sort_order' => $row->sort_order,

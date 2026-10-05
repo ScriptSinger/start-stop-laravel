@@ -23,7 +23,7 @@ class ImportLegacyManufacturers extends Command
                 ['id' => $row->manufacturer_id],
                 [
                     'name' => $row->name,
-                    'slug' => $this->resolveSlug("manufacturer_id={$row->manufacturer_id}", $row->name, 'manufacturers'),
+                    'slug' => $this->resolveSlug("manufacturer_id={$row->manufacturer_id}", $row->name, 'manufacturers', $row->manufacturer_id),
                     'image' => $row->image ?: null,
                     'updated_at' => now(),
                     'created_at' => now(),

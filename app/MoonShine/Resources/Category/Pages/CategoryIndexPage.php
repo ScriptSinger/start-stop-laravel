@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Category\Pages;
 
-use MoonShine\Laravel\Pages\Crud\IndexPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\UI\Components\Table\TableBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\QueryTags\QueryTag;
-use MoonShine\UI\Components\Metrics\Wrapped\Metric;
-use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\Switcher;
-use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use App\MoonShine\Resources\Category\CategoryResource;
+use Illuminate\Database\Eloquent\Builder;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Pages\Crud\IndexPage;
+use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\Metrics\Wrapped\Metric;
+use MoonShine\UI\Components\Table\TableBuilder;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Text;
 use Throwable;
-
 
 /**
  * @extends IndexPage<CategoryResource>
@@ -53,7 +54,31 @@ class CategoryIndexPage extends IndexPage
      */
     protected function filters(): iterable
     {
-        return [];
+        return [
+            Text::make('Название', 'name'),
+            BelongsTo::make('Родитель', 'parent', resource: CategoryResource::class)
+                ->nullable()
+                ->searchable(),
+            Select::make('Статус', 'status')
+                ->options(['1' => 'Активные', '0' => 'Неактивные'])
+                ->nullable(),
+            Select::make('Уровень', 'level')
+                ->options(['root' => 'Разделы', 'child' => 'Подкатегории'])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => match ($value) {
+                    'root' => $query->whereNull('parent_id'),
+                    'child' => $query->whereNotNull('parent_id'),
+                    default => $query,
+                }),
+            Select::make('Товары', 'has_products')
+                ->options(['with' => 'С товарами', 'without' => 'Без товаров'])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => match ($value) {
+                    'with' => $query->has('products'),
+                    'without' => $query->doesntHave('products'),
+                    default => $query,
+                }),
+        ];
     }
 
     /**
@@ -74,7 +99,6 @@ class CategoryIndexPage extends IndexPage
 
     /**
      * @param  TableBuilder  $component
-     *
      * @return TableBuilder
      */
     protected function modifyListComponent(ComponentContract $component): ComponentContract
@@ -84,34 +108,37 @@ class CategoryIndexPage extends IndexPage
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

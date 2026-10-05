@@ -58,11 +58,16 @@ class ImportLegacyProducts extends Command
                 [
                     'manufacturer_id' => $manufacturerId,
                     'name' => $row->name,
-                    'slug' => $this->resolveSlug("product_id={$row->product_id}", $row->name, 'products'),
+                    'slug' => $this->resolveSlug("product_id={$row->product_id}", $row->name, 'products', $row->product_id),
                     'sku' => $row->sku ?: null,
+                    'code' => $row->model ?: null,
                     'description' => $row->description ?: null,
                     'price' => $row->price,
                     'quantity' => $row->quantity,
+                    // Остаток у поставщика и цена под заказ хранились в чужих
+                    // полях: isbn и mpn (логика — в product.twig темы unishop2).
+                    'supplier_quantity' => (int) $row->isbn,
+                    'supplier_price' => $row->mpn !== '' ? (float) str_replace(',', '.', $row->mpn) : null,
                     'image' => $this->normalizeImagePath($row->image ?: null),
                     'status' => (bool) $row->status,
                     'updated_at' => now(),

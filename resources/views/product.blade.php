@@ -31,6 +31,10 @@
             <div class="col-sm-7">
                 <h1>{{ $product->name }}</h1>
 
+                @if ($product->code)
+                    <div>Код товара: {{ $product->code }}</div>
+                @endif
+
                 @if ($product->sku)
                     <div class="product-thumb__model" data-text="Артикул">{{ $product->sku }}</div>
                 @endif
@@ -40,13 +44,34 @@
                 @endif
 
                 <div class="price" style="font-size: 28px; margin: 15px 0;">
-                    {{ number_format((float) $product->price, 0, ',', ' ') }} р.
+                    {{ number_format($product->displayPrice(), 0, ',', ' ') }} р.
                 </div>
 
                 {{-- Кнопка визуальная — корзина не подключена, это Фаза 5 плана миграции. --}}
-                <button type="button" class="btn btn-primary btn-lg">
-                    <i class="fas fa-shopping-cart"></i> В корзину
-                </button>
+                @if ($product->isAvailableOnOrder())
+                    <div style="margin-bottom: 10px;">Под заказ</div>
+                    <button type="button" class="btn btn-primary btn-lg">
+                        <i class="fa fa-truck"></i> Заказать
+                    </button>
+                @else
+                    <button type="button" class="btn btn-primary btn-lg">
+                        <i class="fas fa-shopping-cart"></i> В корзину
+                    </button>
+                @endif
+
+                @if ($specifications->isNotEmpty())
+                    <h3 style="margin-top: 30px;">Характеристики</h3>
+                    <table class="table table-striped">
+                        <tbody>
+                            @foreach ($specifications as $name => $value)
+                                <tr>
+                                    <td>{{ $name }}</td>
+                                    <td>{{ $value }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
 
                 @if ($product->description)
                     <div class="product-page" style="margin-top: 30px;">
