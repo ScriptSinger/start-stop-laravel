@@ -4,13 +4,12 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 #[Signature('import:legacy-brands')]
 #[Description('Перенос категорий-брендов старого проекта (Аккумуляторы → TITAN и т.п.) в производителей')]
-class ImportLegacyBrands extends Command
+class ImportLegacyBrands extends LegacyImportCommand
 {
     /**
      * Разделы, подкатегории которых в старом проекте были брендами: бренд АКБ
@@ -75,7 +74,7 @@ class ImportLegacyBrands extends Command
         'OUTDO VRLA' => 'OUTDO',
     ];
 
-    public function handle(): int
+    protected function import(): int
     {
         // Производители из oc_manufacturer должны быть на месте до того, как
         // мы начнём искать/создавать бренды: иначе на чистой базе HYUNDAI

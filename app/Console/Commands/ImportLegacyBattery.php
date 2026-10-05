@@ -4,14 +4,13 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-battery')]
 #[Description('Импорт базы подбора АКБ из oc_battery_base старого проекта')]
-class ImportLegacyBattery extends Command
+class ImportLegacyBattery extends LegacyImportCommand
 {
-    public function handle(): int
+    protected function import(): int
     {
         $rows = DB::connection('legacy')->table('oc_battery_base')->get();
 

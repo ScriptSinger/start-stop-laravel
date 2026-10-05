@@ -4,12 +4,11 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-attributes')]
 #[Description('Импорт характеристик товаров (справочник OCFilter + значения у товаров) из старого проекта')]
-class ImportLegacyAttributes extends Command
+class ImportLegacyAttributes extends LegacyImportCommand
 {
     /**
      * Источник — таблицы OCFilter, а не oc_product_attribute: в старом проекте
@@ -17,7 +16,7 @@ class ImportLegacyAttributes extends Command
      * ("100 - 110 Ah" один раз, а не текстом у каждого товара) — ровно то, что
      * нужно для фильтра и подбора АКБ. Товары должны быть импортированы раньше.
      */
-    public function handle(): int
+    protected function import(): int
     {
         $this->importAttributes();
         $this->importCategoryLinks();

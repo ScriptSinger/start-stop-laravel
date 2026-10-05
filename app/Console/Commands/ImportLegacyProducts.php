@@ -6,12 +6,11 @@ use App\Console\Commands\Concerns\DecodesLegacyText;
 use App\Console\Commands\Concerns\ResolvesLegacySlug;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-products')]
 #[Description('Импорт товаров, фото и привязки к категориям из старого проекта')]
-class ImportLegacyProducts extends Command
+class ImportLegacyProducts extends LegacyImportCommand
 {
     use DecodesLegacyText;
     use ResolvesLegacySlug;
@@ -38,7 +37,7 @@ class ImportLegacyProducts extends Command
         );
     }
 
-    public function handle(): int
+    protected function import(): int
     {
         $knownCategoryIds = DB::table('categories')->pluck('id')->all();
         $knownManufacturerIds = DB::table('manufacturers')->pluck('id')->all();

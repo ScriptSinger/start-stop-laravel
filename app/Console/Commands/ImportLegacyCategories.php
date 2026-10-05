@@ -6,17 +6,16 @@ use App\Console\Commands\Concerns\DecodesLegacyText;
 use App\Console\Commands\Concerns\ResolvesLegacySlug;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-categories')]
 #[Description('Импорт категорий из oc_category/oc_category_description старого проекта')]
-class ImportLegacyCategories extends Command
+class ImportLegacyCategories extends LegacyImportCommand
 {
     use DecodesLegacyText;
     use ResolvesLegacySlug;
 
-    public function handle(): int
+    protected function import(): int
     {
         $rows = DB::connection('legacy')
             ->table('oc_category as c')

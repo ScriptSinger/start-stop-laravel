@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\LegacyImportCommand;
 use App\Models\Category;
 use App\Models\Page;
 use App\View\Composers\BatteryFilterComposer;
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        LegacyImportCommand::prohibit(! config('shop.legacy_import_enabled'));
+
         // Меню категорий нужно и в шапке, и в сайдбаре на разных страницах —
         // проще один раз прокинуть через composer на оба партиала напрямую,
         // чем гадать, успеет ли composer на layouts.app отработать раньше

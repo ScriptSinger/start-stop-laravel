@@ -5,16 +5,15 @@ namespace App\Console\Commands;
 use App\Console\Commands\Concerns\DecodesLegacyText;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-orders')]
 #[Description('Импорт клиентов и заказов (с позициями) из старого проекта')]
-class ImportLegacyOrders extends Command
+class ImportLegacyOrders extends LegacyImportCommand
 {
     use DecodesLegacyText;
 
-    public function handle(): int
+    protected function import(): int
     {
         $this->importCustomers();
         $this->importOrders();

@@ -4,14 +4,13 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy')]
 #[Description('Полный импорт данных из старого проекта: категории → производители → товары (с брендами) → характеристики → АКБ → заказы → страницы')]
-class ImportLegacy extends Command
+class ImportLegacy extends LegacyImportCommand
 {
-    public function handle(): int
+    protected function import(): int
     {
         $this->call('import:legacy-categories');
         $this->call('import:legacy-manufacturers');

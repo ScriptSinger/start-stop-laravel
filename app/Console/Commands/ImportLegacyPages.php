@@ -6,17 +6,16 @@ use App\Console\Commands\Concerns\DecodesLegacyText;
 use App\Console\Commands\Concerns\ResolvesLegacySlug;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-pages')]
 #[Description('Импорт статических страниц (О компании, Услуги и т.д.) из oc_information старого проекта')]
-class ImportLegacyPages extends Command
+class ImportLegacyPages extends LegacyImportCommand
 {
     use DecodesLegacyText;
     use ResolvesLegacySlug;
 
-    public function handle(): int
+    protected function import(): int
     {
         $rows = DB::connection('legacy')
             ->table('oc_information as i')
