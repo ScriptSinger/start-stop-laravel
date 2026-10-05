@@ -444,6 +444,85 @@ $('body').on('click', '[data-saved-list]', function(e) {
 		.fail(() => uniFlyAlert('danger', 'Не получилось. Попробуйте ещё раз.'));
 });
 
+// Корзина без перезагрузки, как cart.add/uniCartUpd темы: «В корзину» и
+// значок в шапке открывают окно с мини-корзиной; в окне можно менять
+// количество и удалять. Без JavaScript работают обычные формы.
+function uniMiniCartOpen() {
+	uniModalWindow('modal-cart', '', 'Корзина', $('header .header-cart__dropdown').html());
+}
+
+function uniMiniCartUpdate(json) {
+	$('header .header-cart__dropdown').html(json.html);
+	$('.header-cart__total-items, .fly-menu__cart-total').text(json.count);
+	uniChangeBtn();
+}
+
+$('body').on('click', '[data-mini-cart-open]', function(e) {
+	e.preventDefault();
+	uniMiniCartOpen();
+});
+
+$('body').on('submit', 'form[data-add-to-cart]', function(e) {
+	e.preventDefault();
+
+	const form = $(this);
+
+	$.ajax({url: form.attr('action'), type: 'post', data: form.serialize(), dataType: 'json'})
+		.done((json) => {
+			uniMiniCartUpdate(json);
+			uniMiniCartOpen();
+		})
+		.fail(() => uniFlyAlert('danger', 'Не получилось добавить в корзину. Попробуйте ещё раз.'));
+});
+
+$('body').on('submit', 'form[data-mini-cart]', function(e) {
+	e.preventDefault();
+
+	$.ajax({url: $(this).attr('action'), type: 'post', data: $(this).serialize(), dataType: 'json'})
+		.done((json) => {
+			// На странице оформления пересчитать надо и её.
+			if ($('#unicheckout__form').length) {
+				location.reload();
+
+				return;
+			}
+
+			uniMiniCartUpdate(json);
+			$('#modal-cart .modal-body').html(json.html);
+		})
+		.fail(() => uniFlyAlert('danger', 'Не получилось. Попробуйте ещё раз.'));
+});
+
+$('body').on('click', '.header-cart__quantity .qty-switch__btn', function() {
+	const input = $(this).siblings('.qty-switch__input');
+	const value = (parseInt(input.val(), 10) || 1) + Number($(this).data('step'));
+
+	input.val(Math.min(Math.max(value, input.data('minimum')), input.data('maximum')));
+	input.closest('form').trigger('submit');
+});
+
+$('body').on('change', '.header-cart__quantity .qty-switch__input', function() {
+	$(this).closest('form').trigger('submit');
+});
+
+// Товары, которые уже в корзине: кнопка «В корзине» с галочкой — uniChangeBtn темы.
+function uniChangeBtn() {
+	const products = String($('header .header-cart__wrapper').data('products') || '').split(',').map(Number);
+
+	$('.add_to_cart[data-pid]').each(function() {
+		const inCart = products.indexOf($(this).data('pid')) !== -1;
+
+		if (inCart && !$(this).hasClass('in_cart')) {
+			$(this).data('original', $(this).html());
+			$(this).addClass('in_cart').html('<i class="fa fa-check"></i><span>В корзине</span>');
+		} else if (!inCart && $(this).hasClass('in_cart')) {
+			$(this).removeClass('in_cart').html($(this).data('original'));
+		}
+	});
+}
+
+$(uniChangeBtn);
+
 $(function() {
 	const notice = $('body').data('notice');
 

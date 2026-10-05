@@ -42,6 +42,9 @@ return [
     // Карта «Схема проезда»: конструктор Яндекс.Карт из настроек темы.
     'yandex_map_src' => 'https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Aef0add951ec54cba1f9cfc0cd56589920f6546e97b2b6782213bf3cbf9666ef6&width=100%25&height=400&lang=ru_RU&scroll=true',
 
+    // Инфостраница, с условиями которой покупатель соглашается при заказе.
+    'checkout_agreement_page' => 'privacy',
+
     // Инфостраницы, внизу которых — отзывы и карта с контактами
     // (на старом сайте эти модули стояли только в макете «О компании»).
     'pages_with_contacts' => ['about_us'],

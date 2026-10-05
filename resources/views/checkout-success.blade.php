@@ -1,35 +1,51 @@
 @extends('layouts.app')
 
-@section('title', 'Заказ принят — '.config('shop.name'))
+@section('title', 'Ваш заказ #'.$order->id.' сформирован! — '.config('shop.name'))
 
+{{-- Разметка и тексты — как common/success.twig темы UniShop2 старого сайта
+     (вариант для гостя: личного кабинета у нас нет) плюс состав заказа. --}}
 @section('content')
     <div class="container">
-        <h1>Спасибо! Заказ №{{ $order->id }} принят</h1>
+        <ul class="breadcrumb">
+            <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
+            <li><a href="{{ route('cart.index') }}">Корзина покупок</a></li>
+            <li>Заказ сформирован</li>
+        </ul>
+        <div class="row">
+            <div id="content" class="col-sm-12">
+                <h1>Ваш заказ #{{ $order->id }} сформирован!</h1>
+                <p>Ваш заказ успешно создан!</p>
+                <p>Менеджер перезвонит на номер {{ $order->customer_phone }}, чтобы подтвердить заказ.
+                    Пожалуйста, задавайте <a href="{{ route('contact') }}">нам</a> любые вопросы, которые у вас возникают.</p>
+                <p>Спасибо за покупки в нашем интернет-магазине!</p>
 
-        <p>Менеджер перезвонит на номер {{ $order->customer_phone }}, чтобы подтвердить заказ.
-            Если есть вопросы — звоните: <a href="tel:{{ preg_replace('/\D/', '', config('shop.phone')) }}">{{ config('shop.phone') }}</a>.</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered" style="max-width: 720px;">
+                        @foreach ($order->items as $item)
+                            <tr>
+                                <td>
+                                    {{ $item->name }} × {{ $item->quantity }}
+                                    @if ($item->trade_in_discount)
+                                        <div class="small text-muted">Трейд-ин: со сдачей старого АКБ</div>
+                                    @endif
+                                </td>
+                                <td class="text-right" style="white-space: nowrap;">{{ number_format((float) $item->total, 0, '', '') }}р.</td>
+                            </tr>
+                        @endforeach
+                        <tr>
+                            <td><strong>Всего</strong></td>
+                            <td class="text-right" style="white-space: nowrap;"><strong>{{ number_format((float) $order->total, 0, '', '') }}р.</strong></td>
+                        </tr>
+                    </table>
+                </div>
 
-        <table class="table" style="max-width: 640px;">
-            @foreach ($order->items as $item)
-                <tr>
-                    <td>
-                        {{ $item->name }} × {{ $item->quantity }}
-                        @if ($item->trade_in_discount)
-                            <div class="small text-muted">со сдачей старого АКБ</div>
-                        @endif
-                    </td>
-                    <td class="text-right" style="white-space: nowrap;">{{ number_format((float) $item->total, 0, ',', ' ') }} р.</td>
-                </tr>
-            @endforeach
-            <tr>
-                <td><strong>Итого</strong></td>
-                <td class="text-right" style="white-space: nowrap;"><strong>{{ number_format((float) $order->total, 0, ',', ' ') }} р.</strong></td>
-            </tr>
-        </table>
+                <p><strong>Способ получения:</strong> {{ $order->delivery_method }}@if ($order->shipping_address), {{ $order->shipping_address }}@endif</p>
+                <p><strong>Способ оплаты:</strong> {{ $order->payment_method }}</p>
 
-        <p><strong>Получение:</strong> {{ $order->delivery_method }}@if ($order->shipping_address), {{ $order->shipping_address }}@endif</p>
-        <p><strong>Оплата:</strong> {{ $order->payment_method }}</p>
-
-        <a href="{{ route('home') }}" class="btn btn-primary">Вернуться в каталог</a>
+                <div class="buttons">
+                    <div class="pull-right"><a href="{{ route('home') }}" class="btn btn-primary">Продолжить</a></div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection

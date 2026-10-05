@@ -48,9 +48,9 @@ class CartCheckoutTest extends TestCase
         $this->get(route('cart.index'))
             ->assertOk()
             ->assertSee('TITAN 60Ah О.П.')
-            ->assertSee('6 000 р.')   // 7000 − 1000 за единицу
-            ->assertSee('12 000 р.')  // × 2
-            ->assertSee('В наличии');
+            ->assertSee('6000р.')   // 7000 − 1000 за единицу
+            ->assertSee('12000р.')  // × 2
+            ->assertSee('name="trade_in" value="1" checked', false);
 
         $this->get(route('home'))->assertSeeInOrder(['title="Корзина"', '>2</span>'], false);
     }
@@ -70,17 +70,17 @@ class CartCheckoutTest extends TestCase
         $this->patch(route('cart.update', $this->battery), ['quantity' => 3])->assertRedirect();
         $this->get(route('cart.index'))
             ->assertSee('value="3"', false)
-            ->assertSee('21 000 р.'); // галочку сняли — без скидки
+            ->assertSee('21000р.'); // галочку сняли — без скидки
 
         $this->patch(route('cart.update', $this->battery), ['quantity' => 'много'])->assertRedirect();
         $this->get(route('cart.index'))->assertSee('value="1"', false);
 
         $this->patch(route('cart.update', $this->battery), ['quantity' => 0]);
-        $this->get(route('cart.index'))->assertSee('В корзине пока ничего нет');
+        $this->get(route('cart.index'))->assertSee('Ваша корзина пуста!');
 
         $this->post(route('cart.store', $this->battery));
         $this->delete(route('cart.destroy', $this->battery));
-        $this->get(route('cart.index'))->assertSee('В корзине пока ничего нет');
+        $this->get(route('cart.index'))->assertSee('Ваша корзина пуста!');
     }
 
     public function test_inactive_products_cannot_be_bought(): void
@@ -126,9 +126,9 @@ class CartCheckoutTest extends TestCase
         $this->assertNull($order->items->firstWhere('product_id', $this->terminal->id)->trade_in_discount);
 
         // Корзина очищена, «Спасибо» переживает обновление страницы.
-        $this->get(route('cart.index'))->assertSee('В корзине пока ничего нет');
-        $this->get(route('checkout.success'))->assertOk()->assertSee("Заказ №{$order->id} принят");
-        $this->get(route('checkout.success'))->assertOk()->assertSee("Заказ №{$order->id} принят");
+        $this->get(route('cart.index'))->assertSee('Ваша корзина пуста!');
+        $this->get(route('checkout.success'))->assertOk()->assertSee("Ваш заказ #{$order->id} сформирован!");
+        $this->get(route('checkout.success'))->assertOk()->assertSee("Ваш заказ #{$order->id} сформирован!");
     }
 
     public function test_pickup_order_does_not_store_address(): void
@@ -141,6 +141,23 @@ class CartCheckoutTest extends TestCase
         $this->assertNull($order->shipping_address);
         $this->assertStringStartsWith('Самовывоз', $order->delivery_method);
         $this->assertSame('Банковской картой (только самовывоз)', $order->payment_method);
+    }
+
+    public function test_checkout_is_on_cart_page_and_needs_agreement(): void
+    {
+        $this->post(route('cart.store', $this->terminal));
+
+        $this->get(route('checkout.create'))->assertRedirect(route('cart.index'));
+        $this->get(route('cart.index'))
+            ->assertSeeInOrder(['Контактные данные', 'Способ получения', 'Способы оплаты', 'Ваш заказ', 'Оформить заказ'])
+            ->assertSee(route('page.show', 'privacy'), false);
+
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash', 'agree' => null])
+            ->assertSessionHasErrors(['agree' => 'Подтвердите согласие с политикой безопасности.']);
+
+        $this->checkout(['lastname' => 'Петров', 'delivery' => 'pickup', 'payment' => 'cash'])
+            ->assertRedirect(route('checkout.success'));
+        $this->assertSame('Иван Петров', Order::query()->sole()->customer_name);
     }
 
     public function test_validation_rules(): void
@@ -163,9 +180,9 @@ class CartCheckoutTest extends TestCase
         $this->terminal->update(['is_pickup_only' => true]);
         $this->post(route('cart.store', $this->terminal));
 
-        $this->get(route('checkout.create'))
+        $this->get(route('cart.index'))
             ->assertOk()
-            ->assertDontSee('value="city"', false);
+            ->assertDontSee('data-delivery="city"', false);
 
         $this->checkout(['delivery' => 'city', 'address' => 'ул. Ленина, 1', 'payment' => 'cash'])
             ->assertSessionHasErrors(['delivery' => 'В корзине есть товар, который можно забрать только самовывозом.']);
@@ -208,6 +225,7 @@ class CartCheckoutTest extends TestCase
         return $this->post(route('checkout.store'), [
             'name' => 'Иван',
             'phone' => '+7 (987) 000-00-00',
+            'agree' => 1,
             ...$data,
         ]);
     }

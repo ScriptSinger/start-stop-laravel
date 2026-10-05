@@ -24,6 +24,7 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'lastname' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30', new PhoneNumber],
             'email' => ['nullable', 'email', 'max:255'],
             'delivery' => ['required', Rule::enum(DeliveryMethod::class)],
@@ -35,6 +36,7 @@ class CheckoutRequest extends FormRequest
             ],
             'payment' => ['required', Rule::enum(PaymentMethod::class)],
             'comment' => ['nullable', 'string', 'max:1000'],
+            'agree' => ['accepted'],
         ];
     }
 
@@ -77,6 +79,7 @@ class CheckoutRequest extends FormRequest
         return [
             'name.required' => 'Укажите имя.',
             'name.max' => 'Имя слишком длинное.',
+            'lastname.max' => 'Фамилия слишком длинная.',
             'phone.required' => 'Укажите телефон — по нему мы подтвердим заказ.',
             'phone.max' => 'Проверьте номер телефона.',
             'email.email' => 'Проверьте e-mail.',
@@ -87,6 +90,7 @@ class CheckoutRequest extends FormRequest
             'payment.required' => 'Выберите способ оплаты.',
             'payment.enum' => 'Выберите способ оплаты.',
             'comment.max' => 'Комментарий слишком длинный (до 1000 символов).',
+            'agree.accepted' => 'Подтвердите согласие с политикой безопасности.',
         ];
     }
 
@@ -101,12 +105,14 @@ class CheckoutRequest extends FormRequest
     }
 
     /**
+     * Имя и фамилия в заказе — одной строкой, как имя покупателя в заявках.
+     *
      * @return array{name: string, phone: string, email: ?string, address: ?string, comment: ?string}
      */
     public function contact(): array
     {
         return [
-            'name' => $this->validated('name'),
+            'name' => trim($this->validated('name').' '.$this->validated('lastname')),
             'phone' => $this->validated('phone'),
             'email' => $this->validated('email'),
             'address' => $this->validated('address'),

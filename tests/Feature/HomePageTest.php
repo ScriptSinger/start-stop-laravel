@@ -79,7 +79,7 @@ class HomePageTest extends TestCase
 
         $this->post(route('cart.store', $product), ['trade_in' => 1]);
 
-        $this->get(route('cart.index'))->assertSee('4 400 р.');
+        $this->get(route('cart.index'))->assertSee('4400р.');
     }
 
     /**

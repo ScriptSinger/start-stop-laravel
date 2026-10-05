@@ -101,7 +101,7 @@
                                         @endif
                                     </div>
 
-                                    <form method="post" action="{{ route('cart.store', $product) }}" id="product-cart-form">
+                                    <form method="post" action="{{ route('cart.store', $product) }}" id="product-cart-form" data-add-to-cart>
                                         @csrf
                                         @if ($product->hasTradeIn())
                                             <div class="product-page__option option row">
@@ -125,7 +125,7 @@
                                                     <i class="qty-switch__btn fa fa-minus" data-step="-1"></i>
                                                 </div>
                                             </div>
-                                            <button type="submit" class="product-page__add-to-cart add_to_cart btn btn-xl">
+                                            <button type="submit" class="product-page__add-to-cart add_to_cart btn btn-xl" data-pid="{{ $product->id }}">
                                                 @if ($product->isAvailableOnOrder())
                                                     <i class="fa fa-truck"></i><span>Заказать</span>
                                                 @else

@@ -34,3 +34,13 @@
     cursor: pointer;
     border: 1px solid #eee;
 }
+
+/* Подбор АКБ: параметры автомобиля в левой колонке. */
+.battery-fitment {margin:0 0 15px}
+.battery-fitment dt {font-weight:600;margin-top:10px}
+.battery-fitment dd {margin:2px 0 0}
+
+/* Корзина: удаление и трейд-ин — формы вместо onclick темы, внешне как в теме. */
+.checkout-cart__remove-btn {padding:0;border:none;background:none;color:inherit}
+.checkout-cart__trade-in {display:block;margin:5px 0 0;font-weight:400;cursor:pointer}
+.checkout-cart__trade-in input {margin:0 5px 0 0;vertical-align:middle}

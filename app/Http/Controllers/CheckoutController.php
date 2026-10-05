@@ -11,19 +11,12 @@ use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
-    public function create(Cart $cart): View|RedirectResponse
+    /**
+     * Оформление — на странице корзины, как на старом сайте; старый адрес ведёт туда.
+     */
+    public function create(): RedirectResponse
     {
-        $lines = $cart->lines();
-
-        if ($lines->isEmpty()) {
-            return redirect()->route('cart.index');
-        }
-
-        return view('checkout', [
-            'lines' => $lines,
-            'total' => $cart->total($lines),
-            'isPickupOnly' => $cart->isPickupOnly($lines),
-        ]);
+        return redirect()->route('cart.index');
     }
 
     public function store(CheckoutRequest $request, Cart $cart, PlaceOrder $placeOrder): RedirectResponse

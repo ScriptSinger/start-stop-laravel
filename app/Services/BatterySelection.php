@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\CatalogSort;
 use App\Models\BatteryFitment;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -108,16 +109,13 @@ class BatterySelection
      *
      * @return LengthAwarePaginator<int, Product>
      */
-    public function products(BatteryFitment $fitment, int $perPage = 24): LengthAwarePaginator
+    public function products(BatteryFitment $fitment, CatalogSort $sort, int $perPage): LengthAwarePaginator
     {
         return Product::query()
             ->where('status', true)
             ->fitsBattery($fitment)
             ->withCardData()
-            ->orderByRaw('quantity > 0 DESC')
-            ->orderByRaw('supplier_quantity >= ? DESC', [config('shop.supplier_order_min_quantity')])
-            ->orderBy('price')
-            ->orderBy('id')
+            ->sortedBy($sort)
             ->paginate($perPage);
     }
 

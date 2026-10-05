@@ -84,10 +84,14 @@
 
             <div class="header-block__item header-block__item-cart">
                 <div id="cart" class="header-cart" title="Корзина">
-                    <a class="header-cart__btn" href="{{ route('cart.index') }}" aria-label="Корзина">
+                    {{-- Без JavaScript — ссылка на корзину, с ним — окно с мини-корзиной. --}}
+                    <a class="header-cart__btn dropdown-toggle" href="{{ route('cart.index') }}" aria-label="Корзина" data-mini-cart-open>
                         <i class="header-cart__icon fa fa-shopping-cart"></i>
-                        <span id="cart-total" class="header-cart__total-items">{{ $cartCount ?? 0 }}</span>
+                        <span id="cart-total" class="header-cart__total-items">{{ $cartCount }}</span>
                     </a>
+                    <div class="header-cart__dropdown">
+                        @include('partials.mini-cart')
+                    </div>
                 </div>
             </div>
         </div>

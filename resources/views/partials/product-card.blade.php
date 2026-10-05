@@ -64,9 +64,9 @@
             @endif
         </div>
 
-        <form method="post" action="{{ route('cart.store', $product) }}" id="{{ $cardFormId }}" class="product-thumb__cart cart">
+        <form method="post" action="{{ route('cart.store', $product) }}" id="{{ $cardFormId }}" class="product-thumb__cart cart" data-add-to-cart>
             @csrf
-            <button type="submit" class="product-thumb__add-to-cart add_to_cart btn" title="В корзину"><i class="fa fa-shopping-bag"></i><span>В корзину</span></button>
+            <button type="submit" class="product-thumb__add-to-cart add_to_cart btn" title="В корзину" data-pid="{{ $product->id }}"><i class="fa fa-shopping-bag"></i><span>В корзину</span></button>
             <a href="{{ route('quick-order.create', $product) }}" class="product-thumb__quick-order quick-order btn" title="Быстрый заказ" aria-label="Быстрый заказ" data-modal-url="{{ route('quick-order.create', $product) }}" data-modal-title="Быстрый заказ"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
             @if (Route::has('wishlist.store'))
                 <button type="submit" class="product-thumb__wishlist wishlist" title="В закладки" formaction="{{ route('wishlist.store', $product) }}" data-saved-list="wishlist"><i class="far fa-heart"></i></button>
