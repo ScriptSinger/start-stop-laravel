@@ -12,4 +12,18 @@ return [
     // штук — показываем цену под заказ и кнопку «Заказать». В старой теме
     // порог 5 был зашит прямо в шаблон.
     'supplier_order_min_quantity' => (int) env('SHOP_SUPPLIER_ORDER_MIN_QUANTITY', 5),
+
+    // Подбор АКБ по автомобилю (battery_fitments → характеристики товаров).
+    // id характеристик — это filter_id из OCFilter, импорт их сохраняет.
+    'battery_fitment' => [
+        // Где искать: Аккумуляторы, Грузовые аккумуляторы.
+        'category_ids' => [1, 3],
+        'attributes' => [
+            'polarity' => 13,       // Полярность: Обратная / Прямая / Универсальная
+            'capacity_range' => 20, // Ёмкость (Ah): диапазоны "55 - 65 Ah"
+            'dimensions' => 16,     // Габариты: "Евро L2 (242 x 175 x 190 мм)"
+        ],
+        // Допуск по длине АКБ, мм (как в старом battery_filter.php).
+        'length_tolerance_mm' => 2,
+    ],
 ];

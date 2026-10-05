@@ -3,24 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\BatteryFitment;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 /**
  * Порт catalog/controller/extension/module/battery_filter.php старого проекта.
- * Сама логика подбора (марка → модель → поколение) переносится почти 1:1 —
- * она маленькая и не завязана на остальные фичи темы.
+ * Шаги марка → модель → поколение перенесены почти 1:1.
  *
- * getResult() — единственное существенное отличие от оригинала: там в конце
- * строился редирект на страницу категории с параметрами OCFilter
- * (?ocf=F13S2V...), которых у нас пока нет (это Фаза 4 плана — свой фильтр).
- * Пока редиректим на поиск по ёмкости среди товаров — рабочий, но временный
- * стенд-ин до нормального параметрического подбора.
+ * Результат подбора — своя страница (show) вместо редиректа на категорию с
+ * параметрами OCFilter (?ocf=F13S2V...). Сопоставление машины с товарами —
+ * BatteryFitment::matchingAttributeValueIds() и Product::fitsBattery().
  */
 class BatteryFilterController extends Controller
 {
+    /**
+     * Подпись поколения в списке, когда оно у машины не указано (таких 1480
+     * записей). Фронт присылает её обратно как gen — в старом коде поиск по
+     * generation = 'Стандарт' ничего не находил, и подбор для них не работал.
+     */
+    private const DEFAULT_GENERATION_LABEL = 'Стандарт';
+
     // 'LADA' в оригинальном battery_filter.php не совпадало ни с одной
     // реальной записью — в данных бренд называется "ВАЗ (Lada)" (58 строк).
     // Та же опечатка была и в старом коде (0 совпадений там же), поправили
@@ -106,7 +111,7 @@ class BatteryFilterController extends Controller
             // находки в Фазе 2 (не существовал даже в старом проекте), берём
             // реальный фолбэк из корня диска.
             return [
-                'name' => $generationName ?: 'Стандарт',
+                'name' => $generationName ?: self::DEFAULT_GENERATION_LABEL,
                 'image' => Storage::disk('public')->url($imagePath ?: 'no_image.png'),
             ];
         });
@@ -116,33 +121,55 @@ class BatteryFilterController extends Controller
 
     public function getResult(Request $request): JsonResponse
     {
-        $brand = (string) $request->query('brand', '');
-        $model = (string) $request->query('model', '');
-        $generation = (string) $request->query('gen', '');
+        $fitment = $this->findFitment($request);
 
-        $query = BatteryFitment::where('brand', $brand)->where('model', $model);
-
-        if ($generation !== '') {
-            $query->where('generation', $generation);
-        }
-
-        $fitment = $query->first();
-
-        if (! $fitment || ! $fitment->capacity) {
-            return response()->json([]);
-        }
-
-        // Берём первое число из "60,62" и т.п. — в названиях товаров ёмкость
-        // записана как "82 Ah", этого достаточно для поиска-стенд-ина.
-        preg_match('/\d+/', $fitment->capacity, $matches);
-        $capacity = $matches[0] ?? null;
-
-        if (! $capacity) {
+        if (! $fitment || ! $fitment->hasSelectionData()) {
             return response()->json([]);
         }
 
         return response()->json([
-            'redirect' => route('home', ['search' => "{$capacity} Ah"]),
+            'redirect' => route('battery-selection', [
+                'brand' => $fitment->brand,
+                'model' => $fitment->model,
+                'gen' => $fitment->generation ?: null,
+            ]),
         ]);
+    }
+
+    public function show(Request $request): View
+    {
+        $fitment = $this->findFitment($request);
+
+        abort_if(! $fitment || ! $fitment->hasSelectionData(), 404);
+
+        $products = Product::query()
+            ->where('status', true)
+            ->fitsBattery($fitment)
+            // Сначала то, что можно купить: в наличии, потом под заказ.
+            ->orderByRaw('quantity > 0 DESC')
+            ->orderByRaw('supplier_quantity >= ? DESC', [config('shop.supplier_order_min_quantity')])
+            ->orderBy('price')
+            ->paginate(24)
+            ->withQueryString();
+
+        return view('battery-selection', [
+            'fitment' => $fitment,
+            'products' => $products,
+        ]);
+    }
+
+    private function findFitment(Request $request): ?BatteryFitment
+    {
+        $generation = trim((string) $request->query('gen', ''));
+
+        return BatteryFitment::query()
+            ->where('brand', (string) $request->query('brand', ''))
+            ->where('model', (string) $request->query('model', ''))
+            ->when(
+                $generation === '' || $generation === self::DEFAULT_GENERATION_LABEL,
+                fn ($query) => $query->where(fn ($query) => $query->whereNull('generation')->orWhere('generation', '')),
+                fn ($query) => $query->where('generation', $generation),
+            )
+            ->first();
     }
 }

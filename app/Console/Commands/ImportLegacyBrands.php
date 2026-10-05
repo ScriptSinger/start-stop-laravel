@@ -77,25 +77,50 @@ class ImportLegacyBrands extends Command
 
     public function handle(): int
     {
+        // Производители из oc_manufacturer должны быть на месте до того, как
+        // мы начнём искать/создавать бренды: иначе на чистой базе HYUNDAI
+        // создался бы здесь, а потом второй раз — импортом производителей.
+        $this->callSilently('import:legacy-manufacturers');
+
         foreach (self::REPARENT as $categoryId => $parentId) {
             DB::table('categories')->where('id', $categoryId)->update(['parent_id' => $parentId]);
         }
 
-        $brandCategories = DB::table('categories')
-            ->whereIn('parent_id', self::BRAND_PARENT_IDS)
-            ->whereNotIn('id', [...self::NOT_BRAND_IDS, ...self::PSEUDO_FILTER_IDS, ...array_keys(self::REPARENT)])
+        // Бренды и привязки товаров берём из старой базы, а не из локальных
+        // таблиц: импорт товаров перезаписывает category_product без
+        // категорий-брендов (их здесь уже нет), и восстановить бренд было бы
+        // не из чего. Так шаг можно запускать после любого импорта.
+        $brandCategories = DB::connection('legacy')
+            ->table('oc_category as c')
+            ->join('oc_category_description as cd', 'cd.category_id', '=', 'c.category_id')
+            ->where('cd.language_id', 1)
+            ->whereIn('c.parent_id', self::BRAND_PARENT_IDS)
+            ->whereNotIn('c.category_id', [...self::NOT_BRAND_IDS, ...self::PSEUDO_FILTER_IDS, ...array_keys(self::REPARENT)])
             // Сначала основной раздел — его написание бренда берём за эталон
             // ("BOSCH" из аккумуляторов, а не "Bosch" из ламп).
-            ->orderBy('parent_id')
-            ->orderBy('id')
+            ->orderBy('c.parent_id')
+            ->orderBy('c.category_id')
+            ->select('c.category_id as id', 'c.parent_id', 'c.image', 'cd.name')
             ->get();
+
+        $productLinks = DB::connection('legacy')
+            ->table('oc_product_to_category')
+            ->whereIn('category_id', $brandCategories->pluck('id'))
+            ->get()
+            ->groupBy('category_id');
+
+        $existingProductIds = DB::table('products')->pluck('id')->flip();
+        $existingCategoryIds = DB::table('categories')->pluck('id')->flip();
 
         $linkedProducts = 0;
 
-        DB::transaction(function () use ($brandCategories, &$linkedProducts): void {
+        DB::transaction(function () use ($brandCategories, $productLinks, $existingProductIds, $existingCategoryIds, &$linkedProducts): void {
             foreach ($brandCategories as $category) {
-                $manufacturerId = $this->resolveManufacturer($category->name, $category->image);
-                $productIds = DB::table('category_product')->where('category_id', $category->id)->pluck('product_id');
+                $manufacturerId = $this->resolveManufacturer($category->name, $category->image ?: null);
+                $productIds = collect($productLinks->get($category->id, []))
+                    ->pluck('product_id')
+                    ->filter(fn ($productId) => isset($existingProductIds[$productId]))
+                    ->values();
 
                 DB::table('products')
                     ->whereIn('id', $productIds)
@@ -104,12 +129,14 @@ class ImportLegacyBrands extends Command
 
                 // Товар остаётся в разделе (например, «Аккумуляторы»), даже если
                 // в legacy был привязан только к категории-бренду.
-                DB::table('category_product')->insertOrIgnore(
-                    $productIds->map(fn ($productId) => [
-                        'category_id' => $category->parent_id,
-                        'product_id' => $productId,
-                    ])->all(),
-                );
+                if (isset($existingCategoryIds[$category->parent_id])) {
+                    DB::table('category_product')->insertOrIgnore(
+                        $productIds->map(fn ($productId) => [
+                            'category_id' => $category->parent_id,
+                            'product_id' => $productId,
+                        ])->all(),
+                    );
+                }
 
                 $linkedProducts += $productIds->count();
             }

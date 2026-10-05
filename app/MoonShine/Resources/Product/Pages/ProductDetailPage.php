@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Product\Pages;
 
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -41,10 +42,10 @@ class ProductDetailPage extends DetailPage
             Text::make('Артикул', 'sku'),
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class),
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class),
-            Number::make('Цена', 'price'),
+            Money::make('Цена', 'price'),
             Number::make('Остаток', 'quantity'),
             Number::make('Остаток у поставщика', 'supplier_quantity'),
-            Number::make('Цена под заказ', 'supplier_price'),
+            Money::make('Цена под заказ', 'supplier_price'),
             Textarea::make('Описание', 'description'),
             Switcher::make('Активен', 'status'),
         ];

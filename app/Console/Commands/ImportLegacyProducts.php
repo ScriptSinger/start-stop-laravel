@@ -112,6 +112,10 @@ class ImportLegacyProducts extends Command
         $this->newLine(2);
         $this->info("Импортировано товаров: {$rows->count()}");
 
+        // Категории-бренды старого проекта сразу переводим в производителей —
+        // иначе отдельный запуск этой команды сбросил бы бренды товаров.
+        $this->call('import:legacy-brands');
+
         return self::SUCCESS;
     }
 }

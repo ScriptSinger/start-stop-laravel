@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -47,6 +49,25 @@ class Product extends Model
         return (float) ($this->isAvailableOnOrder() && $this->supplier_price !== null
             ? $this->supplier_price
             : $this->price);
+    }
+
+    /**
+     * Аккумуляторы, подходящие автомобилю: внутри условия значения через
+     * «ИЛИ» (60 или 62 Ah), между условиями — «И» (и полярность, и габариты).
+     */
+    #[Scope]
+    protected function fitsBattery(Builder $query, BatteryFitment $fitment): void
+    {
+        $query->whereHas('categories', fn (Builder $categories) => $categories
+            ->whereIn('categories.id', config('shop.battery_fitment.category_ids')));
+
+        foreach ($fitment->matchingAttributeValueIds() as $valueIds) {
+            if ($valueIds === null) {
+                continue;
+            }
+
+            $query->whereHas('attributeValues', fn (Builder $values) => $values->whereIn('attribute_values.id', $valueIds));
+        }
     }
 
     public function getRouteKeyName(): string

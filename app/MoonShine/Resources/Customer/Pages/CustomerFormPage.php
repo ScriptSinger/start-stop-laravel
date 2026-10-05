@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Customer\Pages;
 
 use App\Models\Order;
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
@@ -19,7 +20,6 @@ use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Email;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Phone;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
@@ -47,7 +47,7 @@ class CustomerFormPage extends FormPage
                     ID::make(),
                     Date::make('Дата', 'created_at')->format('d.m.Y H:i'),
                     Select::make('Статус', 'status')->options(Order::STATUSES),
-                    Number::make('Сумма', 'total'),
+                    Money::make('Сумма', 'total'),
                 ])
                 ->disableOutside(),
         ];

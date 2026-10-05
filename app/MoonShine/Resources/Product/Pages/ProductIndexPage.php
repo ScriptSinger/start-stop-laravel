@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Product\Pages;
 
 use App\Models\Attribute;
 use App\Models\Category;
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -55,7 +56,7 @@ class ProductIndexPage extends IndexPage
                     badge: true,
                     link: fn (Category $category, mixed $value, BelongsToMany $field): string => $field->getResource()->getFormPageUrl($category->getKey()),
                 ),
-            Number::make('Цена', 'price'),
+            Money::make('Цена', 'price'),
             Number::make('Остаток', 'quantity'),
             Number::make('У поставщика', 'supplier_quantity'),
             Switcher::make('Активен', 'status'),

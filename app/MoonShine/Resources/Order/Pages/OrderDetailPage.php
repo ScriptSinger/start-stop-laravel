@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Order\Pages;
 
 use App\Models\Order;
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\OrderItem\OrderItemResource;
@@ -46,14 +47,14 @@ class OrderDetailPage extends DetailPage
             Email::make('Email', 'customer_email'),
             Text::make('Оплата', 'payment_method'),
             Textarea::make('Адрес доставки', 'shipping_address'),
-            Number::make('Сумма', 'total'),
+            Money::make('Сумма', 'total'),
             HasMany::make('Позиции', 'items', resource: OrderItemResource::class)
                 ->fields([
                     BelongsTo::make('Товар', 'product', resource: ProductResource::class)->nullable(),
                     Text::make('Название', 'name'),
-                    Number::make('Цена', 'price'),
+                    Money::make('Цена', 'price'),
                     Number::make('Кол-во', 'quantity'),
-                    Number::make('Сумма', 'total'),
+                    Money::make('Сумма', 'total'),
                 ])
                 ->disableOutside(),
         ];

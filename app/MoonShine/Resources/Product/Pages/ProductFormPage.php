@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Product\Pages;
 
 use App\Models\Attribute;
 use App\Models\Product;
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -57,12 +58,12 @@ class ProductFormPage extends FormPage
                         Text::make('Артикул', 'sku')->nullable(),
                         BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)->nullable(),
                         BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)->selectMode(),
-                        Number::make('Цена', 'price'),
+                        Money::make('Цена', 'price'),
                         Number::make('Остаток', 'quantity')->default(0),
                         Number::make('Остаток у поставщика', 'supplier_quantity')
                             ->default(0)
                             ->hint('Если своего остатка нет, а у поставщика не меньше '.config('shop.supplier_order_min_quantity').' шт. — товар продаётся под заказ'),
-                        Number::make('Цена под заказ', 'supplier_price')
+                        Money::make('Цена под заказ', 'supplier_price')
                             ->nullable()
                             ->hint('Пусто — под заказ действует обычная цена'),
                         TinyMce::make('Описание', 'description')->locale('ru')->nullable(),

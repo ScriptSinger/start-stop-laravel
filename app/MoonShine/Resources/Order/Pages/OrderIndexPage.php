@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Order\Pages;
 
 use App\Models\Order;
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Order\OrderResource;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
@@ -16,7 +17,6 @@ use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\DateRange;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Phone;
 use MoonShine\UI\Fields\Range;
 use MoonShine\UI\Fields\Select;
@@ -43,7 +43,7 @@ class OrderIndexPage extends IndexPage
             Select::make('Статус', 'status')
                 ->options(Order::STATUSES),
             Text::make('Оплата', 'payment_method'),
-            Number::make('Сумма', 'total')->sortable(),
+            Money::make('Сумма', 'total')->sortable(),
         ];
     }
 

@@ -70,6 +70,34 @@ class AdminNavigationFiltersTest extends TestCase
         $this->get($url)->assertOk();
     }
 
+    public function test_admin_interface_is_in_russian(): void
+    {
+        $this->get('/admin/resource/product-resource/product-index-page')
+            ->assertOk()
+            ->assertSee('Фильтры')
+            ->assertSee('Создать')
+            ->assertDontSee('>Filters<', false)
+            ->assertDontSee('>Create<', false);
+    }
+
+    public function test_prices_are_shown_without_trailing_zeros(): void
+    {
+        $this->productTable(['search' => '115D31L'])
+            ->assertSee('9 000 ₽')
+            ->assertDontSee('9000.0000');
+
+        $product = Product::query()->where('code', '115D31L')->firstOrFail();
+        $product->update(['supplier_price' => 10900.5]);
+
+        $this->get("/admin/resource/product-resource/product-form-page/{$product->id}")
+            ->assertOk()
+            ->assertSee('name="price"', false)
+            ->assertSee('value="9000"', false)
+            ->assertSee('value="10900.5"', false)
+            ->assertSee('step="0.01"', false)
+            ->assertDontSee('.0000', false);
+    }
+
     public function test_price_filter_is_not_prefilled(): void
     {
         $html = $this->get('/admin/resource/product-resource/product-index-page')->assertOk()->getContent();

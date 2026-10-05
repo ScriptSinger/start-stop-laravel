@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\OrderItem\Pages;
 
+use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\OrderItem\OrderItemResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -37,9 +38,9 @@ class OrderItemIndexPage extends IndexPage
             BelongsTo::make('Заказ', 'order', resource: OrderResource::class),
             BelongsTo::make('Товар', 'product', resource: ProductResource::class),
             Text::make('Название', 'name'),
-            Number::make('Цена', 'price'),
+            Money::make('Цена', 'price'),
             Number::make('Кол-во', 'quantity'),
-            Number::make('Сумма', 'total'),
+            Money::make('Сумма', 'total'),
         ];
     }
 
