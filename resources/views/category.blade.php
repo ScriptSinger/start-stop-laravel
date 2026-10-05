@@ -18,7 +18,7 @@
             <div class="col-sm-8 col-md-9">
                 <h1>{{ $category->name }}</h1>
 
-                @if ($category->description)
+                @if ($category->hasDescription())
                     <div class="category-info__description">{!! $category->description !!}</div>
                 @endif
 
@@ -35,7 +35,14 @@
                 @endif
 
                 @if ($products->isEmpty())
-                    <div class="div-text-empty">В этой категории пока нет товаров.</div>
+                    <div class="div-text-empty">
+                        @if ($filter->isActive())
+                            По выбранным условиям ничего не нашлось.
+                            <a href="{{ route('category.show', $category) }}">Сбросить фильтр</a>
+                        @else
+                            В этой категории пока нет товаров.
+                        @endif
+                    </div>
                 @else
                     <div class="products-block row row-flex">
                         @foreach ($products as $product)

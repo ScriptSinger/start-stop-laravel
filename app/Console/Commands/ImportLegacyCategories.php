@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\DecodesLegacyText;
 use App\Console\Commands\Concerns\ResolvesLegacySlug;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 #[Description('Импорт категорий из oc_category/oc_category_description старого проекта')]
 class ImportLegacyCategories extends Command
 {
+    use DecodesLegacyText;
     use ResolvesLegacySlug;
 
     public function handle(): int
@@ -29,9 +31,9 @@ class ImportLegacyCategories extends Command
             DB::table('categories')->updateOrInsert(
                 ['id' => $row->category_id],
                 [
-                    'name' => $row->name,
-                    'slug' => $this->resolveSlug("category_id={$row->category_id}", $row->name, 'categories', $row->category_id),
-                    'description' => $row->description ?: null,
+                    'name' => $this->legacyText($row->name),
+                    'slug' => $this->resolveSlug("category_id={$row->category_id}", $this->legacyText($row->name), 'categories', $row->category_id),
+                    'description' => $this->legacyText($row->description),
                     'image' => $row->image ?: null,
                     'sort_order' => $row->sort_order,
                     'status' => (bool) $row->status,

@@ -13,4 +13,6 @@
             @endforeach
         </ul>
     </nav>
+
+    @includeWhen(isset($attributeFacets), 'partials.catalog-filter')
 </aside>

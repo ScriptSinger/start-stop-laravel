@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\DecodesLegacyText;
 use App\Console\Commands\Concerns\ResolvesLegacySlug;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 #[Description('Импорт товаров, фото и привязки к категориям из старого проекта')]
 class ImportLegacyProducts extends Command
 {
+    use DecodesLegacyText;
     use ResolvesLegacySlug;
 
     /**
@@ -57,11 +59,11 @@ class ImportLegacyProducts extends Command
                 ['id' => $row->product_id],
                 [
                     'manufacturer_id' => $manufacturerId,
-                    'name' => $row->name,
-                    'slug' => $this->resolveSlug("product_id={$row->product_id}", $row->name, 'products', $row->product_id),
+                    'name' => $this->legacyText($row->name),
+                    'slug' => $this->resolveSlug("product_id={$row->product_id}", $this->legacyText($row->name), 'products', $row->product_id),
                     'sku' => $row->sku ?: null,
                     'code' => $row->model ?: null,
-                    'description' => $row->description ?: null,
+                    'description' => $this->legacyText($row->description),
                     'price' => $row->price,
                     'quantity' => $row->quantity,
                     // Остаток у поставщика и цена под заказ хранились в чужих

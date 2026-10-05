@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\DecodesLegacyText;
 use App\Console\Commands\Concerns\ResolvesLegacySlug;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 #[Description('Импорт статических страниц (О компании, Услуги и т.д.) из oc_information старого проекта')]
 class ImportLegacyPages extends Command
 {
+    use DecodesLegacyText;
     use ResolvesLegacySlug;
 
     public function handle(): int
@@ -27,9 +29,9 @@ class ImportLegacyPages extends Command
             DB::table('pages')->updateOrInsert(
                 ['id' => $row->information_id],
                 [
-                    'title' => $row->title,
-                    'slug' => $this->resolveSlug("information_id={$row->information_id}", $row->title, 'pages', $row->information_id),
-                    'description' => $row->description ?: null,
+                    'title' => $this->legacyText($row->title),
+                    'slug' => $this->resolveSlug("information_id={$row->information_id}", $this->legacyText($row->title), 'pages', $row->information_id),
+                    'description' => $this->legacyText($row->description),
                     'show_in_top' => (bool) $row->bottom,
                     'sort_order' => $row->sort_order,
                     'status' => (bool) $row->status,

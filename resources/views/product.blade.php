@@ -73,7 +73,7 @@
                     </table>
                 @endif
 
-                @if ($product->description)
+                @if ($product->hasDescription())
                     <div class="product-page" style="margin-top: 30px;">
                         {!! $product->description !!}
                     </div>
