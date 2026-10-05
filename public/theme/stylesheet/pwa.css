@@ -1,0 +1,8 @@
+.pwa-notification{color:var(--pwa-c);background:var(--pwa-bg)}
+.pwa-notification .container{display:flex;align-items:center;justify-content:center;padding:15px;font-size:.9em;margin-top:-100%;transition:ease-in-out .15s}
+.pwa-notification .container.active{margin-top:0}
+.pwa-notification.other .chromium, .pwa-notification.other .pwa-notification__install{display:none}
+.pwa-notification.chromium .other{display:none}
+.pwa-notification__text, .pwa-notification__install{margin:0 15px 0 0}
+.pwa-notification__install{padding:3px 7px;color:var(--pwa-install-c);background:var(--pwa-install-bg);border-radius:2px;cursor:pointer;white-space:nowrap}
+.pwa-notification__close{color:var(--pwa-close-c);cursor:pointer;border-bottom:dotted 1px;white-space:nowrap}

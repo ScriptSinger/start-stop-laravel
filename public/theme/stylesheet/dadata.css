@@ -1,0 +1,12 @@
+.dadata-suggestions {position:absolute;z-index:9;overflow-y:auto;min-width:290px;max-width:calc(100vw - 20px);max-height:350px;list-style:none;background:#fff;padding:10px 15px;border-radius:3px;cursor:pointer;box-shadow:0 6px 12px rgba(0, 0, 0, .2)}
+.dadata-suggestions{scrollbar-width:thin}
+.dadata-suggestions::-webkit-scrollbar{width:8px;background:#eee;border-radius:4px}
+.dadata-suggestions::-webkit-scrollbar-thumb{background-color:#ccc;border-radius:4px}
+.dadata-suggestions li{padding:2px 0}
+.dadata-suggestions li:hover{text-decoration:underline}
+.dadata-suggestions li + li {margin:10px 0 0}
+.dadata-suggestions-backdrop{position:fixed;top:0;left:0;width:100%;height:100%}
+
+@media (max-width:575px){
+	.dadata-suggestions li {font-size:.9em}
+}

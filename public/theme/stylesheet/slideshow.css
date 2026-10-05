@@ -1,0 +1,42 @@
+.uni-slideshow{margin:0 0 20px;border-radius:4px;overflow:hidden;background:#fff;border:solid 1px rgba(0, 0, 0, .07);background-clip:padding-box}
+.uni-slideshow__item{display:flex;align-items:center;justify-content:flex-end;width:100%;border-radius:4px;background:#fff}
+.uni-slideshow__item:not(:first-child){display:none}
+.uni-slideshow__image, .uni-slideshow__description{position:relative;padding:0}
+.uni-slideshow__description{padding:0 40px 0 0;text-align:right}
+.uni-slideshow__title{margin:0 0 15px;font-size:1.7em;font-weight:500;color:var(--slideshow-title-c);text-transform:uppercase}
+.uni-slideshow__text{margin:0 0 25px;line-height:1.7em;color:var(--slideshow-text-c)}
+.uni-slideshow__btn, .uni-slideshow__btn:hover, .uni-slideshow__btn:focus{color:var(--slideshow-btn-c);background:var(--slideshow-btn-bg)}
+.owl-carousel .owl-nav {left:0;right:0}
+.uni-slideshow .owl-nav button {font-size:2em;color:var(--slideshow-nav-btn-c);background:none;box-shadow:none}
+.uni-slideshow .owl-dots{position:absolute;z-index:2;bottom:10px;right:0;left:0;height:0}
+.uni-slideshow .owl-dot span{background:var(--slideshow-dot-bg)}
+.uni-slideshow .owl-dot.active span{background:var(--slideshow-dot-bg-active)}
+
+.uni-slideshow__image.fullwidth{height:100%;margin:0 auto}
+.uni-slideshow__img.fullwidth{object-fit:cover;max-width:100%;height:100%}
+.uni-slideshow__description.fullwidth{position:absolute;top:50%;right:0;transform:translateY(-50%)}
+
+@media (min-width:992px){
+	.uni-slideshow__item:not(.fullwidth):before{position:absolute;z-index:0;content:'';width:100%;height:100%;background:linear-gradient(292deg, rgba(0, 0, 0, .03) 0%, rgba(0,0,0,0) 50%)}
+}
+
+@media (min-width:1600px){
+	.uni-slideshow__title{font-size:1.9em}
+}
+
+@media (max-width:992px){
+	.uni-slideshow__item{height:100% !important; min-height:auto !important}
+    .uni-slideshow__title{line-height:1.2em;font-size:1.45em}
+}
+@media (max-width:767px){
+	.uni-slideshow .owl-stage{display:flex}
+	.uni-slideshow__item{flex-wrap:wrap;justify-content:center}
+	.uni-slideshow__img{min-height:120px}
+	.uni-slideshow__description{width:100%;padding:10px 20px 40px;text-align:center}
+	.uni-slideshow__title{margin:0 0 20px}
+	.uni-slideshow__text{margin:0 0 20px}
+	.uni-slideshow__description.fullwidth{padding:10px}
+	.uni-slideshow__title.fullwidth{font-size:1em}
+	.uni-slideshow__text.fullwidth{display:none}
+	.uni-slideshow__btn.fullwidth{height:24px;padding:0 10px;font-size:.85em}
+}
