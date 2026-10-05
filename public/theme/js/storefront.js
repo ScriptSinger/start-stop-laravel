@@ -6,14 +6,23 @@
  */
 'use strict';
 
+// Значения из настроек темы старого сайта (uniJsVars в его <head>).
+var uni_touch_support = 'ontouchstart' in document.documentElement;
+var items_on_mobile = 2, module_on_mobile = 'grid';
+
 $(function() {
-	if ('ontouchstart' in document.documentElement) $('body').addClass('touch-support');
+	if (uni_touch_support) $('body').addClass('touch-support');
 
 	uniMenuAim();
 	uniMenuDropdownHeight();
 	uniMenuDropdownPos();
 	uniMenuMobile();
+	uniMenuUpd('header .menu2 .menu__collapse');
 	cookieNotice();
+
+	// Поиск на телефоне — копия формы из шапки рядом с «Категориями», как на старом сайте.
+	$('#search .header-search').clone().appendTo('#search2');
+	phoneMask(document);
 
 	// Блоки-ссылки темы: <div class="uni-href" data-href="…">.
 	$('body').on('click', '.uni-href', function() {
@@ -28,8 +37,27 @@ $(function() {
 		}
 	});
 
+	// Поля поиска (шапка, телефон, страница поиска) заполняются одинаково,
+	// крестик очищает все — clearBtn из common.js темы.
+	const searchInputs = 'input[name="search"]';
+
+	$('body').on('input', searchInputs, function() {
+		$(searchInputs).not(this).val(this.value);
+		$('.search-btn-clear').toggleClass('show', this.value !== '');
+	});
+
+	$('body').on('click', '.search-btn-clear', function() {
+		$(searchInputs).val('');
+		$('.search-btn-clear').removeClass('show');
+	});
+
 	$('.breadcrumb').scrollLeft(1000);
 });
+
+// Маска телефона, как в формах старого сайта (jquery.maskedinput).
+function phoneMask(root) {
+	if ($.fn.mask) $(root).find('input[type=tel]').mask('+7 (999) 999-99-99');
+}
 
 // Плашка про cookie: согласие помним в cookie notificationOffTime, как старый сайт.
 function cookieNotice() {
@@ -223,3 +251,284 @@ function uniMenuMobile() {
 		});
 	}
 }
+
+// Раскладка блоков главной (сетка/карусель по ширине экрана) — плагин uniModules из common.js темы.
+(function($){
+	var Modules = {
+		init:function(options, el) {
+            var base = this;
+			
+			base.$elem = $(el);
+			base.$elem2 = $(el).children();
+			base.options = $.extend({}, $.fn.uniModules.options, options);
+			
+			base.load();
+        },
+		load:function() {
+			var base = this;
+			
+			base.wrapper = (base.$elem2.closest('.tab-content').length) ? base.$elem2.closest('.tab-content') : base.$elem;
+			
+			if((base.options.type == 'grid' && module_on_mobile == 'carousel' && base.wrapper.width()+20 < 768) || base.wrapper.closest('#column-left, #column-right').length) {
+				base.options.type = 'carousel';
+			}
+			
+			if(base.wrapper.closest('#column-left, #column-right').length) {
+				base.options.items = {0: {items: 1}};
+			}
+			
+			if (base.options.type == 'grid') {
+				base.$elem2.children().wrap('<div class="uni-module__item" style="width:'+base.items()+'"></div>');
+			} else {
+				base.$elem2.addClass('owl-carousel').owlCarousel({
+					responsive:base.options.items,
+					responsiveBaseElement:base.wrapper,
+					dots:base.options.dots,
+					mouseDrag:false,
+					loop:base.options.loop,
+					autoplay:base.options.autoplay,
+					nav:true,
+					navText:['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
+				});
+				
+				if(base.$elem2.width() == 0) {
+					const item = base.$elem2.find('.owl-item'), item_width = base.items();
+					
+					item.css({width: item_width});
+					base.$elem2.find('.owl-stage').css({width:item.length * item_width});
+				}
+			}
+			
+			base.$elem2.addClass('load-complete');
+			base.responsive();
+		},
+		items:function() {
+			var base = this, match = -1, width = base.wrapper.width();
+			
+			width += (base.wrapper.attr('class') == 'tab-content' && width < 520) ? 10 : 20;
+			
+			$.each(base.options.items, (breakpoint) => {
+				if (breakpoint <= width && breakpoint > match) {
+					match = Number(breakpoint);
+				}
+			});
+			
+			const items = base.options.items[match]['items']
+			
+			return (base.options.type == 'carousel') ? width/items : 100/items+'%';
+		},
+		responsive:function() {
+            var base = this, lastWindowWidth = $(window).width();
+			
+			base.resizer = () => {
+                if ($(window).width() != lastWindowWidth || uni_touch_support) {
+					if (base.options.type == 'grid') {	
+						base.$elem2.children().css('width', base.items());
+					}
+                }
+            };
+			
+			$(window).resize(base.resizer);
+        }
+	};
+	
+	$.fn.uniModules = function(options) {		
+		return this.each(function() {
+            if ($(this).data('uni-modules-init') === true) {
+                return false;
+            }
+			
+            $(this).data('uni-modules-init', true);
+			
+            var module = Object.create(Modules);
+            module.init(options, this);
+        });
+	};
+	
+	if(typeof(items_on_mobile) == 'undefined') items_on_mobile = 2;
+	
+	$.fn.uniModules.options = {
+		type 	   :'carousel',
+		items	   :{0:{items:items_on_mobile},700:{items:3},992:{items:4},1400:{items:5}},
+		autoheight :[],
+		dots	   :true,
+		loop	   :false,
+		autoplay   :false
+	};
+})(jQuery);
+
+// Модальное окно — та же разметка, что uniModalWindow в common.js темы.
+function uniModalWindow(id, type, title, data) {
+	$('#' + id).remove();
+
+	const html = '<div id="' + id + '" class="modal">'
+		+ '<div class="modal-dialog modal-' + type + '"><div class="modal-content">'
+		+ '<div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+		+ '<h4 class="modal-title"></h4></div>'
+		+ '<div class="modal-body"></div>'
+		+ '</div></div></div>';
+
+	const modal = $(html).appendTo('body');
+	modal.find('.modal-title').text(title);
+	modal.find('.modal-body').html(data);
+	modal.modal('show');
+}
+
+// Ссылки с data-modal-url открывают форму (быстрый заказ, заказ звонка) в
+// окне; без JavaScript ведут на обычную страницу с той же формой.
+$('body').on('click', '[data-modal-url]', function(e) {
+	e.preventDefault();
+
+	const title = $(this).data('modal-title') || '';
+
+	$.get($(this).data('modal-url'), (html) => {
+		uniModalWindow('modal-form', '', title, html);
+		phoneMask('#modal-form');
+	});
+});
+
+// Отправка формы в окне: успех — сообщение вместо формы, ошибки — под полями.
+$('body').on('submit', '.modal .js-modal-form', function(e) {
+	e.preventDefault();
+
+	const form = $(this), button = form.find('[type=submit]');
+
+	button.prop('disabled', true);
+	form.find('.has-error').removeClass('has-error');
+	form.find('.help-block.js-error').remove();
+
+	$.ajax({url: form.attr('action'), type: 'post', data: form.serialize(), dataType: 'json'})
+		.done((json) => form.replaceWith($('<div class="alert alert-success"></div>').text(json.message)))
+		.fail((xhr) => {
+			const errors = (xhr.responseJSON && xhr.responseJSON.errors) || {};
+
+			if ($.isEmptyObject(errors)) {
+				form.prepend($('<div class="help-block js-error text-danger"></div>').text('Не получилось отправить. Попробуйте ещё раз или позвоните нам.'));
+			}
+
+			$.each(errors, (field, messages) => {
+				const group = form.find('[name="' + field + '"]').closest('.form-group');
+
+				group.addClass('has-error').append($('<span class="help-block js-error"></span>').text(messages[0]));
+			});
+		})
+		.always(() => button.prop('disabled', false));
+});
+
+// Всплывающее уведомление — разметка uniFlyAlert темы; 5 секунд, без анимации,
+// как в настройках старого сайта.
+function uniFlyAlert(type, message) {
+	const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+	const block = $('<div class="uni-alert alert-' + type + '" style="top:50px"><i class="uni-alert__icon fa ' + icon + '"></i><div></div><i class="uni-alert__icon fas fa-times"></i></div>');
+
+	$('.uni-alert').remove();
+	block.find('div').text(message);
+	block.find('.fa-times').on('click', () => block.remove());
+	block.appendTo('body');
+
+	setTimeout(() => block.remove(), 5000);
+}
+
+// Закладки и сравнение без перезагрузки: кнопки с formaction на
+// /wishlist/… и /compare-products/… (в карточках и на странице товара).
+$('body').on('click', '[data-saved-list]', function(e) {
+	e.preventDefault();
+
+	const button = $(this), list = button.data('saved-list');
+
+	$.ajax({url: button.attr('formaction'), type: 'post', data: {_token: $('meta[name=csrf-token]').attr('content')}, dataType: 'json'})
+		.done((json) => {
+			$('.header-' + list + '__total-items, .top-menu__' + list + '-total').text(json.count);
+			uniFlyAlert('success', json.message);
+		})
+		.fail(() => uniFlyAlert('danger', 'Не получилось. Попробуйте ещё раз.'));
+});
+
+$(function() {
+	const notice = $('body').data('notice');
+
+	if (notice) uniFlyAlert('success', notice);
+});
+
+// Лишние пункты главного меню на узком экране складываются в «…» — uniMenuUpd из common.js темы.
+function uniMenuUpd(block) {
+	
+	if(!$(block).length) return;
+	
+	const init = () => {
+		let menu_block = $(block), menu_items = menu_block.children('.menu__level-1-li:not(.menu__additional)');
+			
+		menu_items.css('display', '');
+			
+		if($(window).width() < 992) return;
+		
+		menu_block.find('.menu__additional').remove();
+		
+		let coord = menu_block.offset().left + menu_block.width(), flag = false, new_items = '';
+			
+		if(!menu_items.length || Math.floor(menu_items.last().offset().left + menu_items.last().width()) <= coord) return;
+		
+		menu_items.each(function() {
+			if($(this).offset().left + $(this).width() > coord - 60) {
+				let item = $(this).find('> a'), item_child = $(this).find('.menu__level-2-a'), new_child_items = '';
+				
+				if(item_child.length) {
+					new_child_items = '<div class="menu__level-3"><ul class="menu__level-3-ul">';
+				
+					item_child.each(function() {
+						new_child_items += '<li class="menu__level-3-li"><a class="menu__level-3-a';
+						
+						if(typeof($(this).attr('href')) != 'undefined') {
+							new_child_items += '" href="'+$(this).attr('href')+'">';
+						} else {
+							new_child_items += ' disabled">';
+						}
+						
+						new_child_items += $(this).text()+'</a></li>';
+					});
+					
+					new_child_items += '</ul></div>';
+				}
+				
+				new_items += '<div class="menu__level-2-ul col-md-12"><a class="menu__level-2-a';
+				
+				if(new_child_items) {
+					new_items += ' has-children';
+				}
+				
+				if(typeof(item.attr('href')) != 'undefined') {
+					new_items += '" href="'+item.attr('href')+'">';
+				} else {
+					new_items += ' disabled">';
+				}
+
+				new_items += item.text()+'</a>'+new_child_items+'</div>';
+
+				$(this).hide();
+				
+				flag = true;
+			} else {
+				$(this).show();
+			}
+		});
+		
+		if (flag) {
+			if (!menu_block.find('.menu__additional').length) {
+				let html = '<li class="menu__level-1-li menu__additional has-children">';
+				    html += '<a class="menu__level-1-a additional"><i class="fa fa-ellipsis-h"></i></a>';
+				    html += '<div class="menu__level-2 column-1"></div>';
+				    html += '</li>';
+					
+				menu_block.append(html);
+				
+				uniMenuAim();
+			}
+				
+			menu_block.find('.menu__additional .menu__level-2').html(new_items);
+		}
+	}
+	
+	init();
+	
+	$(window).resize(init);
+};

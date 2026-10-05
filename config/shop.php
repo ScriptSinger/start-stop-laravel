@@ -25,8 +25,26 @@ return [
         'button' => 'Продолжить',
         'remember_hours' => 24,
     ],
+    // Плашки справа на странице товара (настройки темы product.text_banner).
+    'product_banners' => [
+        ['icon' => 'fas fa-shipping-fast', 'text' => 'Бесплатная доставка по Уфе'],
+        ['icon' => 'fas fa-car-battery', 'text' => 'Бесплатное гарантийное обслуживание'],
+        ['icon' => 'fas fa-credit-card', 'text' => 'Скидки и бонусы для постоянных клиентов'],
+        ['icon' => 'fas fa-user-shield', 'text' => '100% Гарантия на брак без дополнительных условий'],
+    ],
+    // Виджет отзывов MyReviews (сводка Яндекс/Авито/2ГИС) — публичный код
+    // встраивания со старого сайта.
+    'reviews_widget' => [
+        'script' => 'https://myreviews.dev/widget/dist/index.js',
+        'uuid' => '87a6a8bf-39d1-4a14-a655-87f1da7fa7ea',
+        'name' => 'g1162765',
+    ],
     // Карта «Схема проезда»: конструктор Яндекс.Карт из настроек темы.
     'yandex_map_src' => 'https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Aef0add951ec54cba1f9cfc0cd56589920f6546e97b2b6782213bf3cbf9666ef6&width=100%25&height=400&lang=ru_RU&scroll=true',
+
+    // Инфостраницы, внизу которых — отзывы и карта с контактами
+    // (на старом сайте эти модули стояли только в макете «О компании»).
+    'pages_with_contacts' => ['about_us'],
 
     // Импорт из старого проекта (import:legacy*) перезаписывает данные,
     // отредактированные в админке. На production он выключен, пока явно не

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Product\Pages;
 
+use App\Enums\ProductSelection;
 use App\Models\Attribute;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
@@ -14,6 +15,7 @@ use App\MoonShine\Resources\ProductImage\ProductImageResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
@@ -59,6 +61,10 @@ class ProductFormPage extends FormPage
                         BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)->nullable(),
                         BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)->selectMode(),
                         Money::make('Цена', 'price'),
+                        Money::make('Цена по акции', 'special_price')
+                            ->nullable()
+                            ->hint('Ниже обычной цены — на сайте старая цена зачёркнута, наклейка «Ваша скидка»'),
+                        $this->selectionsField(),
                         Number::make('Остаток', 'quantity')->default(0),
                         Number::make('Остаток у поставщика', 'supplier_quantity')
                             ->default(0)
@@ -94,6 +100,37 @@ class ProductFormPage extends FormPage
                 ]),
             ]),
         ];
+    }
+
+    /**
+     * Подборки на главной («Рекомендуем», «Акции») — связь product_selection;
+     * новый товар встаёт в конец подборки.
+     */
+    private function selectionsField(): Select
+    {
+        return Select::make('На главной', 'selections')
+            ->options(collect(ProductSelection::cases())->mapWithKeys(fn (ProductSelection $selection): array => [$selection->value => $selection->toString()])->all())
+            ->multiple()
+            ->nullable()
+            ->changeFill(fn (mixed $product): array => $product instanceof Product
+                ? DB::table('product_selection')->where('product_id', $product->getKey())->pluck('selection')->all()
+                : [])
+            ->onApply(fn (Product $product): Product => $product)
+            ->onAfterApply(function (Product $product, mixed $selected): Product {
+                $selected = array_values(array_intersect((array) ($selected ?: []), array_column(ProductSelection::cases(), 'value')));
+
+                DB::table('product_selection')->where('product_id', $product->getKey())->whereNotIn('selection', $selected)->delete();
+
+                foreach ($selected as $selection) {
+                    DB::table('product_selection')->insertOrIgnore([
+                        'selection' => $selection,
+                        'product_id' => $product->getKey(),
+                        'sort_order' => (int) DB::table('product_selection')->where('selection', $selection)->max('sort_order') + 1,
+                    ]);
+                }
+
+                return $product;
+            });
     }
 
     /**

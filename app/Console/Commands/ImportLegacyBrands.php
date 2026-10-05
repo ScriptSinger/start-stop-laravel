@@ -58,7 +58,7 @@ class ImportLegacyBrands extends LegacyImportCommand
      *
      * @var array<string, string>
      */
-    private const BRAND_ALIASES = [
+    public const BRAND_ALIASES = [
         'XTREME CLASSIC' => 'XTREME',
         'XTREME EFB' => 'XTREME',
         'XTREME SILVER' => 'XTREME',

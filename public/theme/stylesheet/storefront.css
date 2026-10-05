@@ -1,0 +1,36 @@
+/*
+ * Дополнения к стилям темы UniShop2 для нового сайта. Подключается последним.
+ */
+
+/* Старый сайт отдавал превью товаров ровно 220×230 (кеш OpenCart с белыми
+   полями). Пока превью не генерируются, вписываем оригинал в ту же рамку,
+   чтобы названия и цены в соседних карточках стояли на одной линии. */
+.product-thumb__image img {
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 220 / 230;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
+/* То же для главного фото на странице товара: превью старого сайта — 500×400. */
+.product-page__image-main-img {
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 500 / 400;
+    object-fit: contain;
+    margin: 0 auto;
+}
+.product-page__image-addit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+.product-page__image-addit-img {
+    width: 74px;
+    height: 74px;
+    object-fit: contain;
+    cursor: pointer;
+    border: 1px solid #eee;
+}

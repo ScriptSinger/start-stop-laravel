@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Pages;
 
+use App\Enums\CustomerRequestType;
+use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
+use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
+use App\MoonShine\Resources\CustomerRequest\Pages\CustomerRequestFormPage;
+use App\MoonShine\Resources\CustomerRequest\Pages\CustomerRequestIndexPage;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\Order\Pages\OrderDetailPage;
 use App\MoonShine\Resources\Order\Pages\OrderIndexPage;
@@ -24,6 +29,7 @@ use MoonShine\UI\Components\Layout\Grid;
 use MoonShine\UI\Components\Metrics\Wrapped\ValueMetric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
+use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Phone;
 use MoonShine\UI\Fields\Text;
@@ -55,6 +61,12 @@ class Dashboard extends Page
      */
     protected function components(): iterable
     {
+        $newRequests = CustomerRequest::query()
+            ->where('is_processed', false)
+            ->latest()
+            ->orderByDesc('id')
+            ->get();
+
         $newOrders = Order::query()
             ->where('status', 'new')
             ->latest()
@@ -65,14 +77,17 @@ class Dashboard extends Page
             Grid::make([
                 Column::make([
                     ValueMetric::make('Новые заказы')->value($newOrders->count()),
-                ], colSpan: 4, adaptiveColSpan: 12),
+                ], colSpan: 3, adaptiveColSpan: 12),
+                Column::make([
+                    ValueMetric::make('Новые заявки')->value($newRequests->count()),
+                ], colSpan: 3, adaptiveColSpan: 12),
                 Column::make([
                     ValueMetric::make('Заказов за 7 дней')
                         ->value(Order::query()->where('status', '!=', 'unknown')->where('created_at', '>=', now()->subDays(7))->count()),
-                ], colSpan: 4, adaptiveColSpan: 12),
+                ], colSpan: 3, adaptiveColSpan: 12),
                 Column::make([
                     ValueMetric::make('Активных товаров')->value(Product::query()->where('status', true)->count()),
-                ], colSpan: 4, adaptiveColSpan: 12),
+                ], colSpan: 3, adaptiveColSpan: 12),
             ]),
 
             Box::make('Новые заказы — ждут звонка', [
@@ -91,6 +106,23 @@ class Dashboard extends Page
                     ])
                     ->withNotFound(),
                 ActionButton::make('Все заказы', $this->pageUrl(OrderIndexPage::class, OrderResource::class)),
+            ]),
+
+            Box::make('Новые заявки — перезвонить', [
+                TableBuilder::make(items: $newRequests)
+                    ->cast(new ModelCaster(CustomerRequest::class))
+                    ->fields([
+                        Date::make('Дата', 'created_at')->format('d.m.Y H:i'),
+                        Enum::make('Тип', 'type')->attach(CustomerRequestType::class),
+                        Text::make('Имя', 'name'),
+                        Phone::make('Телефон', 'phone'),
+                        Text::make('Комментарий', 'comment'),
+                    ])
+                    ->buttons([
+                        ActionButton::make('Открыть', fn (CustomerRequest $request): string => $this->pageUrl(CustomerRequestFormPage::class, CustomerRequestResource::class, ['resourceItem' => $request->getKey()])),
+                    ])
+                    ->withNotFound(),
+                ActionButton::make('Все заявки', $this->pageUrl(CustomerRequestIndexPage::class, CustomerRequestResource::class)),
             ]),
 
             Box::make('Товары, которым не хватает данных', [

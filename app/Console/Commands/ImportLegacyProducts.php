@@ -57,10 +57,21 @@ class ImportLegacyProducts extends LegacyImportCommand
             ->table('oc_product as p')
             ->join('oc_product_description as pd', 'pd.product_id', '=', 'p.product_id')
             ->where('pd.language_id', 1)
-            ->select('p.*', 'pd.name', 'pd.description')
+            ->select('p.*', 'pd.name', 'pd.description', 'pd.meta_h1', 'pd.meta_title', 'pd.meta_description')
             ->get();
 
-        $this->withProgressBar($rows, function ($row) use ($knownCategoryIds, $knownManufacturerIds, $tradeInDiscounts): void {
+        // Цены по акции (oc_product_special): дат у акций старого сайта нет,
+        // при нескольких — с наивысшим приоритетом (меньшее число).
+        $specialPrices = DB::connection('legacy')
+            ->table('oc_product_special')
+            ->where('customer_group_id', 1)
+            ->orderBy('priority')
+            ->orderBy('price')
+            ->get(['product_id', 'price'])
+            ->unique('product_id')
+            ->pluck('price', 'product_id');
+
+        $this->withProgressBar($rows, function ($row) use ($knownCategoryIds, $knownManufacturerIds, $tradeInDiscounts, $specialPrices): void {
             $manufacturerId = in_array($row->manufacturer_id, $knownManufacturerIds, true)
                 ? $row->manufacturer_id
                 : null;
@@ -74,7 +85,12 @@ class ImportLegacyProducts extends LegacyImportCommand
                     'sku' => $row->sku ?: null,
                     'code' => $row->model ?: null,
                     'description' => $this->legacyText($row->description),
+                    // H1 храним, только если он отличается от названия.
+                    'heading' => trim((string) $this->legacyText($row->meta_h1)) !== trim((string) $this->legacyText($row->name)) ? $this->legacyText($row->meta_h1) : null,
+                    'meta_title' => $this->legacyText($row->meta_title),
+                    'meta_description' => $this->legacyText($row->meta_description),
                     'price' => $row->price,
+                    'special_price' => $specialPrices[$row->product_id] ?? null,
                     'quantity' => $row->quantity,
                     // Остаток у поставщика и цена под заказ хранились в чужих
                     // полях: isbn и mpn (логика — в product.twig темы unishop2).

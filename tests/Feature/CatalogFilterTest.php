@@ -48,18 +48,23 @@ class CatalogFilterTest extends TestCase
 
     public function test_without_filter_shows_active_products_and_filter_groups(): void
     {
-        $this->category()
+        $response = $this->category()
             ->assertSee('TITAN 60 О.П.')
             ->assertSee('VARTA 60 О.П.')
-            ->assertDontSee('Архивный TITAN')
-            ->assertSee('Производитель')
-            ->assertSee('Полярность')
-            ->assertSee('Ёмкость (Ah)')
-            // Характеристика другой категории и выключенная в фильтре — не показываются.
-            ->assertDontSee('Вязкость')
-            ->assertDontSee('Скрытая')
-            // Значение есть только у неактивного товара — в фильтре его нет.
-            ->assertDontSee('100 - 110 Ah');
+            ->assertDontSee('Архивный TITAN');
+
+        // Блок фильтра: на карточках товаров характеристики видны все, а в
+        // фильтре — только привязанные к категории и включённые.
+        $filter = $this->filterBlock($response);
+
+        $this->assertStringContainsString('Производитель', $filter);
+        $this->assertStringContainsString('Полярность', $filter);
+        $this->assertStringContainsString('Ёмкость (Ah)', $filter);
+        // Характеристика другой категории и выключенная в фильтре — не показываются.
+        $this->assertStringNotContainsString('Вязкость', $filter);
+        $this->assertStringNotContainsString('Скрытая', $filter);
+        // Значение есть только у неактивного товара — в фильтре его нет.
+        $this->assertStringNotContainsString('100 - 110 Ah', $filter);
     }
 
     public function test_values_inside_attribute_are_or_and_attributes_are_and(): void
@@ -114,6 +119,46 @@ class CatalogFilterTest extends TestCase
         );
     }
 
+    public function test_default_sort_is_price_ascending_with_specials_and_can_be_changed(): void
+    {
+        Product::query()->update(['quantity' => 1]);
+        Product::query()->where('name', 'VARTA 60 О.П.')->update(['special_price' => 5000]);
+
+        // По умолчанию — цена по возрастанию (акция учитывается): VARTA 5000, TITAN 6000…
+        $this->category()->assertSeeInOrder(['VARTA 60 О.П.', 'TITAN 60 О.П.', 'TITAN 60 П.П.', 'TITAN 75 О.П.']);
+
+        $this->category(['sort' => 'price-desc'])->assertSeeInOrder(['TITAN 75 О.П.', 'TITAN 60 П.П.', 'TITAN 60 О.П.', 'VARTA 60 О.П.']);
+        $this->category(['sort' => 'name'])->assertSeeInOrder(['TITAN 60 О.П.', 'TITAN 60 П.П.', 'TITAN 75 О.П.', 'VARTA 60 О.П.']);
+        $this->category(['sort' => 'мусор'])->assertSeeInOrder(['VARTA 60 О.П.', 'TITAN 60 О.П.']);
+    }
+
+    public function test_out_of_stock_products_go_last_in_any_sort(): void
+    {
+        Product::query()->update(['quantity' => 1]);
+        Product::query()->where('name', 'VARTA 60 О.П.')->update(['quantity' => 0, 'special_price' => 1000]);
+
+        $this->category()->assertSeeInOrder(['TITAN 60 О.П.', 'TITAN 75 О.П.', 'VARTA 60 О.П.']);
+        $this->category(['sort' => 'name-desc'])->assertSeeInOrder(['TITAN 75 О.П.', 'TITAN 60 О.П.', 'VARTA 60 О.П.']);
+    }
+
+    public function test_per_page_and_pagination_text(): void
+    {
+        $this->category()->assertSee('Показано с 1 по 4 из 4 (всего 1 страница)');
+        $this->category(['limit' => 25])->assertSee('Показано с 1 по 4 из 4');
+        // Произвольное число на странице не принимаем.
+        $this->category(['limit' => 100000])->assertSee('<option value="'.e(route('category.show', ['category' => $this->batteries, 'limit' => 24])).'" selected>', false);
+    }
+
+    public function test_heading_and_meta_description(): void
+    {
+        $this->batteries->update(['heading' => 'Автомобильные аккумуляторы', 'meta_title' => 'Аккумуляторы в Уфе', 'meta_description' => 'Широкий ассортимент АКБ']);
+
+        $this->category()
+            ->assertSee('<h1>Автомобильные аккумуляторы</h1>', false)
+            ->assertSee('<title>Аккумуляторы в Уфе</title>', false)
+            ->assertSee('<meta name="description" content="Широкий ассортимент АКБ" />', false);
+    }
+
     public function test_garbage_parameters_are_ignored(): void
     {
         $this->category(['attr' => 'abc', 'manufacturer' => ['x', -1], 'price_from' => 'дёшево'])
@@ -134,6 +179,15 @@ class CatalogFilterTest extends TestCase
     private function category(array $query = []): TestResponse
     {
         return $this->get(route('category.show', ['category' => $this->batteries, ...$query]))->assertOk();
+    }
+
+    private function filterBlock(TestResponse $response): string
+    {
+        $html = $response->getContent();
+        $start = strpos($html, 'id="catalog-filter"');
+        $this->assertNotFalse($start, 'На странице нет блока фильтра');
+
+        return substr($html, $start, strpos($html, '</form>', $start) - $start);
     }
 
     private function assertFacetCount(TestResponse $response, string $label, int $expected): void

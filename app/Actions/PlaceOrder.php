@@ -18,8 +18,10 @@ class PlaceOrder
     /**
      * @param  Collection<int, CartLine>  $lines
      * @param  array{name: string, phone: string, email: ?string, address: ?string, comment: ?string}  $contact
+     *
+     * Без способа получения и оплаты — быстрый заказ: их уточнит менеджер по телефону.
      */
-    public function handle(Collection $lines, DeliveryMethod $delivery, PaymentMethod $payment, array $contact): Order
+    public function handle(Collection $lines, ?DeliveryMethod $delivery, ?PaymentMethod $payment, array $contact): Order
     {
         return DB::transaction(function () use ($lines, $delivery, $payment, $contact): Order {
             $order = Order::query()->create([
@@ -27,11 +29,11 @@ class PlaceOrder
                 'customer_phone' => $contact['phone'],
                 'customer_email' => $contact['email'],
                 'status' => 'new',
-                'payment_method' => $payment->label(),
-                'delivery_method' => $delivery->label(),
-                'shipping_address' => $delivery->needsAddress() ? $contact['address'] : null,
+                'payment_method' => $payment?->label(),
+                'delivery_method' => $delivery?->label(),
+                'shipping_address' => $delivery?->needsAddress() ? $contact['address'] : null,
                 'comment' => $contact['comment'],
-                'total' => $lines->sum(fn (CartLine $line): float => $line->total()) + $delivery->price(),
+                'total' => $lines->sum(fn (CartLine $line): float => $line->total()) + ($delivery?->price() ?? 0),
             ]);
 
             $order->items()->createMany($lines->map(fn (CartLine $line): array => [

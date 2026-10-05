@@ -36,23 +36,47 @@ class CategoryMenu
 
         $manufacturers = $this->manufacturersByCategory($roots->modelKeys());
 
-        return $roots->map(function (Category $category) use ($manufacturers): array {
-            $children = $category->children->isNotEmpty()
-                ? $category->children->map(fn (Category $child): array => [
-                    'title' => $child->name,
-                    'url' => route('category.show', $child),
-                ])->all()
-                : collect($manufacturers->get($category->id, []))
-                    ->map(fn (object $manufacturer): array => [
-                        'title' => $manufacturer->name,
-                        'url' => route('category.show', ['category' => $category, 'manufacturer' => [$manufacturer->id]]),
-                    ])->all();
+        return $roots->map(fn (Category $category): array => [
+            'category' => $category,
+            'children' => $this->buildLinks($category, $manufacturers->get($category->id, collect())),
+        ]);
+    }
 
-            return [
-                'category' => $category,
-                'children' => count($children) >= self::MIN_MANUFACTURERS || $category->children->isNotEmpty() ? $children : [],
-            ];
-        });
+    /**
+     * Ссылки второго уровня одного раздела — для плиток на странице категории.
+     *
+     * @return list<array{title: string, url: string}>
+     */
+    public function linksFor(Category $category): array
+    {
+        $category->loadMissing(['children' => fn ($query) => $query->where('status', true)->orderBy('sort_order')->orderBy('name')]);
+
+        return $this->buildLinks($category, $this->manufacturersByCategory([$category->id])->get($category->id, collect()));
+    }
+
+    /**
+     * Подкатегории раздела, а если их нет — его производители (от двух).
+     *
+     * @param  Collection<int, object{id: int, name: string}>  $manufacturers
+     * @return list<array{title: string, url: string}>
+     */
+    private function buildLinks(Category $category, Collection $manufacturers): array
+    {
+        if ($category->children->isNotEmpty()) {
+            return $category->children->map(fn (Category $child): array => [
+                'title' => $child->name,
+                'url' => route('category.show', $child),
+            ])->all();
+        }
+
+        if ($manufacturers->count() < self::MIN_MANUFACTURERS) {
+            return [];
+        }
+
+        return $manufacturers->map(fn (object $manufacturer): array => [
+            'title' => $manufacturer->name,
+            'url' => route('category.show', ['category' => $category, 'manufacturer' => [$manufacturer->id]]),
+        ])->values()->all();
     }
 
     /**

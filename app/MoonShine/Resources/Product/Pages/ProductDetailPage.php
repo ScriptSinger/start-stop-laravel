@@ -43,6 +43,7 @@ class ProductDetailPage extends DetailPage
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class),
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class),
             Money::make('Цена', 'price'),
+            Money::make('Цена по акции', 'special_price'),
             Number::make('Остаток', 'quantity'),
             Number::make('Остаток у поставщика', 'supplier_quantity'),
             Money::make('Цена под заказ', 'supplier_price'),

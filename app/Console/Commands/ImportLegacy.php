@@ -18,6 +18,7 @@ class ImportLegacy extends LegacyImportCommand
         $this->call('import:legacy-attributes');
         $this->call('import:legacy-battery');
         $this->call('import:legacy-orders');
+        $this->call('import:legacy-requests');
         $this->call('import:legacy-pages');
         // После страниц: ссылки меню ведут на них.
         $this->call('import:legacy-theme');
@@ -36,17 +37,18 @@ class ImportLegacy extends LegacyImportCommand
             ['oc_ocfilter_filter_value_to_product', 'attribute_value_product'],
             ['oc_battery_base', 'battery_fitments'],
             ['oc_customer', 'customers'],
-            ['oc_order', 'orders'],
+            // Заказы с нового сайта не считаем — только перенесённые.
+            ['oc_order', 'orders', null, fn (): int => DB::table('orders')->where('id', '<=', (int) DB::connection('legacy')->table('oc_order')->max('order_id'))->count()],
             ['oc_information', 'pages'],
         ];
 
         $rows = [];
         foreach ($checks as $check) {
             [$legacyTable, $newTable] = $check;
-            $legacyCount = isset($check[2])
+            $legacyCount = isset($check[2]) && $check[2] !== null
                 ? $check[2]()
                 : DB::connection('legacy')->table($legacyTable)->count();
-            $newCount = DB::table($newTable)->count();
+            $newCount = isset($check[3]) ? $check[3]() : DB::table($newTable)->count();
             $rows[] = [$legacyTable.' → '.$newTable, $legacyCount, $newCount, $legacyCount === $newCount ? 'OK' : 'MISMATCH'];
         }
 

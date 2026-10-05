@@ -21,7 +21,7 @@ class ImportLegacyCategories extends LegacyImportCommand
             ->table('oc_category as c')
             ->join('oc_category_description as cd', 'cd.category_id', '=', 'c.category_id')
             ->where('cd.language_id', 1)
-            ->select('c.*', 'cd.name', 'cd.description')
+            ->select('c.*', 'cd.name', 'cd.description', 'cd.meta_h1', 'cd.meta_title', 'cd.meta_description')
             ->get();
 
         // Сначала все категории без parent_id — родитель может идти после
@@ -33,6 +33,10 @@ class ImportLegacyCategories extends LegacyImportCommand
                     'name' => $this->legacyText($row->name),
                     'slug' => $this->resolveSlug("category_id={$row->category_id}", $this->legacyText($row->name), 'categories', $row->category_id),
                     'description' => $this->legacyText($row->description),
+                    // H1 храним, только если он отличается от названия.
+                    'heading' => trim((string) $this->legacyText($row->meta_h1)) !== trim((string) $this->legacyText($row->name)) ? $this->legacyText($row->meta_h1) : null,
+                    'meta_title' => $this->legacyText($row->meta_title),
+                    'meta_description' => $this->legacyText($row->meta_description),
                     'image' => $row->image ?: null,
                     'sort_order' => $row->sort_order,
                     'status' => (bool) $row->status,

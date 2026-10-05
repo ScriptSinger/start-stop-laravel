@@ -50,17 +50,24 @@
             </div>
 
             <div id="search" class="header-block__item header-block__item-search hidden-xs hidden-sm">
-                <form class="header-search" action="{{ route('home') }}" method="get">
+                <form class="header-search" action="{{ route('search') }}" method="get">
                     <div class="header-search__form">
                         <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск" aria-label="Поиск" autocomplete="off" class="header-search__input form-control" />
+                        <button type="button" class="search-btn-clear {{ filled($search ?? null) ? 'show' : '' }}" aria-label="Очистить">&times;</button>
                         <button type="submit" class="header-search__btn search-btn" title="Поиск"><i class="fa fa-search"></i></button>
                     </div>
                 </form>
             </div>
 
             <div class="header-block__item header-block__item-telephone">
-                <div class="header-phones">
+                <div class="header-phones has-addit">
                     <a class="header-phones__main" href="{{ $phoneHref }}" title="">{{ config('shop.phone') }}</a>
+                    <i class="header-phones__show-phone dropdown-toggle fas fa-chevron-down" data-toggle="dropdown" data-target="header-phones__ul"></i>
+                    <ul class="header-phones__ul dropdown-menu dropdown-menu-right">
+                        <li class="header-phones__li">
+                            <a href="{{ route('callback.create') }}" class="header-phones__callback" data-modal-url="{{ route('callback.create') }}" data-modal-title="Заказать звонок">Заказать звонок</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -148,7 +155,7 @@
                     </nav>
                 </div>
             </div>
+            <div id="search2" class="visible-xs visible-sm"></div>
         </div>
-        <div id="search2" class="visible-xs visible-sm"></div>
     </div>
 </header>

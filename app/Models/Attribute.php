@@ -11,6 +11,7 @@ class Attribute extends Model
     protected $fillable = [
         'name',
         'sort_order',
+        'display_sort_order',
         'is_filterable',
     ];
 

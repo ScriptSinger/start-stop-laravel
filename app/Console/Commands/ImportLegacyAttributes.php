@@ -50,6 +50,15 @@ class ImportLegacyAttributes extends LegacyImportCommand
             );
         }
 
+        // Порядок на карточке — из oc_attribute (id совпадают с фильтрами OCFilter).
+        DB::connection('legacy')
+            ->table('oc_attribute as a')
+            ->join('oc_attribute_group as g', 'g.attribute_group_id', '=', 'a.attribute_group_id')
+            ->get(['a.attribute_id', 'a.sort_order', 'g.sort_order as group_sort_order'])
+            ->each(fn ($attribute) => DB::table('attributes')
+                ->where('id', $attribute->attribute_id)
+                ->update(['display_sort_order' => $attribute->group_sort_order * 100 + $attribute->sort_order]));
+
         $this->info("Импортировано характеристик: {$rows->count()}");
     }
 

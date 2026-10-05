@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\DeliveryMethod;
 use App\Enums\PaymentMethod;
+use App\Rules\PhoneNumber;
 use App\Services\Cart\Cart;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -23,7 +24,7 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30', 'regex:/^[\d\s()+\-]+$/'],
+            'phone' => ['required', 'string', 'max:30', new PhoneNumber],
             'email' => ['nullable', 'email', 'max:255'],
             'delivery' => ['required', Rule::enum(DeliveryMethod::class)],
             'address' => [
@@ -47,12 +48,6 @@ class CheckoutRequest extends FormRequest
     {
         return [
             function (Validator $validator) use ($cart): void {
-                $digits = preg_replace('/\D/', '', (string) $this->input('phone'));
-
-                if ($this->filled('phone') && (strlen($digits) < 10 || strlen($digits) > 15)) {
-                    $validator->errors()->add('phone', 'Проверьте номер телефона: нужно 10–11 цифр.');
-                }
-
                 $delivery = $this->enum('delivery', DeliveryMethod::class);
                 $payment = $this->enum('payment', PaymentMethod::class);
 
@@ -83,7 +78,6 @@ class CheckoutRequest extends FormRequest
             'name.required' => 'Укажите имя.',
             'name.max' => 'Имя слишком длинное.',
             'phone.required' => 'Укажите телефон — по нему мы подтвердим заказ.',
-            'phone.regex' => 'В телефоне могут быть только цифры, пробелы, скобки, «+» и «-».',
             'phone.max' => 'Проверьте номер телефона.',
             'email.email' => 'Проверьте e-mail.',
             'delivery.required' => 'Выберите способ получения.',

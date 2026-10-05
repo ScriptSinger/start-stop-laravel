@@ -113,6 +113,7 @@ class BatterySelection
         return Product::query()
             ->where('status', true)
             ->fitsBattery($fitment)
+            ->withCardData()
             ->orderByRaw('quantity > 0 DESC')
             ->orderByRaw('supplier_quantity >= ? DESC', [config('shop.supplier_order_min_quantity')])
             ->orderBy('price')

@@ -8,6 +8,7 @@ use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
+use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\MenuItem\MenuItemResource;
 use App\MoonShine\Resources\Order\OrderResource;
@@ -40,6 +41,7 @@ final class MoonShineLayout extends AppLayout
         return [
             ...parent::menu(),
             MenuItem::make(OrderResource::class, 'Заказы'),
+            MenuItem::make(CustomerRequestResource::class, 'Заявки'),
             MenuItem::make(CustomerResource::class, 'Клиенты'),
             MenuGroup::make('Каталог', [
                 MenuItem::make(ProductResource::class, 'Товары'),

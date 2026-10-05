@@ -35,7 +35,9 @@
         @else
             <div class="products-block row row-flex">
                 @foreach ($products as $product)
-                    @include('partials.product-card', ['product' => $product])
+                    <div class="product-layout product-grid grid-view col-sm-6 col-md-4 col-lg-4 col-xxl-5">
+                        @include('partials.product-card', ['product' => $product])
+                    </div>
                 @endforeach
             </div>
 

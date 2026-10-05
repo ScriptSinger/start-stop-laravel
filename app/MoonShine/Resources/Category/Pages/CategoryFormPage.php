@@ -40,6 +40,9 @@ class CategoryFormPage extends FormPage
                 Slug::make('Slug', 'slug')->from('name')->unique(),
                 BelongsTo::make('Родительская категория', 'parent', resource: CategoryResource::class)->nullable(),
                 Image::make('Изображение', 'image')->nullable(),
+                Text::make('Иконка в меню', 'icon')
+                    ->nullable()
+                    ->hint('Путь к картинке (catalog/icons/…png) или класс Font Awesome, например «fas fa-tools»'),
                 TinyMce::make('Описание', 'description')->locale('ru')->nullable(),
                 Number::make('Порядок сортировки', 'sort_order')->default(0),
                 Switcher::make('Активна', 'status')->default(true),

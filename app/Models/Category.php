@@ -15,16 +15,22 @@ class Category extends Model
     protected $fillable = [
         'parent_id',
         'name',
+        'heading',
+        'meta_title',
+        'meta_description',
         'slug',
         'description',
         'image',
         'icon',
+        'home_wall_sort',
+        'show_on_parent_wall',
         'sort_order',
         'status',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'show_on_parent_wall' => 'boolean',
     ];
 
     /**
@@ -56,6 +62,16 @@ class Category extends Model
     public function productAttributes(): BelongsToMany
     {
         return $this->belongsToMany(Attribute::class);
+    }
+
+    /**
+     * Производители-ссылки на плитке раздела в «Популярных категориях».
+     */
+    public function wallManufacturers(): BelongsToMany
+    {
+        return $this->belongsToMany(Manufacturer::class, 'category_wall_manufacturer')
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order');
     }
 
     public function products(): BelongsToMany

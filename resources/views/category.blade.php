@@ -1,59 +1,87 @@
 @extends('layouts.app')
 
-@section('title', $category->name.' — '.config('shop.name'))
+@section('title', $category->meta_title ?: $category->name.' — '.config('shop.name'))
+{{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
+@section('meta_description', (string) $category->meta_description)
 
+@push('module-styles')
+    <link href="{{ asset('theme/stylesheet/home-banner.css') }}" rel="stylesheet" media="screen" />
+@endpush
+
+{{-- Разметка — 1:1 с product/category.twig темы UniShop2 старого сайта. --}}
 @section('content')
-    <div class="container">
-        <ul class="breadcrumb">
-            <li><a href="{{ route('home') }}">Главная</a></li>
-            @if ($category->parent)
-                <li><a href="{{ route('category.show', $category->parent) }}">{{ $category->parent->name }}</a></li>
-            @endif
-            <li>{{ $category->name }}</li>
-        </ul>
-
+    <div id="product-category" class="container">
+        <div class="breadcrumb-h1">
+            <ul class="breadcrumb mobile">
+                <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
+                @if ($category->parent)
+                    <li><a href="{{ route('category.show', $category->parent) }}">{{ $category->parent->name }}</a></li>
+                @endif
+                <li>{{ $category->name }}</li>
+            </ul>
+            <h1>{{ $category->heading ?: $category->name }}</h1>
+        </div>
         <div class="row">
-            @include('partials.category-sidebar', ['activeCategory' => $category])
+            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs">
+                @include('partials.catalog-filter')
+            </aside>
+            <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
+                <div class="content-top">
+                    @include('home.banners')
+                </div>
+                <div class="uni-wrapper">
+                    @if ($category->hasDescription())
+                        <div class="category-info">{!! $category->description !!}</div>
+                    @endif
 
-            <div class="col-sm-8 col-md-9">
-                <h1>{{ $category->name }}</h1>
+                    @if ($categoryLinks !== [])
+                        <div class="category-list row row-flex">
+                            @foreach ($categoryLinks as $link)
+                                <div class="col-xxl-2-1 col-lg-2 col-md-2 col-sm-4 col-xs-4">
+                                    <a href="{{ $link['url'] }}" class="category-list__item uni-item-bg" title="{{ $link['title'] }}">
+                                        <span class="category-list__name">{{ $link['title'] }}</span>
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="visible-xs" style="margin:0 0 20px">
+                            <select class="form-control" onchange="location = this.value;" aria-label="Подкатегория">
+                                <option value="">Выберите подкатегорию</option>
+                                @foreach ($categoryLinks as $link)
+                                    <option value="{{ $link['url'] }}">{{ $link['title'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
-                @if ($category->hasDescription())
-                    <div class="category-info__description">{!! $category->description !!}</div>
-                @endif
+                    @include('partials.catalog-sorts')
 
-                @if ($subcategories->isNotEmpty())
-                    <div class="category-list row row-flex">
-                        @foreach ($subcategories as $subcategory)
-                            <div class="col-sm-3">
-                                <a href="{{ route('category.show', $subcategory) }}" class="category-list__item uni-item-bg" title="{{ $subcategory->name }}">
-                                    <span class="category-list__name">{{ $subcategory->name }}</span>
-                                </a>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
+                    @if ($products->isEmpty())
+                        <div class="div-text-empty">
+                            @if ($filter->isActive())
+                                По выбранным условиям ничего не нашлось.
+                                <a href="{{ route('category.show', $category) }}">Сбросить фильтр</a>
+                            @else
+                                В этой категории пока нет товаров.
+                            @endif
+                        </div>
+                    @else
+                        <div class="products-block row row-flex">
+                            @foreach ($products as $product)
+                                <div class="product-layout product-grid grid-view col-sm-6 col-md-4 col-lg-4 col-xxl-5">
+                                    @include('partials.product-card', ['product' => $product])
+                                </div>
+                            @endforeach
+                        </div>
 
-                @if ($products->isEmpty())
-                    <div class="div-text-empty">
-                        @if ($filter->isActive())
-                            По выбранным условиям ничего не нашлось.
-                            <a href="{{ route('category.show', $category) }}">Сбросить фильтр</a>
-                        @else
-                            В этой категории пока нет товаров.
-                        @endif
-                    </div>
-                @else
-                    <div class="products-block row row-flex">
-                        @foreach ($products as $product)
-                            @include('partials.product-card', ['product' => $product])
-                        @endforeach
-                    </div>
-
-                    <div class="pagination-wrap">
                         {{ $products->links() }}
-                    </div>
-                @endif
+                        <div class="pagination-text">Показано с {{ $products->firstItem() }} по {{ $products->lastItem() }} из {{ $products->total() }} (всего {{ $products->lastPage() }} <x-plural :count="$products->lastPage()" forms="страница|страницы|страниц" />)</div>
+                    @endif
+                </div>
+                <div class="content-bottom">
+                    @include('home.advantages')
+                    @include('home.map')
+                </div>
             </div>
         </div>
     </div>

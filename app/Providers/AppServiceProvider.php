@@ -3,11 +3,12 @@
 namespace App\Providers;
 
 use App\Console\Commands\LegacyImportCommand;
-use App\Models\Category;
 use App\View\Composers\BatteryFilterComposer;
 use App\View\Composers\CartCountComposer;
 use App\View\Composers\FooterComposer;
 use App\View\Composers\HeaderComposer;
+use App\View\Composers\SavedProductsCountComposer;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,17 +29,13 @@ class AppServiceProvider extends ServiceProvider
     {
         LegacyImportCommand::prohibit(! config('shop.legacy_import_enabled'));
 
-        // Сайдбар категорий на странице категории и на главной.
-        View::composer('partials.category-sidebar', function ($view): void {
-            $view->with(
-                'menuCategories',
-                Category::whereNull('parent_id')->where('status', true)->orderBy('sort_order')->get(),
-            );
-        });
+        // Разметка пагинации как у темы UniShop2 (ul.pagination Bootstrap 3).
+        Paginator::useBootstrapThree();
 
         View::composer('partials.header', HeaderComposer::class);
         View::composer('partials.footer', FooterComposer::class);
         View::composer('partials.header', CartCountComposer::class);
+        View::composer('partials.header', SavedProductsCountComposer::class);
 
         View::composer('partials.battery-filter', BatteryFilterComposer::class);
     }

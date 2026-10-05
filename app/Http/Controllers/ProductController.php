@@ -3,24 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\Catalog\SimilarProducts;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function show(Product $product): View
+    public function show(Product $product, SimilarProducts $similarProducts): View
     {
-        $product->load(['manufacturer', 'categories', 'images', 'attributeValues.attribute']);
+        abort_unless($product->status, 404);
 
-        // Группируем значения по характеристике (у одного товара может быть
-        // несколько значений одной характеристики — например, технология).
-        $specifications = $product->attributeValues
-            ->sortBy([['attribute.sort_order', 'asc'], ['attribute.name', 'asc'], ['sort_order', 'asc']])
-            ->groupBy('attribute.name')
-            ->map(fn ($values) => $values->pluck('value')->implode(', '));
+        $product->load(['manufacturer', 'categories', 'images', 'attributeValues.attribute']);
 
         return view('product', [
             'product' => $product,
-            'specifications' => $specifications,
+            'specifications' => $product->specifications(),
+            'similarProducts' => $similarProducts->for($product),
         ]);
     }
 }

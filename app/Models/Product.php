@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CatalogSort;
+use App\Enums\ProductSelection;
 use App\Models\Concerns\HasHtmlDescription;
 use App\Services\Catalog\CatalogFilter;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Product extends Model
 {
@@ -18,11 +21,15 @@ class Product extends Model
     protected $fillable = [
         'manufacturer_id',
         'name',
+        'heading',
+        'meta_title',
+        'meta_description',
         'slug',
         'sku',
         'code',
         'description',
         'price',
+        'special_price',
         'quantity',
         'supplier_quantity',
         'supplier_price',
@@ -34,6 +41,7 @@ class Product extends Model
 
     protected $casts = [
         'price' => 'decimal:4',
+        'special_price' => 'decimal:4',
         'supplier_price' => 'decimal:4',
         'trade_in_discount' => 'decimal:4',
         'is_pickup_only' => 'boolean',
@@ -50,13 +58,57 @@ class Product extends Model
     }
 
     /**
-     * Цена для покупателя: под заказ — цена поставщика, если она задана.
+     * Есть цена по акции ниже обычной (на витрине — старая цена зачёркнута).
+     */
+    public function hasSpecial(): bool
+    {
+        return $this->special_price !== null && (float) $this->special_price < (float) $this->price;
+    }
+
+    /**
+     * Цена для покупателя, как в теме OpenCart: цена по акции, иначе под
+     * заказ — цена поставщика (если задана), иначе обычная.
      */
     public function displayPrice(): float
     {
-        return (float) ($this->isAvailableOnOrder() && $this->supplier_price !== null
-            ? $this->supplier_price
-            : $this->price);
+        return (float) match (true) {
+            $this->hasSpecial() => $this->special_price,
+            $this->isAvailableOnOrder() && $this->supplier_price !== null => $this->supplier_price,
+            default => $this->price,
+        };
+    }
+
+    /**
+     * Характеристики в порядке карточки товара: «Напряжение» => «12V».
+     * Несколько значений одной характеристики — через запятую. Нужна
+     * загруженная связь attributeValues.attribute (см. withCardData()).
+     *
+     * @return Collection<string, string>
+     */
+    public function specifications(?int $limit = null): Collection
+    {
+        return $this->attributeValues
+            ->sortBy([['attribute.display_sort_order', 'asc'], ['attribute.name', 'asc'], ['sort_order', 'asc']])
+            ->groupBy('attribute.name')
+            ->map(fn (Collection $values): string => $values->pluck('value')->implode(', '))
+            ->when($limit !== null, fn (Collection $specifications) => $specifications->take($limit));
+    }
+
+    /**
+     * Связи, нужные карточке товара в списках, — без запросов на каждую карточку.
+     */
+    #[Scope]
+    protected function withCardData(Builder $query): void
+    {
+        $query->with('attributeValues.attribute');
+    }
+
+    /**
+     * Скидка по акции в рублях — для наклейки «Ваша скидка: …».
+     */
+    public function specialDiscount(): float
+    {
+        return $this->hasSpecial() ? (float) $this->price - (float) $this->special_price : 0.0;
     }
 
     /**
@@ -116,6 +168,59 @@ class Product extends Model
     }
 
     /**
+     * Поиск как в OpenCart: каждое слово запроса есть в названии,
+     * либо запрос — часть кода товара.
+     */
+    #[Scope]
+    protected function matchingSearch(Builder $query, string $search): void
+    {
+        $words = preg_split('/\s+/u', trim($search), flags: PREG_SPLIT_NO_EMPTY);
+
+        if ($words === []) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where(fn (Builder $query) => $query
+            ->where(function (Builder $query) use ($words): void {
+                foreach ($words as $word) {
+                    $query->whereLike('products.name', '%'.self::escapeLike($word).'%');
+                }
+            })
+            ->orWhereLike('products.code', '%'.self::escapeLike(trim($search)).'%'));
+    }
+
+    /**
+     * «%» и «_» из запроса — обычные символы, а не шаблон LIKE.
+     */
+    private static function escapeLike(string $value): string
+    {
+        return addcslashes($value, '\\%_');
+    }
+
+    /**
+     * Порядок товаров в каталоге. Как на старом сайте (настройка темы
+     * sort_qty = 2), товары в наличии всегда идут первыми. Цена — с учётом
+     * акции; последним ключом id, чтобы товары не «прыгали» между страницами.
+     */
+    #[Scope]
+    protected function sortedBy(Builder $query, CatalogSort $sort): void
+    {
+        $direction = $sort->isDescending() ? 'desc' : 'asc';
+
+        $query->orderByRaw('products.quantity > 0 desc');
+
+        match (true) {
+            $sort->isByPrice() => $query->orderByRaw("COALESCE(products.special_price, products.price) {$direction}"),
+            $sort->isByName() => $query->orderBy('products.name', $direction),
+            default => $query->orderBy('products.name'),
+        };
+
+        $query->orderBy('products.id');
+    }
+
+    /**
      * Можно купить: есть на складе или продаётся под заказ (см. isAvailableOnOrder()).
      */
     #[Scope]
@@ -143,6 +248,18 @@ class Product extends Model
         }
 
         return max($price, 0.0);
+    }
+
+    /**
+     * Товары подборки главной в заданном порядке.
+     */
+    #[Scope]
+    protected function inSelection(Builder $query, ProductSelection $selection): void
+    {
+        $query->join('product_selection', 'product_selection.product_id', '=', 'products.id')
+            ->where('product_selection.selection', $selection)
+            ->orderBy('product_selection.sort_order')
+            ->select('products.*');
     }
 
     public function getRouteKeyName(): string

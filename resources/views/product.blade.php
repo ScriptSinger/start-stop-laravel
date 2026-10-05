@@ -1,107 +1,254 @@
 @extends('layouts.app')
 
-@section('title', $product->name.' — '.config('shop.name'))
+@section('title', $product->meta_title ?: ($product->heading ?: $product->name).' — '.config('shop.name'))
+{{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
+@section('meta_description', (string) $product->meta_description)
+
+@push('module-styles')
+    @foreach (['goodshare', 'product-page', 'request'] as $stylesheet)
+        <link href="{{ asset("theme/stylesheet/{$stylesheet}.css") }}" rel="stylesheet" media="screen" />
+    @endforeach
+@endpush
+
+{{-- Разметка — 1:1 с product/product.twig темы UniShop2 старого сайта. --}}
+@php($category = $product->categories->first())
+@php($image = Illuminate\Support\Facades\Storage::disk('public')->url($product->image ?: 'no_image.png'))
+@php($heading = $product->heading ?: $product->name)
+@php([$availabilityText, $availabilityClass] = match (true) {
+    $product->quantity > 0 => ['В наличии', 't-5'],
+    $product->isAvailableOnOrder() => ['Под заказ', 't-2'],
+    default => ['Нет в наличии — уточним срок по телефону', 't-1'],
+})
 
 @section('content')
     <div class="container">
-        <ul class="breadcrumb">
-            <li><a href="{{ route('home') }}">Главная</a></li>
-            @foreach ($product->categories as $category)
-                <li><a href="{{ route('category.show', $category) }}">{{ $category->name }}</a></li>
-            @endforeach
-            <li>{{ $product->name }}</li>
-        </ul>
+        <div class="breadcrumb-h1">
+            <ul class="breadcrumb mobile">
+                <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
+                @if ($category)
+                    <li><a href="{{ route('category.show', $category) }}">{{ $category->name }}</a></li>
+                    @if ($product->manufacturer)
+                        <li><a href="{{ route('category.show', ['category' => $category, 'manufacturer' => [$product->manufacturer->id]]) }}">{{ $product->manufacturer->name }}</a></li>
+                    @endif
+                @endif
+            </ul>
+            <h1>{{ $heading }}</h1>
+        </div>
+
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
 
         <div class="row">
-            <div class="col-sm-5">
-                @php($image = $product->image ? Illuminate\Support\Facades\Storage::disk('public')->url($product->image) : Illuminate\Support\Facades\Storage::disk('public')->url('no_image.png'))
-                <img src="{{ $image }}" alt="{{ $product->name }}" class="img-responsive img-thumbnail" />
+            <div id="content" class="col-sm-12">
+                <div id="product" class="uni-wrapper">
+                    <div class="row">
+                        <div class="product-page col-sm-12 col-md-12 col-lg-10">
+                            <div class="row">
+                                <div class="product-page__image col-sm-6">
+                                    <div class="product-page__image-main">
+                                        @if ($product->hasSpecial() || $product->hasTradeIn() || $product->is_pickup_only)
+                                            <div class="sticker">
+                                                @if ($product->hasSpecial())
+                                                    <div class="sticker__item special">Ваша скидка: {{ number_format($product->specialDiscount(), 0, '', '') }}р.</div>
+                                                @endif
+                                                @if ($product->hasTradeIn())
+                                                    <div class="sticker__item ean">Трейд-ин {{ number_format((float) $product->trade_in_discount, 0, '', '') }} руб.</div>
+                                                @endif
+                                                @if ($product->is_pickup_only)
+                                                    <div class="sticker__item jan">Только самовывоз</div>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        <div class="product-page__image-main-carousel">
+                                            <img src="{{ $image }}" alt="{{ $heading }}" title="{{ $heading }}" width="500" height="400" class="product-page__image-main-img img-responsive" id="product-main-image" />
+                                        </div>
+                                    </div>
+                                    @if ($product->images->isNotEmpty())
+                                        <div class="product-page__image-addit">
+                                            @foreach ([$product->image, ...$product->images->pluck('path')] as $path)
+                                                @if ($path)
+                                                    @php($url = Illuminate\Support\Facades\Storage::disk('public')->url($path))
+                                                    <img src="{{ $url }}" alt="{{ $heading }}" class="product-page__image-addit-img img-responsive" data-full="{{ $url }}" width="74" height="74" loading="lazy" />
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
 
-                @if ($product->images->isNotEmpty())
-                    <div class="row" style="margin-top: 10px;">
-                        @foreach ($product->images as $extraImage)
-                            <div class="col-sm-3">
-                                <img src="{{ Illuminate\Support\Facades\Storage::disk('public')->url($extraImage->path) }}" alt="{{ $product->name }}" class="img-responsive img-thumbnail" />
+                                <div class="product-block col-sm-6">
+                                    <div class="product-data">
+                                        @if ($product->code)
+                                            <div class="product-data__item"><div class="product-data__item-div">Код товара:</div> {{ $product->code }}</div>
+                                        @endif
+                                        @if ($product->manufacturer)
+                                            <div class="product-data__item"><div class="product-data__item-div">Производитель:</div> {{ $product->manufacturer->name }}</div>
+                                        @endif
+                                    </div>
+
+                                    <div class="qty-indicator" data-text="Наличие:">
+                                        <div class="qty-indicator__text {{ $availabilityClass }}"> {{ $availabilityText }} </div>
+                                    </div>
+                                    @if ($product->is_pickup_only)
+                                        <div class="text-muted">Только самовывоз</div>
+                                    @endif
+
+                                    <div class="product-page__price price">
+                                        @if ($product->hasSpecial())
+                                            <span class="price-old">{{ number_format((float) $product->price, 0, '', '') }}р.</span><span class="price-new">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
+                                        @else
+                                            {{ number_format($product->displayPrice(), 0, '', '') }}р.
+                                        @endif
+                                    </div>
+
+                                    <form method="post" action="{{ route('cart.store', $product) }}" id="product-cart-form">
+                                        @csrf
+                                        @if ($product->hasTradeIn())
+                                            <div class="product-page__option option row">
+                                                <div class="option__group col-xs-12">
+                                                    <label class="option__group-name">Выберите:</label>
+                                                    <div>
+                                                        <label class="option__item" data-toggle="tooltip" title="- {{ number_format((float) $product->trade_in_discount, 0, '', '') }}р.">
+                                                            <input type="checkbox" name="trade_in" value="1" />
+                                                            <span class="option__name"><i class="fa fa-recycle fa-fw"></i> <span class="option__tit">Трейд-ин</span> <span class="option__val"> {{ number_format($product->priceFor(true), 0, '', '') }}р. </span></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        <div class="product-page__cart">
+                                            <div class="qty-switch">
+                                                <input type="text" name="quantity" value="1" data-minimum="1" data-maximum="{{ \App\Services\Cart\Cart::MAX_QUANTITY }}" class="qty-switch__input form-control" aria-label="Количество" inputmode="numeric" />
+                                                <div>
+                                                    <i class="qty-switch__btn fa fa-plus" data-step="1"></i>
+                                                    <i class="qty-switch__btn fa fa-minus" data-step="-1"></i>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="product-page__add-to-cart add_to_cart btn btn-xl">
+                                                @if ($product->isAvailableOnOrder())
+                                                    <i class="fa fa-truck"></i><span>Заказать</span>
+                                                @else
+                                                    <i class="fa fa-shopping-bag"></i><span>В корзину</span>
+                                                @endif
+                                            </button>
+                                            <a href="{{ route('quick-order.create', $product) }}" class="product-page__quick-order quick-order btn btn-lg btn-xl" title="Быстрый заказ" aria-label="Быстрый заказ" data-modal-url="{{ route('quick-order.create', $product) }}" data-modal-title="Быстрый заказ"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
+                                        </div>
+                                        <button type="submit" title="В закладки" class="product-page__wishlist-btn wishlist" formaction="{{ route('wishlist.store', $product) }}" data-saved-list="wishlist"><i class="far fa-heart"></i><span>В закладки</span></button>
+                                        <button type="submit" title="В сравнение" class="product-page__compare-btn compare" formaction="{{ route('compare.store', $product) }}" data-saved-list="compare"><i class="fas fa-align-right"></i><span>В сравнение</span></button>
+                                    </form>
+
+                                    @if (($shortSpecifications = $specifications->take(6))->isNotEmpty())
+                                        <div class="product-page__short-attribute product-data">
+                                            @foreach ($shortSpecifications as $name => $value)
+                                                <div class="product-data__item"><div class="product-data__item-div">{{ $name }}</div>{{ $value }}</div>
+                                            @endforeach
+                                        </div>
+                                        <a class="product-page__more-attr" href="#tab-specification" data-show-tab="#tab-specification">Все характеристики</a>
+                                    @endif
+
+                                    <div class="product-page__share">
+                                        <div id="goodshare" data-socials="vkontakte,telegram"></div>
+                                    </div>
+                                </div>
                             </div>
-                        @endforeach
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-2">
+                            <div class="product-banner row row-flex">
+                                @foreach (config('shop.product_banners') as $banner)
+                                    <div class="col-xs-6 col-sm-4 col-md-4 col-lg-12">
+                                        <div class="product-banner__item">
+                                            <i class="product-banner__icon {{ $banner['icon'] }} fa-fw"></i>
+                                            <div class="product-banner__text">
+                                                <span class="product-banner__text-span">{{ $banner['text'] }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
-                @endif
-            </div>
 
-            <div class="col-sm-7">
-                <h1>{{ $product->name }}</h1>
-
-                @if ($product->code)
-                    <div>Код товара: {{ $product->code }}</div>
-                @endif
-
-                @if ($product->sku)
-                    <div class="product-thumb__model" data-text="Артикул">{{ $product->sku }}</div>
-                @endif
-
-                @if ($product->manufacturer)
-                    <div>Производитель: {{ $product->manufacturer->name }}</div>
-                @endif
-
-                <div class="price" style="font-size: 28px; margin: 15px 0;">
-                    {{ number_format($product->displayPrice(), 0, ',', ' ') }} р.
+                    <div class="hidden-xs hidden-sm" style="height:20px"></div>
+                    <div>
+                        <ul class="product-page-tabs nav nav-tabs">
+                            @if ($product->hasDescription())
+                                <li class="active"><a href="#tab-description" data-toggle="tab">Описание</a></li>
+                            @endif
+                            @if ($specifications->isNotEmpty())
+                                <li class="{{ $product->hasDescription() ? '' : 'active' }}"><a href="#tab-specification" data-toggle="tab">Характеристики</a></li>
+                            @endif
+                            <li class="{{ $product->hasDescription() || $specifications->isNotEmpty() ? '' : 'active' }}"><a href="#tab-question" class="tab-question" data-toggle="tab">Вопрос-ответ</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            @if ($product->hasDescription())
+                                <div class="tab-pane active" id="tab-description">{!! $product->description !!}</div>
+                            @endif
+                            @if ($specifications->isNotEmpty())
+                                <div class="tab-pane {{ $product->hasDescription() ? '' : 'active' }}" id="tab-specification">
+                                    <div class="product-data">
+                                        @foreach ($specifications as $name => $value)
+                                            <div class="product-data__item">
+                                                <div class="product-data__item-div">{{ $name }}</div>
+                                                <div class="product-data__item-div">{{ $value }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="tab-pane {{ $product->hasDescription() || $specifications->isNotEmpty() ? '' : 'active' }}" id="tab-question">
+                                <div class="question-info">
+                                    <p>Есть вопрос о товаре? Напишите — мы перезвоним и ответим.</p>
+                                    <a href="{{ route('product-question.create', $product) }}" class="btn btn-sm btn-primary" data-modal-url="{{ route('product-question.create', $product) }}" data-modal-title="Задать вопрос">Задать вопрос</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                @if ($product->quantity > 0)
-                    <div class="text-success" style="margin-bottom: 10px;">В наличии</div>
-                @elseif ($product->isAvailableOnOrder())
-                    <div style="margin-bottom: 10px;">Под заказ</div>
-                @else
-                    <div class="text-muted" style="margin-bottom: 10px;">Нет в наличии — уточним срок по телефону</div>
-                @endif
-
-                @if ($product->is_pickup_only)
-                    <div class="text-muted" style="margin-bottom: 10px;">Только самовывоз</div>
-                @endif
-
-                <form method="post" action="{{ route('cart.store', $product) }}" class="form-inline">
-                    @csrf
-                    @if ($product->hasTradeIn())
-                        <div class="checkbox" style="display: block; margin-bottom: 10px;">
-                            <label>
-                                <input type="checkbox" name="trade_in" value="1">
-                                Сдаю старый аккумулятор: −{{ number_format((float) $product->trade_in_discount, 0, ',', ' ') }} р.
-                                (цена {{ number_format($product->priceFor(true), 0, ',', ' ') }} р.)
-                            </label>
-                        </div>
-                    @endif
-                    <input type="number" name="quantity" value="1" min="1" max="{{ \App\Services\Cart\Cart::MAX_QUANTITY }}" class="form-control input-lg" style="width: 90px;" aria-label="Количество">
-                    @if ($product->isAvailableOnOrder())
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fa fa-truck"></i> Заказать
-                        </button>
-                    @else
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-shopping-cart"></i> В корзину
-                        </button>
-                    @endif
-                </form>
-
-                @if ($specifications->isNotEmpty())
-                    <h3 style="margin-top: 30px;">Характеристики</h3>
-                    <table class="table table-striped">
-                        <tbody>
-                            @foreach ($specifications as $name => $value)
-                                <tr>
-                                    <td>{{ $name }}</td>
-                                    <td>{{ $value }}</td>
-                                </tr>
+                @if ($similarProducts->isNotEmpty())
+                    <div class="heading">Похожие товары</div>
+                    <div class="uni-module similar-products">
+                        <div class="uni-module__wrapper">
+                            @foreach ($similarProducts as $similarProduct)
+                                @include('partials.product-card', ['product' => $similarProduct])
                             @endforeach
-                        </tbody>
-                    </table>
-                @endif
-
-                @if ($product->hasDescription())
-                    <div class="product-page" style="margin-top: 30px;">
-                        {!! $product->description !!}
+                        </div>
                     </div>
                 @endif
+
+                <div class="content-bottom">
+                    @include('home.advantages')
+                    @include('home.map')
+                </div>
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('theme/js/goodshare.min.js') }}"></script>
+    <script>
+        $('.similar-products').uniModules({type: 'carousel'});
+
+        // Количество: кнопки «+» и «−» (qty-switch темы).
+        $('.qty-switch__btn').on('click', function () {
+            const input = $(this).closest('.qty-switch').find('.qty-switch__input');
+            const value = (parseInt(input.val(), 10) || 1) + Number($(this).data('step'));
+
+            input.val(Math.min(Math.max(value, input.data('minimum')), input.data('maximum')));
+        });
+
+        // Доп. фото: клик — показать крупно.
+        $('.product-page__image-addit-img').on('click', function () {
+            $('#product-main-image').attr('src', $(this).data('full'));
+        });
+
+        // «Все характеристики» — открыть вкладку и прокрутить к ней.
+        $('[data-show-tab]').on('click', function (e) {
+            e.preventDefault();
+            $('a[href="' + $(this).data('show-tab') + '"]').tab('show');
+            $('html, body').animate({scrollTop: $('.product-page-tabs').offset().top - 20}, 300);
+        });
+    </script>
+@endpush

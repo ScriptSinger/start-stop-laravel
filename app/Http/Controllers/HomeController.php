@@ -2,30 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Enums\BannerPosition;
+use App\Enums\ProductSelection;
+use App\Models\Banner;
 use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Services\Catalog\CategoryWall;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(Request $request): View
+    public function index(CategoryWall $categoryWall): View
     {
-        $search = trim((string) $request->query('search', ''));
-
-        $products = Product::query()
-            ->where('status', true)
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
-            ->latest('id')
-            ->paginate(24)
-            ->withQueryString();
-
         return view('home', [
-            'products' => $products,
-            'search' => $search,
-            // Нужны тут же явно (не только в партиалах через composer) —
-            // плитки "Популярные категории" рендерятся прямо в теле home.blade.php.
-            'menuCategories' => Category::whereNull('parent_id')->where('status', true)->orderBy('sort_order')->get(),
+            'sliderBanners' => Banner::query()->shownAt(BannerPosition::HomeSlider)->get(),
+            'stripBanners' => Banner::query()->shownAt(BannerPosition::HomeStrip)->get(),
+            'categoryWall' => $categoryWall->items(),
+            'selections' => collect(ProductSelection::cases())->mapWithKeys(fn (ProductSelection $selection): array => [
+                $selection->value => Product::query()->inSelection($selection)->where('products.status', true)->withCardData()->get(),
+            ]),
         ]);
     }
 }

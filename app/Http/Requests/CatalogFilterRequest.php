@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CatalogSort;
 use App\Services\Catalog\CatalogFilter;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,6 +26,21 @@ class CatalogFilterRequest extends FormRequest
     public function rules(): array
     {
         return [];
+    }
+
+    /** Варианты «товаров на странице», как на старом сайте. */
+    public const PER_PAGE_OPTIONS = [24, 25, 50, 75, 100];
+
+    public function sort(): CatalogSort
+    {
+        return CatalogSort::tryFrom($this->string('sort')->toString()) ?? CatalogSort::fallback();
+    }
+
+    public function perPage(): int
+    {
+        $perPage = $this->integer('limit');
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::PER_PAGE_OPTIONS[0];
     }
 
     /**
