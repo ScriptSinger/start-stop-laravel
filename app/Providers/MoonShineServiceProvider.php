@@ -10,6 +10,10 @@ use MoonShine\Laravel\DependencyInjection\MoonShine;
 use MoonShine\Laravel\DependencyInjection\MoonShineConfigurator;
 use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
+use App\MoonShine\Resources\Product\ProductResource;
+use App\MoonShine\Resources\Category\CategoryResource;
+use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -22,6 +26,10 @@ class MoonShineServiceProvider extends ServiceProvider
             ->resources([
                 MoonShineUserResource::class,
                 MoonShineUserRoleResource::class,
+                ProductResource::class,
+                CategoryResource::class,
+                BatteryFitmentResource::class,
+                ManufacturerResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

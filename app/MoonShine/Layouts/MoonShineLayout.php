@@ -9,6 +9,11 @@ use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
+use App\MoonShine\Resources\Product\ProductResource;
+use MoonShine\MenuManager\MenuItem;
+use App\MoonShine\Resources\Category\CategoryResource;
+use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -28,6 +33,10 @@ final class MoonShineLayout extends AppLayout
     {
         return [
             ...parent::menu(),
+            MenuItem::make(ProductResource::class, 'Products'),
+            MenuItem::make(CategoryResource::class, 'Categories'),
+            MenuItem::make(BatteryFitmentResource::class, 'BatteryFitments'),
+            MenuItem::make(ManufacturerResource::class, 'Manufacturers'),
         ];
     }
 

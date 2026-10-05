@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
+            // Снимок данных заказчика на момент заказа — не завязываем историю
+            // заказов на то, что запись клиента не изменится/не удалится.
+            $table->string('customer_name');
+            $table->string('customer_phone')->nullable();
+            $table->string('customer_email')->nullable();
+            $table->string('status')->default('new');
+            $table->string('payment_method')->nullable();
+            $table->decimal('total', 15, 4)->default(0);
+            $table->text('shipping_address')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('orders');
+    }
+};
