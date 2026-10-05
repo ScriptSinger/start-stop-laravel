@@ -107,6 +107,24 @@ class BatterySelectionTest extends TestCase
             ->assertSee('Аккумуляторы для Kia Rio');
     }
 
+    public function test_selector_steps_return_models_and_generations(): void
+    {
+        $this->fitment();
+        $this->fitment(['model' => 'Kia Rio', 'generation' => null]);
+
+        $this->getJson(route('battery-filter.models', ['brand' => 'Kia']))
+            ->assertOk()
+            ->assertExactJson([['model' => 'Kia Rio'], ['model' => 'Rio']]);
+
+        $this->getJson(route('battery-filter.generations', ['brand' => 'Kia', 'model' => 'Kia Rio']))
+            ->assertOk()
+            ->assertJsonPath('0.name', 'Стандарт');
+
+        $this->getJson(route('battery-filter.generations', ['brand' => 'Kia', 'model' => 'Rio']))
+            ->assertOk()
+            ->assertJsonPath('0.name', 'Kia Rio IV 2017 - 2020');
+    }
+
     public function test_fitment_without_data_is_not_found(): void
     {
         BatteryFitment::query()->create(['brand' => 'Lada', 'model' => 'Niva']);

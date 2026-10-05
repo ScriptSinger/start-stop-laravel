@@ -39,6 +39,7 @@ class OrderItemIndexPage extends IndexPage
             BelongsTo::make('Товар', 'product', resource: ProductResource::class),
             Text::make('Название', 'name'),
             Money::make('Цена', 'price'),
+            Money::make('Скидка за обмен АКБ', 'trade_in_discount'),
             Number::make('Кол-во', 'quantity'),
             Money::make('Сумма', 'total'),
         ];

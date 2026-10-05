@@ -52,9 +52,9 @@
                 <i class="fas fa-align-right" title="Сравнение"></i>
                 <span class="badge" style="position: absolute; top: -10px; right: -10px;">0</span>
             </span>
-            <a href="#" style="position: relative; color: inherit;" title="Корзина">
+            <a href="{{ route('cart.index') }}" style="position: relative; color: inherit;" title="Корзина">
                 <i class="fas fa-shopping-cart"></i>
-                <span class="badge" style="position: absolute; top: -10px; right: -10px;">0</span>
+                <span class="badge" style="position: absolute; top: -10px; right: -10px;">{{ $cartCount ?? 0 }}</span>
             </a>
         </div>
     </div>

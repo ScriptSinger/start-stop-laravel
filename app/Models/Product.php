@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Http\Requests\CatalogFilterRequest;
 use App\Models\Concerns\HasHtmlDescription;
+use App\Services\Catalog\CatalogFilter;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +26,8 @@ class Product extends Model
         'quantity',
         'supplier_quantity',
         'supplier_price',
+        'trade_in_discount',
+        'is_pickup_only',
         'image',
         'status',
     ];
@@ -33,6 +35,8 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:4',
         'supplier_price' => 'decimal:4',
+        'trade_in_discount' => 'decimal:4',
+        'is_pickup_only' => 'boolean',
         'status' => 'boolean',
     ];
 
@@ -87,34 +91,26 @@ class Product extends Model
     }
 
     /**
-     * Фильтр каталога. $except — условие, которое не применять: так считаются
-     * счётчики в блоке фильтра («сколько будет, если отметить ещё и это»).
-     * Значения: 'manufacturer' или 'attr:<id характеристики>'.
+     * Фильтр каталога: производитель, характеристики, цена, наличие.
      */
     #[Scope]
-    protected function catalogFilter(Builder $query, CatalogFilterRequest $filter, ?string $except = null): void
+    protected function catalogFilter(Builder $query, CatalogFilter $filter): void
     {
-        $manufacturerIds = $filter->manufacturerIds();
-
-        if ($manufacturerIds !== [] && $except !== 'manufacturer') {
-            $query->whereIn('manufacturer_id', $manufacturerIds);
+        if ($filter->manufacturerIds !== []) {
+            $query->whereIn('manufacturer_id', $filter->manufacturerIds);
         }
 
-        $query->withAttributeValues(array_filter(
-            $filter->attributeValueIds(),
-            fn (int $attributeId): bool => $except !== "attr:{$attributeId}",
-            ARRAY_FILTER_USE_KEY,
-        ));
+        $query->withAttributeValues($filter->attributeValueIds);
 
-        if (($priceFrom = $filter->priceFrom()) !== null) {
-            $query->where('price', '>=', $priceFrom);
+        if ($filter->priceFrom !== null) {
+            $query->where('price', '>=', $filter->priceFrom);
         }
 
-        if (($priceTo = $filter->priceTo()) !== null) {
-            $query->where('price', '<=', $priceTo);
+        if ($filter->priceTo !== null) {
+            $query->where('price', '<=', $filter->priceTo);
         }
 
-        if ($filter->onlyAvailable()) {
+        if ($filter->onlyAvailable) {
             $query->available();
         }
     }
@@ -128,6 +124,25 @@ class Product extends Model
         $query->where(fn (Builder $query) => $query
             ->where('quantity', '>', 0)
             ->orWhere('supplier_quantity', '>=', config('shop.supplier_order_min_quantity')));
+    }
+
+    public function hasTradeIn(): bool
+    {
+        return $this->trade_in_discount !== null && (float) $this->trade_in_discount > 0;
+    }
+
+    /**
+     * Цена за единицу для покупателя с учётом трейд-ина (сдаёт старый АКБ).
+     */
+    public function priceFor(bool $withTradeIn): float
+    {
+        $price = $this->displayPrice();
+
+        if ($withTradeIn && $this->hasTradeIn()) {
+            $price -= (float) $this->trade_in_discount;
+        }
+
+        return max($price, 0.0);
     }
 
     public function getRouteKeyName(): string

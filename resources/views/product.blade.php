@@ -47,17 +47,40 @@
                     {{ number_format($product->displayPrice(), 0, ',', ' ') }} р.
                 </div>
 
-                {{-- Кнопка визуальная — корзина не подключена, это Фаза 5 плана миграции. --}}
-                @if ($product->isAvailableOnOrder())
+                @if ($product->quantity > 0)
+                    <div class="text-success" style="margin-bottom: 10px;">В наличии</div>
+                @elseif ($product->isAvailableOnOrder())
                     <div style="margin-bottom: 10px;">Под заказ</div>
-                    <button type="button" class="btn btn-primary btn-lg">
-                        <i class="fa fa-truck"></i> Заказать
-                    </button>
                 @else
-                    <button type="button" class="btn btn-primary btn-lg">
-                        <i class="fas fa-shopping-cart"></i> В корзину
-                    </button>
+                    <div class="text-muted" style="margin-bottom: 10px;">Нет в наличии — уточним срок по телефону</div>
                 @endif
+
+                @if ($product->is_pickup_only)
+                    <div class="text-muted" style="margin-bottom: 10px;">Только самовывоз</div>
+                @endif
+
+                <form method="post" action="{{ route('cart.store', $product) }}" class="form-inline">
+                    @csrf
+                    @if ($product->hasTradeIn())
+                        <div class="checkbox" style="display: block; margin-bottom: 10px;">
+                            <label>
+                                <input type="checkbox" name="trade_in" value="1">
+                                Сдаю старый аккумулятор: −{{ number_format((float) $product->trade_in_discount, 0, ',', ' ') }} р.
+                                (цена {{ number_format($product->priceFor(true), 0, ',', ' ') }} р.)
+                            </label>
+                        </div>
+                    @endif
+                    <input type="number" name="quantity" value="1" min="1" max="{{ \App\Services\Cart\Cart::MAX_QUANTITY }}" class="form-control input-lg" style="width: 90px;" aria-label="Количество">
+                    @if ($product->isAvailableOnOrder())
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fa fa-truck"></i> Заказать
+                        </button>
+                    @else
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-shopping-cart"></i> В корзину
+                        </button>
+                    @endif
+                </form>
 
                 @if ($specifications->isNotEmpty())
                     <h3 style="margin-top: 30px;">Характеристики</h3>

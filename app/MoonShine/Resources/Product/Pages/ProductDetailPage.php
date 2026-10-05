@@ -46,6 +46,8 @@ class ProductDetailPage extends DetailPage
             Number::make('Остаток', 'quantity'),
             Number::make('Остаток у поставщика', 'supplier_quantity'),
             Money::make('Цена под заказ', 'supplier_price'),
+            Money::make('Скидка при обмене (трейд-ин)', 'trade_in_discount'),
+            Switcher::make('Только самовывоз', 'is_pickup_only'),
             Textarea::make('Описание', 'description'),
             Switcher::make('Активен', 'status'),
         ];

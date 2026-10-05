@@ -15,8 +15,10 @@ class Order extends Model
         'customer_email',
         'status',
         'payment_method',
+        'delivery_method',
         'total',
         'shipping_address',
+        'comment',
     ];
 
     /**

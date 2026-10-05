@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\DecodesLegacyText;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 #[Description('Импорт клиентов и заказов (с позициями) из старого проекта')]
 class ImportLegacyOrders extends Command
 {
+    use DecodesLegacyText;
+
     public function handle(): int
     {
         $this->importCustomers();
@@ -54,7 +57,15 @@ class ImportLegacyOrders extends Command
 
         $rows = DB::connection('legacy')->table('oc_order')->get();
 
-        $this->withProgressBar($rows, function ($row) use ($knownCustomerIds, $knownProductIds, $statusNames): void {
+        // Трейд-ин в позициях: выбранная опция «Цена при обмене» → её скидка.
+        // Цена позиции в OpenCart уже включает эту скидку.
+        $tradeInDiscounts = DB::connection('legacy')
+            ->table('oc_order_option as oo')
+            ->join('oc_product_option_value as pov', 'pov.product_option_value_id', '=', 'oo.product_option_value_id')
+            ->where('pov.price_prefix', '-')
+            ->pluck('pov.price', 'oo.order_product_id');
+
+        $this->withProgressBar($rows, function ($row) use ($knownCustomerIds, $knownProductIds, $statusNames, $tradeInDiscounts): void {
             $customerId = in_array($row->customer_id, $knownCustomerIds, true)
                 ? $row->customer_id
                 : null;
@@ -67,7 +78,8 @@ class ImportLegacyOrders extends Command
                     'customer_phone' => $row->telephone ?: null,
                     'customer_email' => $row->email ?: null,
                     'status' => $statusNames[$row->order_status_id] ?? 'unknown',
-                    'payment_method' => $row->payment_method ?: null,
+                    'payment_method' => $this->methodLabel($row->payment_method),
+                    'delivery_method' => $this->methodLabel($row->shipping_method),
                     'total' => $row->total,
                     'shipping_address' => trim("{$row->shipping_address_1} {$row->shipping_address_2} {$row->shipping_city}"),
                     'updated_at' => $row->date_modified,
@@ -88,6 +100,7 @@ class ImportLegacyOrders extends Command
                     'product_id' => in_array($item->product_id, $knownProductIds, true) ? $item->product_id : null,
                     'name' => $item->name,
                     'price' => $item->price,
+                    'trade_in_discount' => $tradeInDiscounts[$item->order_product_id] ?? null,
                     'quantity' => $item->quantity,
                     'total' => $item->total,
                     'created_at' => now(),
@@ -98,5 +111,17 @@ class ImportLegacyOrders extends Command
 
         $this->newLine(2);
         $this->info("Импортировано заказов: {$rows->count()}");
+    }
+
+    /**
+     * Подпись способа оплаты/доставки из заказа OpenCart: закодирована в
+     * HTML-сущности и с <br> («Самовывоз: Магазин &quot;СТАРТ-СТОП&quot;<br>Время
+     * работы: 10-20»). Плейсхолдер «Выберите … для этого заказа» — не способ.
+     */
+    private function methodLabel(?string $value): ?string
+    {
+        $label = trim(strip_tags(str_ireplace(['<br>', '<br/>', '<br />'], ', ', (string) $this->legacyText($value))));
+
+        return $label === '' || str_starts_with($label, 'Выберите') ? null : $label;
     }
 }

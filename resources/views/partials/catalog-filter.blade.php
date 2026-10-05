@@ -1,7 +1,5 @@
 {{-- Фильтр каталога: внутри блока значения через «ИЛИ», между блоками — «И».
      Число рядом со значением — сколько товаров будет с учётом остальных условий. --}}
-@php($selectedManufacturers = $filter->manufacturerIds())
-@php($selectedValues = $filter->attributeValueIds())
 
 <form method="get" action="{{ route('category.show', $category) }}" class="catalog-filter" id="catalog-filter" style="margin-top: 20px;">
     <div class="heading">Фильтр</div>
@@ -9,7 +7,7 @@
     <div class="catalog-filter__group form-group">
         <div class="checkbox">
             <label>
-                <input type="checkbox" name="available" value="1" @checked($filter->onlyAvailable())>
+                <input type="checkbox" name="available" value="1" @checked($filter->onlyAvailable)>
                 Есть в наличии или под заказ
             </label>
         </div>
@@ -20,13 +18,13 @@
         <div class="row" style="margin-top: 5px;">
             <div class="col-xs-6">
                 <input type="number" min="0" name="price_from" class="form-control input-sm"
-                       value="{{ $filter->priceFrom() !== null ? (int) $filter->priceFrom() : '' }}"
-                       placeholder="от {{ (int) ($priceBounds->min_price ?? 0) }}">
+                       value="{{ $filter->priceFrom !== null ? (int) $filter->priceFrom : '' }}"
+                       placeholder="от {{ (int) $priceBounds['min'] }}">
             </div>
             <div class="col-xs-6">
                 <input type="number" min="0" name="price_to" class="form-control input-sm"
-                       value="{{ $filter->priceTo() !== null ? (int) $filter->priceTo() : '' }}"
-                       placeholder="до {{ (int) ($priceBounds->max_price ?? 0) }}">
+                       value="{{ $filter->priceTo !== null ? (int) $filter->priceTo : '' }}"
+                       placeholder="до {{ (int) $priceBounds['max'] }}">
             </div>
         </div>
     </div>
@@ -40,7 +38,7 @@
                 'label' => $manufacturer->name,
                 'count' => $manufacturer->count,
             ]),
-            'selected' => $selectedManufacturers,
+            'selected' => $filter->manufacturerIds,
         ])
     @endif
 
@@ -53,7 +51,7 @@
                 'label' => $value->value,
                 'count' => $value->count,
             ]),
-            'selected' => $selectedValues[$attribute->id] ?? [],
+            'selected' => $filter->selectedValueIds($attribute->id),
         ])
     @endforeach
 

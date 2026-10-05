@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Catalog\CatalogFilter;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -27,19 +28,23 @@ class CatalogFilterRequest extends FormRequest
     }
 
     /**
-     * @return list<int>
+     * Разбор адресной строки в объект фильтра; дальше с запросом никто не работает.
      */
-    public function manufacturerIds(): array
+    public function toFilter(): CatalogFilter
     {
-        return self::positiveInts($this->query('manufacturer'));
+        return new CatalogFilter(
+            manufacturerIds: self::positiveInts($this->query('manufacturer')),
+            attributeValueIds: $this->attributeValueIds(),
+            priceFrom: self::price($this->query('price_from')),
+            priceTo: self::price($this->query('price_to')),
+            onlyAvailable: $this->boolean('available'),
+        );
     }
 
     /**
-     * id характеристики → выбранные id значений.
-     *
      * @return array<int, list<int>>
      */
-    public function attributeValueIds(): array
+    private function attributeValueIds(): array
     {
         $attributes = $this->query('attr');
 
@@ -58,30 +63,6 @@ class CatalogFilterRequest extends FormRequest
         }
 
         return $selected;
-    }
-
-    public function priceFrom(): ?float
-    {
-        return self::price($this->query('price_from'));
-    }
-
-    public function priceTo(): ?float
-    {
-        return self::price($this->query('price_to'));
-    }
-
-    public function onlyAvailable(): bool
-    {
-        return $this->boolean('available');
-    }
-
-    public function isActive(): bool
-    {
-        return $this->manufacturerIds() !== []
-            || $this->attributeValueIds() !== []
-            || $this->priceFrom() !== null
-            || $this->priceTo() !== null
-            || $this->onlyAvailable();
     }
 
     /**

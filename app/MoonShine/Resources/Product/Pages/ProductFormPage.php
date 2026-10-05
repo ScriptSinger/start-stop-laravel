@@ -67,6 +67,10 @@ class ProductFormPage extends FormPage
                             ->nullable()
                             ->hint('Пусто — под заказ действует обычная цена'),
                         TinyMce::make('Описание', 'description')->locale('ru')->nullable(),
+                        Money::make('Скидка при обмене (трейд-ин)', 'trade_in_discount')
+                            ->nullable()
+                            ->hint('Покупатель сдаёт старый АКБ — цена меньше на эту сумму. Пусто — обмена нет'),
+                        Switcher::make('Только самовывоз', 'is_pickup_only')->default(false),
                         Switcher::make('Активен', 'status')->default(true),
                     ]),
                 ]),

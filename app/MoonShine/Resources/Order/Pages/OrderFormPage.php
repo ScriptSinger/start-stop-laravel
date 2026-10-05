@@ -49,8 +49,10 @@ class OrderFormPage extends FormPage
                 Text::make('Имя', 'customer_name')->required(),
                 Phone::make('Телефон', 'customer_phone'),
                 Email::make('Email', 'customer_email'),
+                Text::make('Получение', 'delivery_method'),
                 Text::make('Оплата', 'payment_method'),
                 Textarea::make('Адрес доставки', 'shipping_address'),
+                Textarea::make('Комментарий покупателя', 'comment'),
                 Money::make('Сумма', 'total')->readonly(),
             ]),
             HasMany::make('Позиции', 'items', resource: OrderItemResource::class)
@@ -58,6 +60,7 @@ class OrderFormPage extends FormPage
                     BelongsTo::make('Товар', 'product', resource: ProductResource::class)->nullable(),
                     Text::make('Название', 'name'),
                     Money::make('Цена', 'price'),
+                    Money::make('Скидка за обмен АКБ', 'trade_in_discount'),
                     Number::make('Кол-во', 'quantity'),
                     Money::make('Сумма', 'total'),
                 ])

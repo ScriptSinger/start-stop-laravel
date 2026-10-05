@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
-use App\Http\Controllers\BatteryFilterController;
 use App\Models\Category;
 use App\Models\Page;
+use App\View\Composers\BatteryFilterComposer;
+use App\View\Composers\CartCountComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -44,8 +45,8 @@ class AppServiceProvider extends ServiceProvider
             $view->with('navPages', $pages->where('show_in_top', false));
         });
 
-        View::composer('partials.battery-filter', function ($view): void {
-            $view->with(BatteryFilterController::brandsData());
-        });
+        View::composer('partials.header', CartCountComposer::class);
+
+        View::composer('partials.battery-filter', BatteryFilterComposer::class);
     }
 }

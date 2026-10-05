@@ -42,6 +42,7 @@ class OrderIndexPage extends IndexPage
             Phone::make('Телефон', 'customer_phone'),
             Select::make('Статус', 'status')
                 ->options(Order::STATUSES),
+            Text::make('Получение', 'delivery_method'),
             Text::make('Оплата', 'payment_method'),
             Money::make('Сумма', 'total')->sortable(),
         ];

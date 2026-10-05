@@ -14,18 +14,19 @@
                 {{ number_format($product->displayPrice(), 0, ',', ' ') }} р.
             </div>
 
-            {{-- Кнопка визуальная — корзина не подключена, это Фаза 5 плана миграции. --}}
-            <div class="product-thumb__cart cart">
+            {{-- Из карточки — 1 шт. без трейд-ина; галочка обмена есть в корзине и на странице товара. --}}
+            <form method="post" action="{{ route('cart.store', $product) }}" class="product-thumb__cart cart">
+                @csrf
                 @if ($product->isAvailableOnOrder())
-                    <button type="button" class="product-thumb__add-to-cart btn btn-primary" title="Заказать">
+                    <button type="submit" class="product-thumb__add-to-cart btn btn-primary" title="Заказать">
                         <i class="fa fa-truck"></i><span>Заказать</span>
                     </button>
                 @else
-                    <button type="button" class="product-thumb__add-to-cart btn btn-primary" title="В корзину">
+                    <button type="submit" class="product-thumb__add-to-cart btn btn-primary" title="В корзину">
                         <i class="fas fa-shopping-cart"></i><span>В корзину</span>
                     </button>
                 @endif
-            </div>
+            </form>
         </div>
     </div>
 </div>

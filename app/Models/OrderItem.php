@@ -12,12 +12,14 @@ class OrderItem extends Model
         'product_id',
         'name',
         'price',
+        'trade_in_discount',
         'quantity',
         'total',
     ];
 
     protected $casts = [
         'price' => 'decimal:4',
+        'trade_in_discount' => 'decimal:4',
         'total' => 'decimal:4',
     ];
 
