@@ -39,7 +39,7 @@ class BatteryFitmentFormPage extends FormPage
                 Text::make('Ёмкость (Ач)', 'capacity')->nullable(),
                 Text::make('Полярность', 'polarity')->nullable(),
                 Text::make('Габариты (ДxШxВ, через запятую)', 'dims')->nullable(),
-                Image::make('Фото авто', 'image')->dir('catalog/cars')->disk('public')->nullable(),
+                Image::make('Фото авто', 'image')->nullable(),
             ]),
         ];
     }

@@ -40,7 +40,7 @@ class CategoryFormPage extends FormPage
                 Text::make('Название', 'name'),
                 Slug::make('Slug', 'slug')->from('name')->unique(),
                 BelongsTo::make('Родительская категория', 'parent', resource: CategoryResource::class)->nullable(),
-                Image::make('Изображение', 'image')->dir('catalog/categories')->disk('public')->nullable(),
+                Image::make('Изображение', 'image')->nullable(),
                 Textarea::make('Описание', 'description')->nullable(),
                 Number::make('Порядок сортировки', 'sort_order')->default(0),
                 Switcher::make('Активна', 'status')->default(true),

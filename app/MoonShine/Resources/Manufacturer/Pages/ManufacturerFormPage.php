@@ -35,7 +35,7 @@ class ManufacturerFormPage extends FormPage
                 ID::make(),
                 Text::make('Название', 'name'),
                 Slug::make('Slug', 'slug')->from('name')->unique(),
-                Image::make('Логотип', 'image')->dir('catalog/manufacturers')->disk('public'),
+                Image::make('Логотип', 'image'),
             ]),
         ];
     }

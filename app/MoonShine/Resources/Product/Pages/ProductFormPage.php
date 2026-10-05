@@ -47,7 +47,7 @@ class ProductFormPage extends FormPage
                 BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)->selectMode(),
                 Number::make('Цена', 'price'),
                 Number::make('Остаток', 'quantity')->default(0),
-                Image::make('Фото', 'image')->dir('catalog/product')->disk('public')->nullable(),
+                Image::make('Фото', 'image')->nullable(),
                 Textarea::make('Описание', 'description')->nullable(),
                 Switcher::make('Активен', 'status')->default(true),
             ]),
