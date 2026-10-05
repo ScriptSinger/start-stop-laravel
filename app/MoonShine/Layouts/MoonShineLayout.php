@@ -9,6 +9,7 @@ use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
+use App\MoonShine\Resources\MenuItem\MenuItemResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -48,6 +49,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(BatteryFitmentResource::class, 'Подбор АКБ'),
             ]),
             MenuItem::make(PageResource::class, 'Страницы'),
+            MenuItem::make(MenuItemResource::class, 'Меню сайта'),
         ];
     }
 

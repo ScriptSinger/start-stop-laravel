@@ -19,6 +19,8 @@ class ImportLegacy extends LegacyImportCommand
         $this->call('import:legacy-battery');
         $this->call('import:legacy-orders');
         $this->call('import:legacy-pages');
+        // После страниц: ссылки меню ведут на них.
+        $this->call('import:legacy-theme');
 
         $this->newLine();
         $this->components->info('Сверка количества строк (legacy → новая таблица):');

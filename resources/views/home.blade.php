@@ -2,6 +2,17 @@
 
 @section('title', $search !== '' ? 'Поиск: '.$search.' — '.config('shop.name') : config('shop.name'))
 
+{{-- Как на старом сайте: меню категорий раскрыто только на главной. --}}
+@push('styles')
+    <style>@media (min-width:992px) {header .menu1 .menu__collapse {display:block !important}}</style>
+@endpush
+
+@push('module-styles')
+    @foreach (['home-banner', 'category_wall', 'news'] as $stylesheet)
+        <link href="{{ asset("theme/stylesheet/{$stylesheet}.css") }}" rel="stylesheet" media="screen" />
+    @endforeach
+@endpush
+
 @section('content')
     <div class="container">
         <div class="row">

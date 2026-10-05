@@ -18,6 +18,7 @@ class Category extends Model
         'slug',
         'description',
         'image',
+        'icon',
         'sort_order',
         'status',
     ];
@@ -25,6 +26,14 @@ class Category extends Model
     protected $casts = [
         'status' => 'boolean',
     ];
+
+    /**
+     * Иконка задана классом Font Awesome ("fas fa-tools"), а не картинкой.
+     */
+    public function hasFontIcon(): bool
+    {
+        return $this->icon !== null && preg_match('/^fa[srlbd]?\s/', $this->icon) === 1;
+    }
 
     public function getRouteKeyName(): string
     {

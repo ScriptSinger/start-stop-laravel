@@ -10,6 +10,7 @@ use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
+use App\MoonShine\Resources\MenuItem\MenuItemResource;
 use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use App\MoonShine\Resources\Order\OrderResource;
@@ -43,6 +44,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 CustomerResource::class,
                 PageResource::class,
                 ProductImageResource::class,
+                MenuItemResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

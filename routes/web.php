@@ -4,6 +4,7 @@ use App\Http\Controllers\BatteryFilterController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/catalog/{product:slug}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->name('category.show');
+// Адрес как на старом сайте (OpenCart information/contact).
+Route::get('/contact-us', ContactController::class)->name('contact');
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.show');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
