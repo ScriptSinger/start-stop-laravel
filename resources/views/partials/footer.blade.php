@@ -51,3 +51,10 @@
         </div>
     </div>
 </footer>
+{{-- Кнопка «наверх» (fly-block темы; закладки, сравнение и контакты в нём
+     на старом сайте были выключены). --}}
+<div class="fly-block">
+    <div class="fly-block__item fly-block__scrollup" title="Наверх" data-scroll-top>
+        <i class="fa fa-chevron-up fly-block__scrollup-icon" aria-hidden="true"></i>
+    </div>
+</div>

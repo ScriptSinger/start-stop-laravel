@@ -55,6 +55,29 @@ class CartCheckoutTest extends TestCase
         $this->get(route('home'))->assertSeeInOrder(['title="Корзина"', '>2</span>'], false);
     }
 
+    public function test_ajax_add_returns_mini_cart_for_modal(): void
+    {
+        $this->postJson(route('cart.store', $this->battery), ['quantity' => 2])
+            ->assertOk()
+            ->assertJsonPath('count', 2)
+            ->assertJsonPath('products', [$this->battery->id])
+            ->assertJsonPath('html', fn (string $html): bool => str_contains($html, 'TITAN 60Ah О.П.') && str_contains($html, 'Перейти к оформлению заказа'));
+
+        $this->deleteJson(route('cart.destroy', $this->battery))
+            ->assertOk()
+            ->assertJsonPath('count', 0)
+            ->assertJsonPath('html', fn (string $html): bool => str_contains($html, 'Ваша корзина пуста!'));
+    }
+
+    public function test_header_contains_mini_cart(): void
+    {
+        $this->post(route('cart.store', $this->battery));
+
+        $this->get(route('home'))
+            ->assertSee('data-products="'.$this->battery->id.'"', false)
+            ->assertSeeInOrder(['header-cart__dropdown', 'TITAN 60Ah О.П.', 'Перейти к оформлению заказа'], false);
+    }
+
     public function test_adding_again_sums_quantity_and_clamps_it(): void
     {
         $this->post(route('cart.store', $this->terminal), ['quantity' => 60]);

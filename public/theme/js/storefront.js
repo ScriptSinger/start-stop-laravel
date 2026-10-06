@@ -19,6 +19,8 @@ $(function() {
 	uniMenuMobile();
 	uniMenuUpd('header .menu2 .menu__collapse');
 	cookieNotice();
+	uniFlyMenu();
+	uniShowMore();
 
 	// Поиск на телефоне — копия формы из шапки рядом с «Категориями», как на старом сайте.
 	$('#search .header-search').clone().appendTo('#search2');
@@ -611,3 +613,147 @@ function uniMenuUpd(block) {
 	
 	$(window).resize(init);
 };
+
+function uniScrollTo(target, time = 200) {
+	$('html, body').animate({scrollTop: $(target).offset().top - 150}, time);
+}
+
+// Кнопка «наверх» появляется после прокрутки — fly-block темы.
+$('body').on('click', '[data-scroll-top]', () => uniScrollTo('body'));
+$(window).on('scroll', function() {
+	$('.fly-block__scrollup').toggleClass('visible', $(this).scrollTop() > 190);
+});
+
+// Шапка, прилипающая при прокрутке, — uniFlyMenu из fly-menu-cart.js темы
+// с настройками старого сайта: на компьютере меню категорий, поиск, телефон
+// и корзина; на телефоне сверху — «Главная», меню, поиск и корзина.
+// Личного кабинета у нас нет, поэтому его значка тоже нет.
+function uniFlyMenu() {
+	if ($('#unicheckout__form').length) return;
+
+	const breakpoint = 992;
+
+	const init = () => {
+		$('#fly-menu').remove();
+
+		const desktop = $(window).width() > breakpoint;
+		let html = '<div id="fly-menu" class="fly-menu"><div class="container"><div class="row">';
+
+		if (desktop) {
+			html += '<div class="fly-menu__menu">';
+			html += '<button class="fly-menu__menu-btn header-menu__btn">' + $('header .menu__header').html() + '</button>';
+			html += '<div class="container" style="position:absolute"><div class="menu-wrapper new"><nav class="menu menu1 new">' + $('header #menu').html() + '</nav></div></div>';
+			html += '</div>';
+			html += '<div class="fly-menu__search">' + $('header #search').html() + '</div>';
+
+			const phone = $('header .header-phones__main');
+			html += '<div class="fly-menu__phone uni-href" data-href="' + phone.attr('href') + '">' + phone.html() + '</div>';
+		} else {
+			html += '<div class="fly-menu__block fly-menu__home uni-href" data-href="/"><i class="fly-menu__icon fly-menu__icon-menu fas fa-home"></i></div>';
+			html += '<div class="fly-menu__block fly-menu__menu-m"><i class="fly-menu__icon fly-menu__icon-menu fas fa-bars"></i></div>';
+			html += '<div class="fly-menu__block fly-menu__search-m"><i class="fly-menu__icon fly-menu__icon-search fas fa-search"></i>' + $('header #search').html() + '</div>';
+		}
+
+		html += '<div class="fly-menu__block fly-menu__cart">';
+		html += '<i class="fly-menu__icon fly-menu__icon-cart fa fa-shopping-bag" data-mini-cart-open></i>';
+		html += '<span class="fly-menu__cart-total fly-menu__total">' + $('header .header-cart__total-items').text() + '</span>';
+		html += '</div>';
+		html += '</div></div></div>';
+
+		$('body').append(html);
+
+		const blocks = $('.fly-menu__block');
+
+		$('.fly-menu__block .fly-menu__icon').on('click', function() {
+			const parent = $(this).parent();
+
+			blocks.toggleClass('show').not(parent).removeClass('show');
+
+			if (desktop) return;
+
+			$('body').removeClass('scroll-disabled');
+
+			if (parent.hasClass('fly-menu__search-m') && !$('.fly-menu-backdrop').length) {
+				$('.fly-menu').before('<div class="fly-menu-backdrop"></div>');
+			}
+
+			if (parent.hasClass('show')) {
+				if (parent.hasClass('fly-menu__menu-m')) $('.menu-open').trigger('click');
+
+				if (parent.hasClass('fly-menu__search-m')) {
+					$('body').addClass('scroll-disabled');
+					parent.find('.form-control').trigger('focus');
+				}
+			} else {
+				$('.fly-menu-backdrop').remove();
+			}
+		});
+
+		if (desktop) {
+			uniMenuAim();
+		}
+	};
+
+	$('body').on('hide.bs.modal', '.modal', () => $('.fly-menu-backdrop').trigger('click'));
+	$('body').on('click', '.fly-menu-backdrop, .menu-close, main, footer', () => {
+		$('body').removeClass('scroll-disabled');
+		$('.fly-menu__block').removeClass('show');
+		$('.fly-menu-backdrop').remove();
+	});
+	$(document).on('click', '.fly-menu__menu-btn', () => {
+		$('header .menu-wrapper.new, header .header-menu__btn').removeClass('show');
+	});
+
+	init();
+
+	let windowWidth = $(window).width();
+
+	$(window).on('resize', function() {
+		if ($(this).width() !== windowWidth) {
+			windowWidth = $(this).width();
+			init();
+		}
+	});
+
+	$(window).on('scroll', function() {
+		if ($(this).scrollTop() > 200) {
+			$('#fly-menu').addClass('show');
+		} else {
+			$('#fly-menu, #fly-menu .row > div').removeClass('show');
+
+			if ($('.fly-menu__menu-btn').hasClass('show')) $('.fly-menu__menu-btn').trigger('click');
+		}
+	});
+}
+
+// «Показать ещё» под списком товаров — showmore-ajaxpagination.js темы:
+// следующая страница дописывается к текущей, адрес меняется на неё.
+function uniShowMore() {
+	if (!$('.product-layout').length || !$('.pagination').length) return;
+
+	const nextUrl = () => $('.pagination').find('.active').next().find('a').attr('href');
+	const button = $('<div class="show-more" style="margin:15px 0 30px;text-align:center"><button type="button" class="show-more__btn btn btn-xl btn-default"><i class="show-more__icon fas fa-sync-alt"></i><span>Показать еще</span></button></div>');
+
+	if (!nextUrl()) return;
+
+	$('.pagination').first().before(button);
+
+	button.on('click', '.show-more__btn', function() {
+		const url = nextUrl(), icon = $(this).find('.show-more__icon');
+
+		if (!url) return;
+
+		icon.addClass('spin');
+
+		$.get(url, (data) => {
+			const result = $('<div>').html(data);
+
+			$('.products-block').append(result.find('.products-block').html());
+			$('.pagination').html(result.find('.pagination').html());
+			$('.pagination-text').text(result.find('.pagination-text').text());
+			button.toggle(!!nextUrl());
+			uniChangeBtn();
+			window.history.pushState('', '', url);
+		}).always(() => icon.removeClass('spin'));
+	});
+}
