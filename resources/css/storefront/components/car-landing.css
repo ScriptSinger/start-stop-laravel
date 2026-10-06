@@ -42,6 +42,16 @@
 
 .car-landing__generations-nav {display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px}
 
+/* Выбор двигателя на странице поколения. */
+.car-landing__engines {display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 15px; padding: 12px 15px; border: 1px dashed #c82a00; border-radius: 8px}
+.car-landing__engines-title {width: 100%; font-weight: 600}
+
+/* Страница всех марок: плитки с логотипами. */
+.car-landing__brands {display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin: 0 0 40px; padding: 0; list-style: none}
+.car-landing__brands a {display: grid; grid-template-columns: 48px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; padding: 12px; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; color: inherit; transition: border-color .2s, box-shadow .2s}
+.car-landing__brands a:hover, .car-landing__brands a:focus {border-color: #c82a00; box-shadow: 0 2px 8px rgba(0 0 0 / .08); text-decoration: none}
+.car-landing__brands img {grid-row: span 2; width: 48px; height: 48px; object-fit: contain}
+
 /* Страница марки: плитки моделей. */
 .car-landing__intro {margin-bottom: 20px; line-height: 1.6}
 .car-landing__models {display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none}

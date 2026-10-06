@@ -88,7 +88,7 @@ final readonly class CarModel
             ->map(fn (Collection $fitments, string $generation): array => [
                 'generation' => $generation,
                 'capacity' => $fitments->flatMap(fn (BatteryFitment $fitment): array => $fitment->capacities())->unique()->sort()->implode(', ') ?: '—',
-                'polarity' => $fitments->map(fn (BatteryFitment $fitment): string => trim((string) $fitment->polarity))->filter()->unique()->implode(', ') ?: '—',
+                'polarity' => implode(', ', BatteryFitment::polarityList($fitments->pluck('polarity')->all())) ?: '—',
                 'dimensions' => $fitments
                     ->flatMap(fn (BatteryFitment $fitment): array => $fitment->dimensions())
                     ->map(fn (array $dims): string => implode('×', $dims))

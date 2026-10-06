@@ -21,11 +21,14 @@ trait DescribesFitments
     }
 
     /**
+     * Полярности машины: «Обратная», «Прямая». «Универсальная» в данных
+     * означает, что подойдёт и такой АКБ, — покупателю её не показываем.
+     *
      * @return list<string>
      */
     public function polarities(): array
     {
-        return $this->fitments->pluck('polarity')->map(fn (?string $polarity): string => trim((string) $polarity))->filter()->unique()->values()->all();
+        return BatteryFitment::polarityList($this->fitments->pluck('polarity')->all());
     }
 
     /**

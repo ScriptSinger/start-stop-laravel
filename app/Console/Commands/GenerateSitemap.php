@@ -56,7 +56,8 @@ class GenerateSitemap extends Command
         ));
 
         // Посадочные «Аккумулятор для …» — только включённые марки и модели с товарами.
-        $carPages = 0;
+        $carPages = 1;
+        $sitemap->add(Url::create(route('car-landing.index')));
         $carLandings->brands()->each(function (CarBrand $brand) use ($sitemap, $carLandings, &$carPages): void {
             $models = $carLandings->models($brand);
 
@@ -79,6 +80,8 @@ class GenerateSitemap extends Command
                         $carPages++;
                     });
             });
+
+            $carLandings->releaseMemory();
         });
 
         $path = $this->option('path') ?: public_path('sitemap.xml');

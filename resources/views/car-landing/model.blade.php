@@ -10,6 +10,7 @@
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
+                <li><a href="{{ route('car-landing.index') }}">По марке авто</a></li>
                 <li><a href="{{ route('car-landing.brand', $brand->slug) }}">Аккумуляторы для {{ $brand->name }}</a></li>
                 @if ($generation)
                     <li><a href="{{ $model->url() }}">{{ $model->name }}</a></li>
@@ -29,6 +30,17 @@
                     <a href="{{ $item->url() }}" @class(['car-landing__chip', 'car-landing__chip_active' => $generation?->slug === $item->slug])>{{ $item->label }}</a>
                 @endforeach
             </nav>
+        @endif
+
+        @if ($engines->isNotEmpty())
+            {{-- Моторам поколения подходят разные АКБ: ниже — варианты для всех,
+                 точный подбор — по двигателю. --}}
+            <div class="car-landing__engines">
+                <span class="car-landing__engines-title">Разным двигателям подходят разные аккумуляторы — уточните свой:</span>
+                @foreach ($engines as $engine)
+                    <a href="{{ $engine['url'] }}" class="car-landing__chip">{{ $engine['name'] }}</a>
+                @endforeach
+            </div>
         @endif
 
         @include('car-landing.partials.summary')

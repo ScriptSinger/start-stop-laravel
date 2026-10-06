@@ -81,11 +81,93 @@ class BatterySelectionTest extends TestCase
             ->assertDontSee('Низкий LB2')
             ->assertDontSee('Обычный L2');
 
+        // Узкий азиатский B24 (127 мм) в широкий отсек D23 (173 мм) — не держится.
+        $this->fitment(['generation' => 'Азиатский D23', 'dims' => '234x173x225']);
+        $this->battery('Узкий B24', ['Обратная', '55 - 65 Ah', 'Азия B24 (234 x 127 x 227 мм)']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Азиатский D23']))
+            ->assertOk()
+            ->assertDontSee('Узкий B24');
+
         // Обычный отсек 190 принимает и низкий аккумулятор.
         $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Kia Rio IV 2017 - 2020']))
             ->assertOk()
             ->assertSee('Низкий LB2')
             ->assertSee('Обычный L2');
+    }
+
+    public function test_car_accepting_both_polarities_gets_both(): void
+    {
+        $this->fitment(['generation' => 'Обе', 'polarity' => 'Обратная, Прямая, Универсальная']);
+        $this->battery('Обратный 60', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)']);
+        $this->battery('Прямой 60', ['Прямая', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Обе']))
+            ->assertOk()
+            ->assertSee('Обратный 60')
+            ->assertSee('Прямой 60');
+    }
+
+    public function test_terminal_type_must_match_when_battery_has_it(): void
+    {
+        $this->attribute(19, 'Токовыводы', ['Стандарт конус', 'конус тонкие']);
+        $this->fitment(['generation' => 'Узкие клеммы', 'terminals' => 'thin']);
+        $this->battery('Тонкие клеммы', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)', 'конус тонкие']);
+        $this->battery('Стандартные клеммы', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)', 'Стандарт конус']);
+        $this->battery('Клеммы не указаны', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Узкие клеммы']))
+            ->assertOk()
+            ->assertSee('Клеммы</dt>', false)
+            ->assertSee('Узкие (азиатские)')
+            ->assertSee('Тонкие клеммы')
+            ->assertSee('Клеммы не указаны')
+            ->assertDontSee('Стандартные клеммы');
+
+        // Боковых клемм нет ни у одного товара — остаются только АКБ без «Токовыводов».
+        $this->fitment(['generation' => 'Боковые клеммы', 'terminals' => 'side']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Боковые клеммы']))
+            ->assertOk()
+            ->assertSee('Клеммы не указаны')
+            ->assertDontSee('Тонкие клеммы')
+            ->assertDontSee('Стандартные клеммы');
+    }
+
+    public function test_engine_step_only_when_engines_need_different_batteries(): void
+    {
+        // Ёмкости в данных разные, но в один диапазон АКБ — шаг не нужен.
+        $this->fitment(['generation' => 'Одинаковые', 'engine' => null]);
+        $this->fitment(['generation' => 'Одинаковые', 'engine' => '1.4 бензин', 'capacity' => '55 Ач']);
+        $this->fitment(['generation' => 'Одинаковые', 'engine' => '1.6 бензин', 'capacity' => '62 Ач']);
+        // Разная полярность — шаг нужен.
+        $this->fitment(['generation' => 'Разные', 'engine' => null]);
+        $this->fitment(['generation' => 'Разные', 'engine' => '1.6 бензин', 'polarity' => 'Прямая']);
+        $this->fitment(['generation' => 'Разные', 'engine' => '2.0 дизель']);
+
+        $this->getJson(route('battery-filter.generations', ['brand' => 'Kia', 'model' => 'Rio']))
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'Одинаковые', 'engines' => false])
+            ->assertJsonFragment(['name' => 'Разные', 'engines' => true])
+            ->assertJsonMissing(['name' => 'Стандарт']);
+
+        $this->getJson(route('battery-filter.engines', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Одинаковые']))->assertExactJson([]);
+        $this->getJson(route('battery-filter.engines', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Разные']))->assertExactJson(['1.6 бензин', '2.0 дизель']);
+
+        $this->getJson(route('battery-filter.result', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Разные', 'engine' => '1.6 бензин']))
+            ->assertJsonPath('redirect', route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Разные', 'engine' => '1.6 бензин']));
+
+        $this->battery('Прямой 60', ['Прямая', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Разные', 'engine' => '1.6 бензин']))
+            ->assertOk()
+            ->assertSee('Аккумуляторы для Kia Rio Разные 1.6 бензин')
+            ->assertSee('Прямой 60');
+
+        // Без двигателя — общая запись поколения (обратная полярность).
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Разные']))
+            ->assertOk()
+            ->assertDontSee('Прямой 60');
     }
 
     public function test_unknown_polarity_does_not_filter_by_polarity(): void

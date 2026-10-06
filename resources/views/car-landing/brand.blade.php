@@ -5,6 +5,7 @@
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
+                <li><a href="{{ route('car-landing.index') }}">По марке авто</a></li>
                 <li>Аккумуляторы для {{ $brand->name }}</li>
             </ul>
             <h1>Аккумуляторы для {{ $brand->name }}</h1>

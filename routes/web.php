@@ -65,7 +65,8 @@ Route::post('/product-question/{product}', [ProductQuestionController::class, 's
 
 Route::get('/podbor-akb', [BatteryFilterController::class, 'show'])->name('battery-selection');
 
-// Посадочные «Аккумулятор для <модель>» — марки включаются в shop.car_landings.
+// Посадочные «Аккумулятор для <модель>» — все марки кроме спецтехники (shop.car_landings).
+Route::get('/akkumulyator-dlya', [CarLandingController::class, 'index'])->name('car-landing.index');
 Route::get('/akkumulyator-dlya/{brand}', [CarLandingController::class, 'brand'])->name('car-landing.brand');
 Route::get('/akkumulyator-dlya/{brand}/{model}', [CarLandingController::class, 'model'])->name('car-landing.model');
 Route::get('/akkumulyator-dlya/{brand}/{model}/{generation}', [CarLandingController::class, 'generation'])->name('car-landing.generation');
@@ -73,5 +74,6 @@ Route::get('/akkumulyator-dlya/{brand}/{model}/{generation}', [CarLandingControl
 Route::prefix('battery-filter')->name('battery-filter.')->group(function () {
     Route::get('/models', [BatteryFilterController::class, 'getModels'])->name('models');
     Route::get('/generations', [BatteryFilterController::class, 'getGenerations'])->name('generations');
+    Route::get('/engines', [BatteryFilterController::class, 'getEngines'])->name('engines');
     Route::get('/result', [BatteryFilterController::class, 'getResult'])->name('result');
 });

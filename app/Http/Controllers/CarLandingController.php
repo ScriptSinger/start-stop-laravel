@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CatalogFilterRequest;
+use App\Models\BatteryFitment;
 use App\Models\Product;
+use App\Services\BatterySelection;
+use App\Services\CarLanding\CarBrand;
 use App\Services\CarLanding\CarGeneration;
 use App\Services\CarLanding\CarLandingCatalog;
 use App\Services\CarLanding\CarModel;
 use Artesaos\SEOTools\Facades\SEOMeta;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -19,6 +23,20 @@ use Illuminate\View\View;
  */
 class CarLandingController extends Controller
 {
+    public function index(CarLandingCatalog $catalog, BatterySelection $selection): View
+    {
+        $brands = $catalog->brandsWithModels();
+
+        SEOTools::setTitle('Аккумуляторы для автомобилей всех марок — купить в Уфе | '.config('shop.name'), false);
+        SEOTools::setDescription('Подбор аккумулятора по марке и модели автомобиля: '.$brands->count().' марок, ёмкость, полярность и размеры, цены и наличие в Уфе. Доставка по городу, трейд-ин.');
+
+        return view('car-landing.index', [
+            'brands' => $brands,
+            'logos' => $brands->mapWithKeys(fn (CarBrand $brand): array => [$brand->slug => $selection->brandLogo($brand->fitmentBrand)]),
+            'modelCounts' => $brands->mapWithKeys(fn (CarBrand $brand): array => [$brand->slug => $catalog->models($brand)->count()]),
+        ]);
+    }
+
     public function brand(string $brand, CarLandingCatalog $catalog): View
     {
         $carBrand = $catalog->brand($brand) ?? abort(404);
@@ -73,6 +91,7 @@ class CarLandingController extends Controller
             'generation' => $generation,
             'subject' => $subject,
             'generations' => $catalog->generations($model),
+            'engines' => $generation === null ? collect() : $this->engines($generation),
             'products' => $products,
             'priceFrom' => $priceFrom,
             'inStockCount' => Product::query()->whereKey($catalog->productIds($subject))->where('quantity', '>', 0)->count(),
@@ -80,6 +99,29 @@ class CarLandingController extends Controller
             'sort' => $request->sort(),
             'perPage' => $request->perPage(),
         ]);
+    }
+
+    /**
+     * Двигатели поколения, которым подходят разные АКБ: ссылки на подбор
+     * под конкретный мотор (страница поколения показывает варианты для всех).
+     *
+     * @return Collection<int, array{name: string, url: string}>
+     */
+    private function engines(CarGeneration $generation): Collection
+    {
+        // Двигатели записаны под тем же поколением, что и сама запись с мотором.
+        $fitment = $generation->fitments->first(fn (BatteryFitment $fitment): bool => $fitment->engine !== null);
+
+        if ($fitment === null) {
+            return collect();
+        }
+
+        return app(BatterySelection::class)
+            ->engines($fitment->brand, $fitment->model, (string) $fitment->generation)
+            ->map(fn (string $engine): array => [
+                'name' => $engine,
+                'url' => route('battery-selection', ['brand' => $fitment->brand, 'model' => $fitment->model, 'gen' => $fitment->generation, 'engine' => $engine]),
+            ]);
     }
 
     /**

@@ -26,9 +26,14 @@
                             <dt>Ёмкость</dt>
                             <dd>{{ implode(', ', $fitment->capacities()) }} Ач</dd>
                         @endif
-                        @if ($fitment->polarity)
+                        @php($polarities = App\Models\BatteryFitment::polarityList([$fitment->polarity]))
+                        @if ($polarities !== [])
                             <dt>Полярность</dt>
-                            <dd>{{ $fitment->polarity }}</dd>
+                            <dd>{{ implode(' или ', $polarities) }}</dd>
+                        @endif
+                        @if ($fitment->terminalsLabel())
+                            <dt>Клеммы</dt>
+                            <dd>{{ $fitment->terminalsLabel() }}</dd>
                         @endif
                         @if ($fitment->dimensions() !== [])
                             <dt>Габариты (Д×Ш×В, мм)</dt>

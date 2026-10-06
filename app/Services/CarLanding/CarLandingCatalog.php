@@ -40,20 +40,47 @@ class CarLandingCatalog
      */
     private array $modelsCache = [];
 
+    /**
+     * @var Collection<int, CarBrand>|null
+     */
+    private ?Collection $brandsCache = null;
+
     public function brand(string $slug): ?CarBrand
     {
-        $config = config("shop.car_landings.brands.{$slug}");
-
-        return $config === null ? null : new CarBrand($slug, $config['name'], $config['fitment_brand'], $config['skip_models'] ?? []);
+        return $this->brands()->first(fn (CarBrand $brand): bool => $brand->slug === $slug);
     }
 
     /**
+     * Марки из данных подбора, кроме групп спецтехники (shop.car_landings).
+     * Есть ли у марки страницы — решают её модели: см. models().
+     *
      * @return Collection<int, CarBrand>
      */
     public function brands(): Collection
     {
-        return collect(array_keys(config('shop.car_landings.brands')))
-            ->map(fn (string $slug): CarBrand => $this->brand($slug));
+        return $this->brandsCache ??= BatteryFitment::query()
+            ->whereNotIn('brand', config('shop.car_landings.excluded_brands'))
+            ->where('brand', '!=', '')
+            ->distinct()
+            ->orderBy('brand')
+            ->pluck('brand')
+            ->map(function (string $fitmentBrand): CarBrand {
+                $name = config('shop.car_landings.brand_names')[$fitmentBrand] ?? $fitmentBrand;
+
+                return new CarBrand(Str::slug($name), $name, $fitmentBrand, config('shop.car_landings.skip_models')[$fitmentBrand] ?? []);
+            })
+            ->filter(fn (CarBrand $brand): bool => $brand->slug !== '')
+            ->values();
+    }
+
+    /**
+     * Марки, у которых есть хотя бы одна страница модели.
+     *
+     * @return Collection<int, CarBrand>
+     */
+    public function brandsWithModels(): Collection
+    {
+        return $this->brands()->filter(fn (CarBrand $brand): bool => $this->models($brand)->isNotEmpty())->values();
     }
 
     /**
@@ -105,11 +132,28 @@ class CarLandingCatalog
     public function refresh(): int
     {
         Cache::forever(self::VERSION_KEY, $this->version() + 1);
+        $this->releaseMemory();
+        $this->brandsCache = null;
+
+        return $this->brands()->sum(function (CarBrand $brand): int {
+            $pages = $this->models($brand)->sum(fn (CarModel $model): int => 1 + $this->generations($model)->count());
+
+            // Всё уже в кеше — в памяти процесса держать незачем.
+            $this->releaseMemory();
+
+            return $pages;
+        });
+    }
+
+    /**
+     * Забыть посчитанное в памяти процесса (в общем кеше оно остаётся).
+     * Для обхода всех марок подряд: иначе 16 тысяч записей подбора
+     * со всеми моделями не помещаются в лимит памяти PHP.
+     */
+    public function releaseMemory(): void
+    {
         $this->modelsCache = [];
         $this->productIdsCache = [];
-
-        return $this->brands()->sum(fn (CarBrand $brand): int => $this->models($brand)
-            ->sum(fn (CarModel $model): int => 1 + $this->generations($model)->count()));
     }
 
     /**

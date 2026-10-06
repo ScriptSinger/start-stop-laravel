@@ -46,7 +46,7 @@ class BatterySelection
             ->distinct()
             ->orderBy('brand')
             ->pluck('brand')
-            ->map(fn (string $brand): array => ['name' => $brand, 'image' => $this->brandLogoUrl($brand)])
+            ->map(fn (string $brand): array => ['name' => $brand, 'image' => $this->brandLogo($brand)])
             ->partition(fn (array $brand): bool => in_array($brand['name'], self::POPULAR_BRANDS, true));
 
         return ['popular_brands' => $popular->values()->all(), 'other_brands' => $other->values()->all()];
@@ -65,30 +65,74 @@ class BatterySelection
     }
 
     /**
-     * @return Collection<int, array{name: string, image: string}>
+     * Поколения модели. Строка модели без поколения — общие данные модели:
+     * отдельной плиткой («Стандарт») она нужна, только если поколений нет.
+     * engines — у поколения есть двигатели с разными АКБ, нужен ещё шаг.
+     *
+     * @return Collection<int, array{name: string, image: string, engines: bool}>
      */
     public function generations(string $brand, string $model): Collection
     {
-        return BatteryFitment::query()
+        $generations = BatteryFitment::query()
             ->where('brand', $brand)
             ->where('model', $model)
+            ->whereNotNull('generation')
+            ->where('generation', '!=', '')
             ->distinct()
-            ->orderBy('generation')
             ->pluck('generation')
-            ->map(function (?string $generation): array {
-                $name = trim((string) $generation);
-
-                return [
-                    'name' => $name ?: self::DEFAULT_GENERATION_LABEL,
-                    'image' => $this->generationImage($name),
-                ];
-            })
+            ->sort(SORT_NATURAL)
             ->values();
+
+        if ($generations->isEmpty()) {
+            return collect([[
+                'name' => self::DEFAULT_GENERATION_LABEL,
+                'image' => $this->generationImage(''),
+                'engines' => false,
+            ]]);
+        }
+
+        return $generations->map(fn (string $generation): array => [
+            'name' => $generation,
+            'image' => $this->generationImage((new BatteryFitment(['brand' => $brand, 'model' => $model, 'generation' => $generation]))->displayName(withEngine: false)),
+            'engines' => $this->engines($brand, $model, $generation)->isNotEmpty(),
+        ]);
     }
 
-    public function findFitment(string $brand, string $model, string $generation): ?BatteryFitment
+    /**
+     * Двигатели поколения — только если им подходят разные аккумуляторы.
+     * Иначе выбор мотора ничего не меняет и шаг не нужен.
+     *
+     * @return Collection<int, string>
+     */
+    public function engines(string $brand, string $model, string $generation): Collection
+    {
+        $engines = BatteryFitment::query()
+            ->where('brand', $brand)
+            ->where('model', $model)
+            ->where('generation', $generation)
+            ->whereNotNull('engine')
+            ->get();
+
+        // Сравниваем не цифры в данных («55, 60, 62 Ач» и «60, 62, 65 Ач»),
+        // а условия подбора: одинаковые условия — одинаковые аккумуляторы.
+        $variants = $engines->map(fn (BatteryFitment $fitment): string => json_encode([
+            collect($fitment->matchingAttributeValueIds())->map(fn (?array $ids): ?array => $ids === null ? null : collect($ids)->sort()->values()->all())->all(),
+            $fitment->terminalValueIds(),
+        ]))->unique();
+
+        return $variants->count() > 1
+            ? $engines->pluck('engine')->unique()->sort(SORT_NATURAL)->values()
+            : collect();
+    }
+
+    /**
+     * Запись машины. Без двигателя — общая запись поколения (если она есть),
+     * иначе первая.
+     */
+    public function findFitment(string $brand, string $model, string $generation, string $engine = ''): ?BatteryFitment
     {
         $generation = trim($generation);
+        $engine = trim($engine);
 
         return BatteryFitment::query()
             ->where('brand', $brand)
@@ -97,6 +141,11 @@ class BatterySelection
                 $generation === '' || $generation === self::DEFAULT_GENERATION_LABEL,
                 fn ($query) => $query->where(fn ($query) => $query->whereNull('generation')->orWhere('generation', '')),
                 fn ($query) => $query->where('generation', $generation),
+            )
+            ->when(
+                $engine === '',
+                fn ($query) => $query->orderByRaw('engine is null desc'),
+                fn ($query) => $query->where('engine', $engine),
             )
             // Для одной машины в базе бывают повторяющиеся строки — берём
             // всегда одну и ту же.
@@ -119,7 +168,7 @@ class BatterySelection
             ->paginate($perPage);
     }
 
-    private function brandLogoUrl(string $brand): string
+    public function brandLogo(string $brand): string
     {
         $logoPath = 'catalog/carslogo/'.mb_strtolower($brand, 'UTF-8').'.png';
 

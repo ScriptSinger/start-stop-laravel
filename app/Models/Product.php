@@ -120,7 +120,13 @@ class Product extends Model
         $query
             ->whereHas('categories', fn (Builder $categories) => $categories
                 ->whereIn('categories.id', config('shop.battery_fitment.category_ids')))
-            ->withAttributeValues($fitment->matchingAttributeValueIds());
+            ->withAttributeValues($fitment->matchingAttributeValueIds())
+            // Клеммы проверяем, только если у АКБ указаны «Токовыводы». Пустой
+            // список — подходящих клемм нет ни у одного товара: только АКБ без них.
+            ->when(($valueIds = $fitment->terminalValueIds()) !== null, fn (Builder $query) => $query
+                ->where(fn (Builder $query) => $query
+                    ->whereHas('attributeValues', fn (Builder $values) => $values->whereIn('attribute_values.id', $valueIds))
+                    ->orWhereDoesntHave('attributeValues', fn (Builder $values) => $values->where('attribute_values.attribute_id', config('shop.battery_fitment.attributes.terminals')))));
     }
 
     /**

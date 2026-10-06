@@ -4,13 +4,15 @@
  */
 import Alpine from 'alpinejs';
 
-export default ({modelsUrl, generationsUrl, resultUrl}) => ({
+export default ({modelsUrl, generationsUrl, enginesUrl, resultUrl}) => ({
     step: 1,
     allBrands: false,
     brand: '',
     model: '',
+    generation: '',
     models: [],
     generations: [],
+    engines: [],
 
     async loadModels(brand) {
         const models = await this.fetchJson(modelsUrl, {brand});
@@ -39,8 +41,21 @@ export default ({modelsUrl, generationsUrl, resultUrl}) => ({
         }
     },
 
-    // У поколений с посадочной страницей есть готовая ссылка (url).
-    choose(generation) {
+    // Если моторам поколения нужны разные АКБ — ещё шаг «двигатель»;
+    // у поколений с посадочной страницей есть готовая ссылка (url).
+    async choose(generation) {
+        if (generation.engines) {
+            const engines = await this.fetchJson(enginesUrl, {brand: this.brand, model: this.model, gen: generation.name});
+
+            if (engines.length) {
+                this.generation = generation.name;
+                this.engines = engines;
+                this.step = 4;
+
+                return;
+            }
+        }
+
         if (generation.url) {
             location.href = generation.url;
         } else {
@@ -48,8 +63,8 @@ export default ({modelsUrl, generationsUrl, resultUrl}) => ({
         }
     },
 
-    async finish(generation) {
-        const json = await this.fetchJson(resultUrl, {brand: this.brand, model: this.model, gen: generation});
+    async finish(generation, engine = '') {
+        const json = await this.fetchJson(resultUrl, {brand: this.brand, model: this.model, gen: generation, engine});
 
         if (json.redirect) {
             location.href = json.redirect;

@@ -47,16 +47,31 @@ class BatteryFilterController extends Controller
         if ($generations->isEmpty()) {
             return response()->json([[
                 'name' => $landing->fullName(),
-                'image' => $selection->generationImage((string) $landing->fitments->first()->generation),
+                'image' => $selection->generationImage($landing->fitments->first()->displayName(withEngine: false)),
                 'url' => $landing->url(),
+                'engines' => false,
             ]]);
         }
 
         return response()->json($generations->map(fn (CarGeneration $generation): array => [
             'name' => $generation->label,
-            'image' => $selection->generationImage((string) $generation->fitments->first()->generation),
+            'image' => $selection->generationImage($generation->fitments->first()->displayName(withEngine: false)),
             'url' => $generation->url(),
+            // Моторам поколения нужны разные АКБ — сначала выбор двигателя.
+            'engines' => $selection->engines($brand, $model, (string) $generation->fitments->first()->generation)->isNotEmpty(),
         ]));
+    }
+
+    /**
+     * Двигатели поколения — только если им нужны разные АКБ, иначе пусто.
+     */
+    public function getEngines(Request $request, BatterySelection $selection): JsonResponse
+    {
+        return response()->json($selection->engines(
+            $request->string('brand')->toString(),
+            $request->string('model')->toString(),
+            $request->string('gen')->toString(),
+        ));
     }
 
     public function getResult(Request $request, BatterySelection $selection): JsonResponse
@@ -67,13 +82,7 @@ class BatteryFilterController extends Controller
             return response()->json([]);
         }
 
-        return response()->json([
-            'redirect' => route('battery-selection', [
-                'brand' => $fitment->brand,
-                'model' => $fitment->model,
-                'gen' => $fitment->generation ?: null,
-            ]),
-        ]);
+        return response()->json(['redirect' => $this->resultUrl($fitment)]);
     }
 
     public function show(CatalogFilterRequest $request, BatterySelection $selection, CarLandingCatalog $landings): View
@@ -85,11 +94,7 @@ class BatteryFilterController extends Controller
         SEOTools::setTitle('Аккумуляторы для '.$fitment->displayName());
         // Машину задают параметры адреса — они и есть страница. SEOMeta
         // выводит адрес как есть, поэтому & экранируем сами.
-        SEOMeta::setCanonical(e(route('battery-selection', [
-            'brand' => $fitment->brand,
-            'model' => $fitment->model,
-            'gen' => $fitment->generation ?: null,
-        ])));
+        SEOMeta::setCanonical(e($this->resultUrl($fitment)));
 
         $landing = $landings->modelFor((string) $fitment->brand, (string) $fitment->model);
 
@@ -108,6 +113,17 @@ class BatteryFilterController extends Controller
             $request->string('brand')->toString(),
             $request->string('model')->toString(),
             $request->string('gen')->toString(),
+            $request->string('engine')->toString(),
         );
+    }
+
+    private function resultUrl(BatteryFitment $fitment): string
+    {
+        return route('battery-selection', [
+            'brand' => $fitment->brand,
+            'model' => $fitment->model,
+            'gen' => $fitment->generation ?: null,
+            'engine' => $fitment->engine ?: null,
+        ]);
     }
 }
