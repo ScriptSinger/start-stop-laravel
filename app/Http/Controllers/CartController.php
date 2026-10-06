@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Services\Cart\Cart;
 use App\Services\Cart\CartLine;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,8 @@ class CartController extends Controller
     public function index(Cart $cart): View
     {
         $lines = $cart->lines();
+
+        SEOTools::setTitle('Оформление заказа');
 
         return view('cart', [
             'lines' => $lines,

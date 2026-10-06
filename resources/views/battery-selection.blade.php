@@ -2,7 +2,6 @@
 
 @php($carName = $fitment->displayName())
 
-@section('title', 'Аккумуляторы для '.$carName.' — '.config('shop.name'))
 
 {{-- На старом сайте подбор вёл на страницу «Аккумуляторы» с фильтром OCFilter,
      поэтому раскладка — как у категории (product/category.twig темы UniShop2):

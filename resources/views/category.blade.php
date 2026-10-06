@@ -1,9 +1,5 @@
 @extends('layouts.app')
 
-@section('title', $category->meta_title ?: $category->name.' — '.config('shop.name'))
-{{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
-@section('meta_description', (string) $category->meta_description)
-
 {{-- Разметка — 1:1 с product/category.twig темы UniShop2 старого сайта. --}}
 @section('content')
     <div id="product-category" class="container">

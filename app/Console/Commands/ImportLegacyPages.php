@@ -33,7 +33,7 @@ class ImportLegacyPages extends LegacyImportCommand
                     'description' => $this->legacyText($row->description),
                     // H1 храним, только если он отличается от названия.
                     'heading' => trim((string) $this->legacyText($row->meta_h1)) !== trim((string) $this->legacyText($row->title)) ? $this->legacyText($row->meta_h1) : null,
-                    'meta_title' => $this->cyrillicShopName($this->legacyText($row->meta_title)),
+                    'meta_title' => $this->legacyMetaTitle($row->meta_title),
                     'meta_description' => $this->legacyText($row->meta_description),
                     'show_in_top' => (bool) $row->bottom,
                     'sort_order' => $row->sort_order,
@@ -48,14 +48,5 @@ class ImportLegacyPages extends LegacyImportCommand
         $this->info("Импортировано страниц: {$rows->count()}");
 
         return self::SUCCESS;
-    }
-
-    /**
-     * В части заголовков старого сайта «Cтарт-Стоп» набрано с латинской «C» —
-     * поисковик видит это как другое слово.
-     */
-    private function cyrillicShopName(?string $title): ?string
-    {
-        return $title === null ? null : str_replace('Cтарт', 'Старт', $title);
     }
 }

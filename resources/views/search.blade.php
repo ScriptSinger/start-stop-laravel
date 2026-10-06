@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', ($search !== '' ? 'Поиск - '.$search : 'Поиск').' — '.config('shop.name'))
-
 @push('page-styles')
     @vite('resources/css/storefront/pages/search.css')
 @endpush

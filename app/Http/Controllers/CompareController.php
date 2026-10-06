@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\SavedProducts\Compare;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,8 @@ class CompareController extends Controller
             ->sortBy([['display_sort_order', 'asc'], ['name', 'asc']])
             ->pluck('name')
             ->values();
+
+        SEOTools::setTitle('Сравнение товаров');
 
         return view('compare', ['products' => $products, 'specificationNames' => $specificationNames]);
     }

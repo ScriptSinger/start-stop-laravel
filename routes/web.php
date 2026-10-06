@@ -18,7 +18,7 @@ use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', SearchController::class)->name('search');
+Route::get('/search', SearchController::class)->middleware('noindex')->name('search');
 Route::get('/catalog/{product:slug}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->name('category.show');
 // Сколько товаров будет с выбранным фильтром — для кнопки «Показать N товаров» на телефоне.
@@ -29,37 +29,37 @@ Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.sho
 
 // Личный кабинет покупателя (вход, регистрация, восстановление пароля — Fortify).
 // Адреса как на старом сайте.
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'noindex'])->group(function () {
     Route::get('/my-account', [AccountController::class, 'index'])->name('account');
     Route::get('/order-history', [AccountController::class, 'orders'])->name('account.orders');
     Route::get('/order-history/{order}', [AccountController::class, 'order'])->whereNumber('order')->name('account.order');
 });
 
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/cart', [CartController::class, 'index'])->middleware('noindex')->name('cart.index');
 Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.store');
 Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{product}', [CartController::class, 'destroy'])->name('cart.destroy');
 
-Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+Route::get('/wishlist', [WishlistController::class, 'index'])->middleware('noindex')->name('wishlist.index');
 Route::post('/wishlist/{product}', [WishlistController::class, 'store'])->name('wishlist.store');
 Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
 
 // Адрес как на старом сайте (product/compare).
-Route::get('/compare-products', [CompareController::class, 'index'])->name('compare.index');
+Route::get('/compare-products', [CompareController::class, 'index'])->middleware('noindex')->name('compare.index');
 Route::post('/compare-products/{product}', [CompareController::class, 'store'])->name('compare.store');
 Route::delete('/compare-products/{product}', [CompareController::class, 'destroy'])->name('compare.destroy');
 
 Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
-Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/success', [CheckoutController::class, 'success'])->middleware('noindex')->name('checkout.success');
 
-Route::get('/callback', [CallbackRequestController::class, 'create'])->name('callback.create');
+Route::get('/callback', [CallbackRequestController::class, 'create'])->middleware('noindex')->name('callback.create');
 Route::post('/callback', [CallbackRequestController::class, 'store'])->middleware('throttle:5,1')->name('callback.store');
 
-Route::get('/quick-order/{product}', [QuickOrderController::class, 'create'])->name('quick-order.create');
+Route::get('/quick-order/{product}', [QuickOrderController::class, 'create'])->middleware('noindex')->name('quick-order.create');
 Route::post('/quick-order/{product}', [QuickOrderController::class, 'store'])->middleware('throttle:10,1')->name('quick-order.store');
 
-Route::get('/product-question/{product}', [ProductQuestionController::class, 'create'])->name('product-question.create');
+Route::get('/product-question/{product}', [ProductQuestionController::class, 'create'])->middleware('noindex')->name('product-question.create');
 Route::post('/product-question/{product}', [ProductQuestionController::class, 'store'])->middleware('throttle:5,1')->name('product-question.store');
 
 Route::get('/podbor-akb', [BatteryFilterController::class, 'show'])->name('battery-selection');

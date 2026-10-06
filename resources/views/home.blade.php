@@ -1,8 +1,5 @@
 @extends('layouts.app')
 
-@section('title', config('shop.home_meta.title'))
-@section('meta_description', config('shop.home_meta.description'))
-
 @section('body_class', 'menu-expanded')
 
 @push('page-styles')

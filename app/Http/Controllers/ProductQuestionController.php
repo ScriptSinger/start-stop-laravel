@@ -6,6 +6,7 @@ use App\Enums\CustomerRequestType;
 use App\Http\Requests\ProductQuestionRequest;
 use App\Models\CustomerRequest;
 use App\Models\Product;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class ProductQuestionController extends Controller
     public function create(Request $request, Product $product): View
     {
         abort_unless($product->status, 404);
+
+        SEOTools::setTitle('Вопрос о товаре');
 
         return view($request->ajax() ? 'product-question.form' : 'product-question.page', ['product' => $product]);
     }

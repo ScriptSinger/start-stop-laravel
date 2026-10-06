@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Заказ #'.$order->id.' — '.config('shop.name'))
 @section('robots', 'noindex, nofollow')
 
 @push('page-styles')

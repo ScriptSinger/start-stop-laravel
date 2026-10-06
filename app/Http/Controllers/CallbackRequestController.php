@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CustomerRequestType;
 use App\Http\Requests\CallbackRequestRequest;
 use App\Models\CustomerRequest;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ class CallbackRequestController extends Controller
 {
     public function create(Request $request): View
     {
+        SEOTools::setTitle('Заказать звонок');
+
         return view($request->ajax() ? 'callback.form' : 'callback.page');
     }
 

@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Оформление заказа — '.config('shop.name'))
-
 @section('no_fly_menu', true)
 
 @push('page-styles')

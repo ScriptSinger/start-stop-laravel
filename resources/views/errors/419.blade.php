@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Страница устарела — '.config('shop.name'))
+{{-- Своего контроллера у страницы ошибки нет — заголовок задаём здесь. --}}
+@php(Artesaos\SEOTools\Facades\SEOTools::setTitle('Страница устарела'))
+@php(Artesaos\SEOTools\Facades\SEOMeta::setRobots('noindex, follow'))
 
 @section('content')
     <div id="error-not-found" class="container">

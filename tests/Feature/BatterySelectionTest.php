@@ -102,9 +102,10 @@ class BatterySelectionTest extends TestCase
             ->assertOk()
             ->assertJsonPath('redirect', route('battery-selection', ['brand' => 'Kia', 'model' => 'Kia Rio']));
 
-        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Kia Rio']))
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Kia Rio', 'sort' => 'price_asc']))
             ->assertOk()
-            ->assertSee('Аккумуляторы для Kia Rio');
+            ->assertSee('<title>Аккумуляторы для Kia Rio — Старт-Стоп</title>', false)
+            ->assertSee('<link rel="canonical" href="'.e(route('battery-selection', ['brand' => 'Kia', 'model' => 'Kia Rio'])).'">', false);
     }
 
     public function test_selector_steps_return_models_and_generations(): void

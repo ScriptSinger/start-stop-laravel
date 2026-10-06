@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Личный кабинет — '.config('shop.name'))
 @section('robots', 'noindex, nofollow')
 
 @push('page-styles')

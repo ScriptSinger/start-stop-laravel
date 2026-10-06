@@ -37,8 +37,29 @@ class ProductPageTest extends TestCase
             ->assertOk()
             ->assertSee('<h1>Аккумулятор ТЮМЕНЬ ASIA 40 Ah П.П.</h1>', false)
             ->assertSee('<title>Аккумулятор ТЮМЕНЬ ASIA в Уфе</title>', false)
-            ->assertSee('<meta name="description" content="Купить АКБ" />', false)
+            ->assertSee('<meta name="description" content="Купить АКБ">', false)
             ->assertSee(e(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$tyumen->id]])), false);
+    }
+
+    public function test_structured_data_has_price_availability_and_breadcrumbs(): void
+    {
+        $product = $this->product(10, 'ZUBR 60 Ah', ['image' => 'catalog/zubr.jpg', 'sku' => '306']);
+
+        $html = $this->get(route('product.show', $product))
+            ->assertOk()
+            ->assertSee('<meta property="og:type" content="product">', false)
+            ->assertSee('<meta property="og:image" content="'.url('/storage/catalog/zubr.jpg').'">', false)
+            ->assertSee('<link rel="canonical" href="'.route('product.show', $product).'">', false)
+            ->getContent();
+
+        preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $matches);
+        [$productData, $breadcrumbs] = array_map(fn (string $json): array => json_decode($json, true), $matches[1]);
+
+        $this->assertSame('Product', $productData['@type']);
+        $this->assertSame('306', $productData['sku']);
+        $this->assertSame(['@type' => 'Offer', 'url' => route('product.show', $product), 'price' => '7000.00', 'priceCurrency' => 'RUB', 'availability' => 'https://schema.org/InStock'], $productData['offers']);
+        $this->assertSame('BreadcrumbList', $breadcrumbs['@type']);
+        $this->assertSame(['Старт-Стоп', 'Аккумуляторы', 'ZUBR 60 Ah'], array_column($breadcrumbs['itemListElement'], 'name'));
     }
 
     public function test_inactive_product_page_is_not_found(): void

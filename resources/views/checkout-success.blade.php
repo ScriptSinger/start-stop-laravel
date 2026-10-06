@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Ваш заказ #'.$order->id.' сформирован! — '.config('shop.name'))
-
 {{-- Разметка и тексты — как common/success.twig темы UniShop2 старого сайта
      (вариант для гостя: личного кабинета у нас нет) плюс состав заказа. --}}
 @section('content')

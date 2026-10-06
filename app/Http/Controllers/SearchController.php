@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SearchRequest;
 use App\Models\Product;
 use App\Services\Catalog\SearchSuggestions;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
 
@@ -26,6 +27,8 @@ class SearchController extends Controller
             ->sortedBy($request->sort())
             ->paginate($request->perPage())
             ->withQueryString();
+
+        SEOTools::setTitle($search !== '' ? 'Поиск - '.$search : 'Поиск');
 
         return view('search', [
             'search' => $search,

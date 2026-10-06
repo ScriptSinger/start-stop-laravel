@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Связаться с нами — '.config('shop.name'))
-
 {{-- Разметка — 1:1 с information/contact.twig темы UniShop2. Форму «Написать
      нам» не переносим: без уведомлений сообщения некуда доставить. --}}
 @push('page-styles')

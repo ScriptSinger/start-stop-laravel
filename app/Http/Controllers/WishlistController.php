@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\SavedProducts\Wishlist;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ class WishlistController extends Controller
 {
     public function index(Wishlist $wishlist): View
     {
+        SEOTools::setTitle('Закладки');
+
         return view('wishlist', ['products' => $wishlist->products()]);
     }
 

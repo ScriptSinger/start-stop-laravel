@@ -6,6 +6,7 @@ use App\Actions\PlaceOrder;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\Order;
 use App\Services\Cart\Cart;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -48,6 +49,8 @@ class CheckoutController extends Controller
         if (! $order) {
             return redirect()->route('home');
         }
+
+        SEOTools::setTitle("Ваш заказ #{$order->id} сформирован!");
 
         return view('checkout-success', ['order' => $order]);
     }

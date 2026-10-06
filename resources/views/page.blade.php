@@ -1,9 +1,5 @@
 @extends('layouts.app')
 
-@section('title', $page->meta_title ?: $page->title.' — '.config('shop.name'))
-{{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
-@section('meta_description', (string) $page->meta_description)
-
 @section('body_class', 'menu-expanded')
 
 {{-- Разметка — 1:1 с information/information.twig темы UniShop2 старого сайта. --}}

@@ -166,7 +166,7 @@ class CatalogFilterTest extends TestCase
         $this->category()
             ->assertSee('<h1>Автомобильные аккумуляторы</h1>', false)
             ->assertSee('<title>Аккумуляторы в Уфе</title>', false)
-            ->assertSee('<meta name="description" content="Широкий ассортимент АКБ" />', false);
+            ->assertSee('<meta name="description" content="Широкий ассортимент АКБ">', false);
     }
 
     public function test_garbage_parameters_are_ignored(): void

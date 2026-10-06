@@ -35,7 +35,7 @@ class ImportLegacyCategories extends LegacyImportCommand
                     'description' => $this->legacyText($row->description),
                     // H1 храним, только если он отличается от названия.
                     'heading' => trim((string) $this->legacyText($row->meta_h1)) !== trim((string) $this->legacyText($row->name)) ? $this->legacyText($row->meta_h1) : null,
-                    'meta_title' => $this->legacyText($row->meta_title),
+                    'meta_title' => $this->legacyMetaTitle($row->meta_title),
                     'meta_description' => $this->legacyText($row->meta_description),
                     'image' => $row->image ?: null,
                     'sort_order' => $row->sort_order,

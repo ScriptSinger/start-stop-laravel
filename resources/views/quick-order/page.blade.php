@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Быстрый заказ — '.config('shop.name'))
-
 @section('content')
     <div class="container">
         <div class="breadcrumb-h1">

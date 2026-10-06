@@ -1,9 +1,5 @@
 @extends('layouts.app')
 
-@section('title', $product->meta_title ?: ($product->heading ?: $product->name).' — '.config('shop.name'))
-{{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
-@section('meta_description', (string) $product->meta_description)
-
 @push('page-styles')
     @vite('resources/css/storefront/pages/product.css')
 @endpush
@@ -11,10 +7,6 @@
 {{-- Разметка — 1:1 с product/product.twig темы UniShop2 старого сайта. --}}
 @php($category = $product->categories->first())
 @php($image = Illuminate\Support\Facades\Storage::disk('public')->url($product->image ?: 'no_image.png'))
-@section('og_type', 'product')
-@if ($product->image)
-    @section('og_image', $image)
-@endif
 @php($heading = $product->heading ?: $product->name)
 @php([$availabilityText, $availabilityClass] = match (true) {
     $product->quantity > 0 => ['В наличии', 't-5'],

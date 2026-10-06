@@ -7,6 +7,9 @@ use App\Models\Category;
 use App\Services\Catalog\CatalogFacets;
 use App\Services\Catalog\CatalogFilter;
 use App\Services\Catalog\CategoryMenu;
+use Artesaos\SEOTools\Facades\SEOMeta;
+use Artesaos\SEOTools\Facades\SEOTools;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -23,6 +26,8 @@ class CategoryController extends Controller
             ->sortedBy($request->sort())
             ->paginate($request->perPage())
             ->withQueryString();
+
+        $this->describe($category, $products);
 
         return view('category', [
             'category' => $category,
@@ -48,6 +53,33 @@ class CategoryController extends Controller
         return response()->json([
             'count' => $this->filteredProducts($category, $request->toFilter())->count(),
         ]);
+    }
+
+    /**
+     * Фильтры и сортировка — варианты страницы категории: canonical ведёт на
+     * неё саму (как на старом сайте). Страницы пагинации — самостоятельные,
+     * со ссылками prev/next без фильтров.
+     */
+    private function describe(Category $category, LengthAwarePaginator $products): void
+    {
+        SEOTools::setTitle($category->meta_title ?: $category->name, appendDefault: ! $category->meta_title);
+
+        if (filled($category->meta_description)) {
+            SEOTools::setDescription($category->meta_description);
+        }
+
+        $pageUrl = fn (int $page): string => route('category.show', $page > 1 ? [$category, 'page' => $page] : $category);
+        $page = $products->currentPage();
+
+        SEOMeta::setCanonical($pageUrl($page));
+
+        if ($page > 1) {
+            SEOMeta::setPrev($pageUrl($page - 1));
+        }
+
+        if ($products->hasMorePages()) {
+            SEOMeta::setNext($pageUrl($page + 1));
+        }
     }
 
     private function filteredProducts(Category $category, CatalogFilter $filter): BelongsToMany

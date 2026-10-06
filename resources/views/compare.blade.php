@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Сравнение товаров — '.config('shop.name'))
-
 @push('page-styles')
     @vite('resources/css/storefront/pages/compare.css')
 @endpush

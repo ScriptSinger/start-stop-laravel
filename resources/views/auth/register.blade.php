@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Регистрация — '.config('shop.name'))
 @section('robots', 'noindex, follow')
 
 @push('page-styles')

@@ -6,6 +6,7 @@ use App\Actions\PlaceOrder;
 use App\Http\Requests\QuickOrderRequest;
 use App\Models\Product;
 use App\Services\Cart\CartLine;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class QuickOrderController extends Controller
     public function create(Request $request, Product $product): View
     {
         abort_unless($product->status, 404);
+
+        SEOTools::setTitle('Быстрый заказ');
 
         return view($request->ajax() ? 'quick-order.form' : 'quick-order.page', ['product' => $product]);
     }

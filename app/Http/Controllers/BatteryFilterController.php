@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CatalogFilterRequest;
 use App\Models\BatteryFitment;
 use App\Services\BatterySelection;
+use Artesaos\SEOTools\Facades\SEOMeta;
+use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -53,6 +55,15 @@ class BatteryFilterController extends Controller
         $fitment = $this->findFitment($request, $selection);
 
         abort_unless($fitment?->hasSelectionData(), 404);
+
+        SEOTools::setTitle('Аккумуляторы для '.$fitment->displayName());
+        // Машину задают параметры адреса — они и есть страница. SEOMeta
+        // выводит адрес как есть, поэтому & экранируем сами.
+        SEOMeta::setCanonical(e(route('battery-selection', [
+            'brand' => $fitment->brand,
+            'model' => $fitment->model,
+            'gen' => $fitment->generation ?: null,
+        ])));
 
         return view('battery-selection', [
             'fitment' => $fitment,
