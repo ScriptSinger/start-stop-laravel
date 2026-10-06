@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,6 +48,20 @@ class Order extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Заказы, которые видит покупатель: брошенное оформление (unknown) не показываем.
+     */
+    #[Scope]
+    protected function visibleToCustomer(Builder $query): void
+    {
+        $query->where('status', '!=', 'unknown');
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUSES[$this->status] ?? $this->status;
     }
 
     public function items(): HasMany

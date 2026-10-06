@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BatteryFilterController;
 use App\Http\Controllers\CallbackRequestController;
 use App\Http\Controllers\CartController;
@@ -25,6 +26,14 @@ Route::get('/category/{category:slug}/count', [CategoryController::class, 'count
 // Адрес как на старом сайте (OpenCart information/contact).
 Route::get('/contact-us', ContactController::class)->name('contact');
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.show');
+
+// Личный кабинет покупателя (вход, регистрация, восстановление пароля — Fortify).
+// Адреса как на старом сайте.
+Route::middleware('auth')->group(function () {
+    Route::get('/my-account', [AccountController::class, 'index'])->name('account');
+    Route::get('/order-history', [AccountController::class, 'orders'])->name('account.orders');
+    Route::get('/order-history/{order}', [AccountController::class, 'order'])->whereNumber('order')->name('account.order');
+});
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.store');

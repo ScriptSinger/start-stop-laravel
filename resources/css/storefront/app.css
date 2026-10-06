@@ -8,6 +8,7 @@
 @import '../../theme/stylesheet/topstripe.css';
 @import '../../theme/stylesheet/notification.css';
 @import '../../theme/stylesheet/blog.css';
+@import '../../theme/stylesheet/login_register.css';
 @import '../../theme/stylesheet/generated-user-style.0.css';
 
 @import './components/layout.css';

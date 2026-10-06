@@ -2,24 +2,19 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<User>
+ * @extends Factory<Customer>
  */
-class UserFactory extends Factory
+class CustomerFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -27,19 +22,21 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'phone' => '+7 (987) '.fake()->numerify('###-##-##'),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Клиент со старого сайта: пароля ещё нет, есть хеш OpenCart.
      */
-    public function unverified(): static
+    public function legacyPassword(string $password, string $salt = 'abcdefghi'): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+        return $this->state(fn (): array => [
+            'password' => null,
+            'legacy_password_hash' => sha1($salt.sha1($salt.sha1($password))),
+            'legacy_password_salt' => $salt,
         ]);
     }
 }

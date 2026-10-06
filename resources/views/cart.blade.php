@@ -97,6 +97,11 @@
                                 </div>
                             </div>
 
+                            @guest
+                                {{-- Как на старом сайте: вошедший покупатель увидит заказ в истории заказов. --}}
+                                <div class="checkout-login">Уже зарегистрированы? &nbsp;<a href="{{ route('login') }}" class="checkout-login__link" @click.prevent="$store.modal.open($el.href, 'Авторизация')">Авторизоваться</a></div>
+                            @endguest
+
                             <form method="post" action="{{ route('checkout.store') }}" id="unicheckout__form" class="unicheckout__form" novalidate data-checkout
                                   x-data="checkout({delivery: @js($selectedDelivery->value), payment: @js($selectedPayment), pickup: @js(DeliveryMethod::Pickup->value), cardOnlyPayments: @js(collect(PaymentMethod::cases())->reject->isAllowedFor(DeliveryMethod::City)->map->value->values())})"
                                   @input="clearWarning" @change="clearWarning">

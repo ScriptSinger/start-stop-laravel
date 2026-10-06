@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -11,14 +11,13 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Тестовый покупатель для входа на витрину (пароль — «password»).
+     * Каталог и заказы заполняет импорт со старого сайта: php artisan import:legacy.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
+        Customer::factory()->create([
+            'name' => 'Test Customer',
             'email' => 'test@example.com',
         ]);
     }

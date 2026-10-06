@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\DeliveryMethod;
 use App\Enums\PaymentMethod;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Services\Cart\CartLine;
 use Illuminate\Support\Collection;
@@ -20,11 +21,13 @@ class PlaceOrder
      * @param  array{name: string, phone: string, email: ?string, address: ?string, comment: ?string}  $contact
      *
      * Без способа получения и оплаты — быстрый заказ: их уточнит менеджер по телефону.
+     * С покупателем — заказ попадёт в его историю заказов в личном кабинете.
      */
-    public function handle(Collection $lines, ?DeliveryMethod $delivery, ?PaymentMethod $payment, array $contact): Order
+    public function handle(Collection $lines, ?DeliveryMethod $delivery, ?PaymentMethod $payment, array $contact, ?Customer $customer = null): Order
     {
-        return DB::transaction(function () use ($lines, $delivery, $payment, $contact): Order {
+        return DB::transaction(function () use ($lines, $delivery, $payment, $contact, $customer): Order {
             $order = Order::query()->create([
+                'customer_id' => $customer?->id,
                 'customer_name' => $contact['name'],
                 'customer_phone' => $contact['phone'],
                 'customer_email' => $contact['email'],

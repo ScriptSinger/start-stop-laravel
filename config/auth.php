@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\Customer;
 
 return [
 
@@ -17,7 +17,7 @@ return [
 
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'customers'),
     ],
 
     /*
@@ -38,9 +38,10 @@ return [
     */
 
     'guards' => [
+        // Покупатели сайта. Администраторы входят в MoonShine своим guard.
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'customers',
         ],
     ],
 
@@ -62,9 +63,9 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'customers' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => Customer::class,
         ],
 
         // 'users' => [
@@ -93,8 +94,8 @@ return [
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
+        'customers' => [
+            'provider' => 'customers',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,

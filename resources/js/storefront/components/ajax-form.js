@@ -1,11 +1,12 @@
 /*
- * Форма в окне (заказ звонка, быстрый заказ, вопрос о товаре): отправка без
- * перезагрузки — успех показывается вместо формы, ошибки — под полями.
- * На отдельной странице (/callback и т.п.) форма отправляется как обычно.
+ * Форма в окне (заказ звонка, быстрый заказ, вопрос о товаре, вход):
+ * отправка без перезагрузки — успех показывается вместо формы (или, с
+ * reload, страница обновляется — например, после входа), ошибки — под полями.
+ * На отдельной странице (/callback, /login и т.п.) форма отправляется как обычно.
  */
 import { postJson } from '../utils';
 
-export default () => ({
+export default ({reload = false} = {}) => ({
     errors: {},
     message: '',
     sending: false,
@@ -20,9 +21,18 @@ export default () => ({
         this.errors = {};
 
         try {
-            this.message = (await postJson(this.$el.action, new FormData(this.$el))).message;
+            const json = await postJson(this.$el.action, new FormData(this.$el));
+
+            if (reload) {
+                location.reload();
+
+                return;
+            }
+
+            this.message = json.message;
         } catch (error) {
-            this.errors = error.data?.errors ?? {_form: ['Не получилось отправить. Попробуйте ещё раз или позвоните нам.']};
+            this.errors = error.data?.errors
+                ?? {_form: [error.data?.message || 'Не получилось отправить. Попробуйте ещё раз или позвоните нам.']};
         } finally {
             this.sending = false;
         }

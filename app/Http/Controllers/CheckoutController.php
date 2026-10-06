@@ -28,7 +28,7 @@ class CheckoutController extends Controller
                 ->with('status', 'Корзина пуста — возможно, товары сняли с продажи.');
         }
 
-        $order = $placeOrder->handle($lines, $request->delivery(), $request->payment(), $request->contact());
+        $order = $placeOrder->handle($lines, $request->delivery(), $request->payment(), $request->contact(), $request->user());
 
         $cart->clear();
         // Не флеш: страница «Спасибо» должна пережить обновление.

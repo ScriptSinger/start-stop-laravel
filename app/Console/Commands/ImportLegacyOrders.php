@@ -26,17 +26,24 @@ class ImportLegacyOrders extends LegacyImportCommand
         $rows = DB::connection('legacy')->table('oc_customer')->get();
 
         $this->withProgressBar($rows, function ($row): void {
+            $hasOwnPassword = DB::table('customers')->where('id', $row->customer_id)->whereNotNull('password')->exists();
+
             DB::table('customers')->updateOrInsert(
                 ['id' => $row->customer_id],
                 [
                     'name' => trim("{$row->firstname} {$row->lastname}"),
-                    'email' => $row->email ?: "customer-{$row->customer_id}@legacy.invalid",
+                    'email' => $row->email ? mb_strtolower(trim($row->email)) : "customer-{$row->customer_id}@legacy.invalid",
                     'phone' => $row->telephone ?: null,
-                    // Пароль не переносим — старый хэш (соль + тройной sha1) не
-                    // совместим с Laravel bcrypt, клиентам потребуется сброс.
-                    'password' => null,
                     'updated_at' => now(),
                     'created_at' => $row->date_added,
+                    // Старый пароль (sha1 с солью) проверяется при первом входе и
+                    // пересохраняется обычным хешем (Customer::upgradeLegacyPassword).
+                    // Кто уже задал пароль на новом сайте — того не трогаем.
+                    ...($hasOwnPassword ? [] : [
+                        'password' => null,
+                        'legacy_password_hash' => $row->password ?: null,
+                        'legacy_password_salt' => $row->salt ?: null,
+                    ]),
                 ],
             );
         });

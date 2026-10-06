@@ -33,6 +33,22 @@
                         </div>
                     </div>
                 @endif
+                {{-- Личный кабинет — как #account в шапке темы UniShop2. --}}
+                <div class="top-menu__account status-2">
+                    <div id="account" class="btn-group">
+                        <button class="top-menu__btn dropdown-toggle" aria-label="Личный кабинет" data-toggle="dropdown"><i class="far fa-user"></i><span class="top-menu__btn-text">Личный кабинет</span></button>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            @guest
+                                <li><a href="{{ route('login') }}" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="fas fa-fw fa-sign-in-alt"></i>Авторизация</a></li>
+                                <li><a href="{{ route('register') }}"><i class="fas fa-fw fa-user-plus"></i>Регистрация</a></li>
+                            @else
+                                <li><a href="{{ route('account') }}"><i class="fas fa-fw fa-user"></i>Личный кабинет</a></li>
+                                <li><a href="{{ route('account.orders') }}"><i class="fas fa-fw fa-clipboard-list"></i>История заказов</a></li>
+                                <li><form method="post" action="{{ route('logout') }}">@csrf<button type="submit" class="top-menu__logout"><i class="fas fa-fw fa-sign-out-alt"></i>Выход</button></form></li>
+                            @endguest
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -65,6 +81,13 @@
                 </div>
             </div>
 
+            <div class="header-block__item header-block__item-account">
+                @guest
+                    <a class="header-account" href="{{ route('login') }}" title="Войти" aria-label="Войти" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="header-account__icon far fa-user"></i></a>
+                @else
+                    <a class="header-account" href="{{ route('account') }}" title="Личный кабинет" aria-label="Личный кабинет"><i class="header-account__icon far fa-user"></i></a>
+                @endguest
+            </div>
             @if ($hasWishlist)
                 <div class="header-block__item header-block__item-wishlist">
                     <div class="header-wishlist uni-href" data-href="{{ route('wishlist.index') }}" title="Закладки"><i class="header-wishlist__icon far fa-heart"></i><span class="header-wishlist__total-items" x-text="$store.saved.wishlist">{{ $wishlistCount ?? 0 }}</span></div>

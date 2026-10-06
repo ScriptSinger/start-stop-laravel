@@ -39,6 +39,7 @@ class QuickOrderController extends Controller
                 'address' => null,
                 'comment' => trim('Быстрый заказ. '.$request->validated('comment')),
             ],
+            customer: $request->user(),
         );
 
         session(['placed_order_id' => $order->id]);
