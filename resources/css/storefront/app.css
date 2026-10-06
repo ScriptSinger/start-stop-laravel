@@ -1,0 +1,20 @@
+/*
+ * Витрина, часть 2: общие стили темы, которые старый сайт подключал после
+ * стилей блоков страницы, и наши дополнения (components/) — последними.
+ */
+@import '../../theme/stylesheet/livesearch.css';
+@import '../../theme/stylesheet/flymenu.css';
+@import '../../theme/stylesheet/qty-indicator.css';
+@import '../../theme/stylesheet/topstripe.css';
+@import '../../theme/stylesheet/notification.css';
+@import '../../theme/stylesheet/blog.css';
+@import '../../theme/stylesheet/generated-user-style.0.css';
+
+@import './components/layout.css';
+@import './components/product-card.css';
+@import './components/product-page.css';
+@import './components/catalog.css';
+@import './components/home.css';
+@import './components/battery-wizard.css';
+@import './components/cart.css';
+@import './components/forms.css';

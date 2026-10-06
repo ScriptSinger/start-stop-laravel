@@ -1,0 +1,4 @@
+/* Стили блоков страницы из темы UniShop2 — как старый сайт подключал их на этой странице. */
+@import '../../../theme/stylesheet/home-banner.css';
+@import '../../../theme/stylesheet/category_wall.css';
+@import '../../../theme/stylesheet/news.css';

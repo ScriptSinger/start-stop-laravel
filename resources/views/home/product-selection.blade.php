@@ -5,7 +5,7 @@
     <div class="heading">{{ $selection->toString() }}@if ($link) <a href="{{ route('category.show', $link['category']) }}" class="heading__link">{{ $link['title'] }}</a>@endif</div>
     <div class="tab-content">
         <div class="tab-pane active">
-            <div class="uni-module {{ $moduleClass }}">
+            <div class="uni-module {{ $moduleClass }}" data-uni-module="carousel">
                 <div class="uni-module__wrapper">
                     @foreach ($products as $product)
                         @include('partials.product-card', ['product' => $product])
@@ -14,8 +14,4 @@
             </div>
         </div>
     </div>
-
-    @push('scripts')
-        <script>$('.{{ $moduleClass }}').uniModules({type: 'carousel'});</script>
-    @endpush
 @endif

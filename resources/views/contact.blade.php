@@ -4,8 +4,8 @@
 
 {{-- Разметка — 1:1 с information/contact.twig темы UniShop2. Форму «Написать
      нам» не переносим: без уведомлений сообщения некуда доставить. --}}
-@push('module-styles')
-    <link href="{{ asset('theme/stylesheet/contact-page.css') }}" rel="stylesheet" media="screen" />
+@push('page-styles')
+    @vite('resources/css/storefront/pages/contact.css')
 @endpush
 
 @section('content')
@@ -42,7 +42,7 @@
                             </div>
                             <div class="contacts__map col-xs-12 col-sm-6">
                                 <div class="heading">Схема проезда</div>
-                                <script type="text/javascript" charset="utf-8" async src="{{ config('shop.yandex_map_src') }}"></script>
+                                <div data-yandex-map="{{ config('shop.yandex_map_src') }}"></div>
                             </div>
                         </div>
                     </div>

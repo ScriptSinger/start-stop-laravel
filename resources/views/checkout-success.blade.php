@@ -20,7 +20,7 @@
                 <p>Спасибо за покупки в нашем интернет-магазине!</p>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered" style="max-width: 720px;">
+                    <table class="table table-bordered order-summary">
                         @foreach ($order->items as $item)
                             <tr>
                                 <td>
@@ -29,12 +29,12 @@
                                         <div class="small text-muted">Трейд-ин: со сдачей старого АКБ</div>
                                     @endif
                                 </td>
-                                <td class="text-right" style="white-space: nowrap;">{{ number_format((float) $item->total, 0, '', '') }}р.</td>
+                                <td class="text-right order-summary__price">{{ number_format((float) $item->total, 0, '', '') }}р.</td>
                             </tr>
                         @endforeach
                         <tr>
                             <td><strong>Всего</strong></td>
-                            <td class="text-right" style="white-space: nowrap;"><strong>{{ number_format((float) $order->total, 0, '', '') }}р.</strong></td>
+                            <td class="text-right order-summary__price"><strong>{{ number_format((float) $order->total, 0, '', '') }}р.</strong></td>
                         </tr>
                     </table>
                 </div>

@@ -2,8 +2,8 @@
 
 @section('title', ($search !== '' ? 'Поиск - '.$search : 'Поиск').' — '.config('shop.name'))
 
-@push('module-styles')
-    <link href="{{ asset('theme/stylesheet/search-page.css') }}" rel="stylesheet" media="screen" />
+@push('page-styles')
+    @vite('resources/css/storefront/pages/search.css')
 @endpush
 
 {{-- Разметка — 1:1 с product/search.twig темы UniShop2 старого сайта. --}}
@@ -22,8 +22,8 @@
                     <form class="search-page__search-block" action="{{ route('search') }}" method="get">
                         <div class="row-flex">
                             <div class="search-page__search-input">
-                                <input type="text" name="search" value="{{ $search }}" placeholder="Ключевые слова" id="input-search" class="form-control" aria-label="Ключевые слова" />
-                                <button type="button" class="search-btn-clear {{ $search !== '' ? 'show' : '' }}" aria-label="Очистить">&times;</button>
+                                <input type="text" name="search" value="{{ $search }}" placeholder="Ключевые слова" id="input-search" class="form-control" aria-label="Ключевые слова" x-model="$store.search.query" />
+                                <button type="button" class="search-btn-clear {{ $search !== '' ? 'show' : '' }}" aria-label="Очистить" :class="{show: $store.search.query !== ''}" @click="$store.search.query = ''">&times;</button>
                             </div>
                             <div class="search-page__search-delimiter visible-xs"></div>
                             <div class="search-page__search-category">
@@ -77,16 +77,7 @@
                     @else
                         @include('partials.catalog-sorts')
 
-                        <div class="products-block row row-flex">
-                            @foreach ($products as $product)
-                                <div class="product-layout product-grid grid-view col-sm-6 col-md-3 col-lg-3 col-xxl-4">
-                                    @include('partials.product-card', ['product' => $product])
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{ $products->links() }}
-                        <div class="pagination-text">Показано с {{ $products->firstItem() }} по {{ $products->lastItem() }} из {{ $products->total() }} (всего {{ $products->lastPage() }} <x-plural :count="$products->lastPage()" forms="страница|страницы|страниц" />)</div>
+                        @include('partials.product-grid', ['columnClass' => 'col-sm-6 col-md-3 col-lg-3 col-xxl-4'])
                     @endif
                 </div>
             </div>

@@ -1,0 +1,14 @@
+/* Подбор АКБ по марке авто (модуль battery_filter старого сайта). */
+.battery-wizard-container {background: #fff; padding: 20px; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px}
+.w-title {font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center}
+.w-back {cursor: pointer; color: #e31e24; font-size: 24px; vertical-align: middle; margin-right: 10px}
+.w-cur-brand {color: #e31e24}
+.w-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px}
+.w-grid.gens {grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))}
+.w-grid.models {grid-template-columns: repeat(auto-fill, minmax(140px, 1fr))}
+.w-item {border: 1px solid #f0f0f0; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; transition: all 0.2s ease-in-out; background: #fff}
+.w-item:hover {border-color: #e31e24; box-shadow: 0 5px 12px rgba(227, 30, 36, 0.1); transform: translateY(-2px)}
+.brand-box img {max-width: 60px; height: 50px; object-fit: contain; display: block; margin: 0 auto 8px}
+.gens img {width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px}
+.w-btn-more {margin-top: 20px; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 25px; border-radius: 20px; color: #555; cursor: pointer}
+.battery-wizard-container .mt-3 {margin-top: 15px}

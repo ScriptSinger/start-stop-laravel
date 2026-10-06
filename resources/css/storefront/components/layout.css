@@ -1,0 +1,21 @@
+/* Каркас страницы. */
+
+/* Тема прячет блоки модулей до их раскладки скриптом; у нас раскладка
+   не мигает, поэтому показываем сразу (как inline-стиль старого сайта). */
+.uni-module__wrapper {opacity: 1}
+
+/* Меню категорий раскрыто слева — на главной и инфостраницах, как на старом сайте. */
+@media (min-width: 992px) {
+    .menu-expanded header .menu1 .menu__collapse {display: block !important}
+}
+
+/* Отступы, которые в теме были пустыми div со style="height:…". */
+.footer__payments-gap {height: 15px}
+
+/* Всплывающее уведомление: одно за раз, под шапкой браузера. */
+.uni-alert {top: 50px}
+
+/* Выпадающее меню категорий в прилипающей шапке — под кнопкой, как у темы. */
+.fly-menu__dropdown {position: absolute}
+
+[x-cloak] {display: none !important}

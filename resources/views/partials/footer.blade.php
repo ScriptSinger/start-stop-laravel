@@ -6,7 +6,7 @@
         <div class="row row-flex">
             @foreach ($footerColumns as $column)
                 <div class="footer__column col-sm-6 col-md-3">
-                    <div class="footer__column-heading" data-toggle="collapse" data-target=".footer__column-ul-{{ $loop->iteration }}" onclick="$(this).toggleClass('open')">
+                    <div class="footer__column-heading" data-toggle="collapse" data-target=".footer__column-ul-{{ $loop->iteration }}" x-data="{open: false}" :class="{open}" @click="open = !open">
                         {{ $column->title }} <i class="fas fa-chevron-down visible-xs"></i>
                     </div>
                     <ul class="footer__column-ul footer__column-ul-{{ $loop->iteration }} collapse list-unstyled">
@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <div class="col-sm-12 col-md-6">
-                    <div class="visible-xs visible-sm" style="height:15px"></div>
+                    <div class="footer__payments-gap visible-xs visible-sm"></div>
                     <div class="footer__payments"></div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
 {{-- Кнопка «наверх» (fly-block темы; закладки, сравнение и контакты в нём
      на старом сайте были выключены). --}}
 <div class="fly-block">
-    <div class="fly-block__item fly-block__scrollup" title="Наверх" data-scroll-top>
+    <div class="fly-block__item fly-block__scrollup" title="Наверх" x-data="{visible: false}" :class="{visible}" @scroll.window.throttle.50ms="visible = window.scrollY > 190" @click="window.scrollTo({top: 0, behavior: 'smooth'})">
         <i class="fa fa-chevron-up fly-block__scrollup-icon" aria-hidden="true"></i>
     </div>
 </div>

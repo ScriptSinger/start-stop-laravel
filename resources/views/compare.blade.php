@@ -2,8 +2,8 @@
 
 @section('title', 'Сравнение товаров — '.config('shop.name'))
 
-@push('module-styles')
-    <link href="{{ asset('theme/stylesheet/compare.css') }}" rel="stylesheet" media="screen" />
+@push('page-styles')
+    @vite('resources/css/storefront/pages/compare.css')
 @endpush
 
 {{-- Разметка — 1:1 с product/compare.twig темы UniShop2 старого сайта. --}}
@@ -19,9 +19,9 @@
         <div class="row">
             <div id="content" class="col-sm-12">
                 <div class="uni-wrapper">
-                    <div class="compare-page-wrapper">
+                    <div class="compare-page-wrapper" x-data="{onlyDifferences: true}">
                         @if ($products->isNotEmpty())
-                            <label class="compare-attribute-hide-same input {{ $specificationNames->isNotEmpty() ? 'is_visible' : '' }}"><input type="checkbox" value="1" checked="checked" id="compare-hide-same" /> Показывать только отличия</label>
+                            <label class="compare-attribute-hide-same input {{ $specificationNames->isNotEmpty() ? 'is_visible' : '' }}"><input type="checkbox" value="1" checked="checked" id="compare-hide-same" x-model="onlyDifferences" /> Показывать только отличия</label>
                             <div class="compare-page {{ $products->count() > 2 ? 'more' : '' }}" data-products="{{ $products->count() }}">
                                 <div class="compare-page__row">
                                     @foreach ($products as $product)
@@ -43,9 +43,9 @@
                                                         {{ number_format($product->displayPrice(), 0, '', '') }}р.
                                                     @endif
                                                 </div>
-                                                <form method="post" action="{{ route('cart.store', $product) }}">
+                                                <form method="post" action="{{ route('cart.store', $product) }}" @submit.prevent="$store.cart.add($el)">
                                                     @csrf
-                                                    <button type="submit" class="compare-page__cart add_to_cart button btn" title="В корзину"><i class="fa fa-shopping-bag"></i><span>В корзину</span></button>
+                                                    <button type="submit" class="compare-page__cart add_to_cart button btn" title="В корзину" :class="{in_cart: $store.cart.has({{ $product->id }})}"><x-cart-button-label :product="$product" /></button>
                                                 </form>
                                             </div>
                                         </div>
@@ -69,7 +69,9 @@
                                 </div>
                                 @php($specifications = $products->mapWithKeys(fn ($product) => [$product->id => $product->specifications()]))
                                 @foreach ($specificationNames as $name)
-                                    <div class="compare-page__row compare-page__attr">
+                                    {{-- «Показывать только отличия»: строка, где у всех товаров одно значение, прячется. --}}
+                                    @php($isSame = $products->count() > 1 && $products->map(fn ($product) => $specifications[$product->id][$name] ?? '-')->unique()->count() === 1)
+                                    <div class="compare-page__row compare-page__attr" @if ($isSame) x-show="!onlyDifferences" @endif>
                                         @foreach ($products as $product)
                                             @php($value = $specifications[$product->id][$name] ?? null)
                                             <div class="compare-page__cell">
@@ -81,7 +83,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <div class="compare-page" style="margin:0" data-products="0">
+                            <div class="compare-page compare-page_empty" data-products="0">
                                 <div class="div-text-empty">Вы не выбрали ни одного товара для сравнения.</div>
                             </div>
                         @endif
@@ -91,21 +93,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        // «Показывать только отличия»: прячем строки, где у всех товаров одно значение.
-        function compareHideSame() {
-            const hide = $('#compare-hide-same').is(':checked');
-
-            $('.compare-page__attr').each(function () {
-                const values = $(this).find('.compare-page__attr-val').map((i, el) => $(el).text().trim()).get();
-
-                $(this).toggle(!(hide && values.length > 1 && values.every((value) => value === values[0])));
-            });
-        }
-
-        $('#compare-hide-same').on('change', compareHideSame);
-        compareHideSame();
-    </script>
-@endpush

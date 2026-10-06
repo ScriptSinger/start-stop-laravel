@@ -1,0 +1,12 @@
+/*
+ * Витрина, часть 1: стили темы UniShop2 старого сайта в его порядке.
+ * Вёрстка повторяет разметку темы 1:1, поэтому порядок файлов важен.
+ * generated*.css — цвета и переменные, собранные старой админкой темы.
+ * Дальше идут стили блоков страницы (pages/*.css), затем app.css.
+ */
+@import '../../theme/stylesheet/bootstrap.min.css';
+@import '../../theme/stylesheet/opensans.css';
+@import '../../theme/stylesheet/stylesheet.css';
+@import '../../theme/stylesheet/generated.0.css';
+@import '../../theme/stylesheet/font-awesome.min.css';
+@import '../../theme/stylesheet/animate.css';

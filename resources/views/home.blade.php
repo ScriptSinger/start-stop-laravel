@@ -2,12 +2,10 @@
 
 @section('title', config('shop.name'))
 
-@include('partials.expanded-category-menu')
+@section('body_class', 'menu-expanded')
 
-@push('module-styles')
-    @foreach (['home-banner', 'category_wall', 'news'] as $stylesheet)
-        <link href="{{ asset("theme/stylesheet/{$stylesheet}.css") }}" rel="stylesheet" media="screen" />
-    @endforeach
+@push('page-styles')
+    @vite('resources/css/storefront/pages/home.css')
 @endpush
 
 {{-- Сетка — как common/home.twig темы UniShop2: слева пустая колонка (её

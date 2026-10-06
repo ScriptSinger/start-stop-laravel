@@ -19,7 +19,7 @@
                 @foreach ($products as $product)
                     <div class="product-layout product-grid grid-view col-sm-6 col-md-4 col-lg-3 col-xxl-5">
                         @include('partials.product-card', ['product' => $product])
-                        <form method="post" action="{{ route('wishlist.destroy', $product) }}" class="text-center" style="margin: -10px 0 20px;">
+                        <form method="post" action="{{ route('wishlist.destroy', $product) }}" class="wishlist__remove text-center">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-link btn-sm"><i class="far fa-trash-alt"></i> Удалить из закладок</button>

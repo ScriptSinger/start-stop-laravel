@@ -1,0 +1,41 @@
+/* Блоки главной (html-модули старого сайта) и баннеры. */
+
+/* Баннеры. Скругление — из пользовательского CSS темы (.tp-caption img
+   { border-radius: 15px }), написанного под разметку Revolution Slider. */
+.home-slider img, .home-strip img {width: 100%; height: auto; border-radius: 15px}
+.home-strip {margin-top: 20px}
+
+/* «Популярные категории»: фон плитки — картинка категории из админки
+   (адрес — в style плитки, остальное здесь; как shorthand background старого сайта). */
+.category-wall__item_image {background-color: transparent; background-size: cover; background-repeat: no-repeat; background-position: center}
+
+/* «Наши преимущества». */
+.iconblock-8 {margin: 10px 0; padding-right: 10px}
+.iconblock-8 .icon {float: left; text-align: center; position: relative; top: 15px; left: 5px; width: 50px; height: 50px; background: #c82a00; color: #fff; transition: all .3s; transform: skew(-10deg); margin-left: 30px; border-radius: 18%}
+.iconblock-8 .icon i, .iconblock-8 .icon img {font-size: 32px; height: auto; width: 40px; color: #fff; padding-top: 10px; z-index: 1; position: relative; box-sizing: content-box; transform: skew(5deg)}
+.iconblock-8 .icon img.iconblock-8__img_small {width: 50%}
+.iconblock-8:hover .icon {top: 10px; left: 0}
+.iconblock-8:hover .icon {box-shadow: 8px 8px #cccccc}
+.iconblock-8 .block {overflow: hidden; padding-left: 30px}
+.iconblock-8 h3 {transition: all 0.7s ease 0s; color: #000; font-size: 18px; margin: 10px 0; font-weight: 500}
+.iconblock-8:hover h3 {color: #c82a00}
+
+/* «Обратный звонок». */
+.imageblock .header-phones__callback {display: inline-block; background: #c82a00; border: none; border-radius: 12px; color: white !important; text-decoration: none; margin-left: 30px; padding: 6px 12px}
+.imageblock {border-radius: 25px; background-image: url('../../../images/home/callback.jpg'); background-size: cover; background-repeat: no-repeat; background-position: 50% 30%}
+.blocktxt {background: rgb(0, 0, 0, 0.7); padding: 20px; border-radius: 25px; color: #fff !important}
+.imageblock h3 {transition: all 0.7s ease 0s; color: #fff; font-size: 36px; margin: 10px 0; font-weight: 500}
+.imageblock:hover h3 {color: #c82a00}
+
+/* «О нас»: текст из визуального редактора старой админки; там это были
+   style у каждого абзаца, поэтому селектор сильнее правил темы для .html-module. */
+.home-page .html-module.home-about :is(h2, h3, p, li) {padding: 0; margin-bottom: 16px; margin-left: 25px; line-height: inherit; font-feature-settings: "liga", "kern"; font-kerning: normal}
+.home-about__verdana {font-family: Verdana}
+
+/* Отзывы (виджет MyReviews). */
+.reviews-widget {display: flex; justify-content: center; margin-top: 20px; border-radius: 20px}
+.reviews-widget__frame {width: 100%; height: 100%; max-width: 1170px; border: none; outline: none; padding: 0; margin: 0}
+
+/* Карта с контактами. */
+.contact-wrap .blockontact {z-index: 2}
+.contact-wrap .map-area {z-index: 1}

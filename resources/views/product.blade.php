@@ -4,10 +4,8 @@
 {{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
 @section('meta_description', (string) $product->meta_description)
 
-@push('module-styles')
-    @foreach (['goodshare', 'product-page', 'request'] as $stylesheet)
-        <link href="{{ asset("theme/stylesheet/{$stylesheet}.css") }}" rel="stylesheet" media="screen" />
-    @endforeach
+@push('page-styles')
+    @vite('resources/css/storefront/pages/product.css')
 @endpush
 
 {{-- Разметка — 1:1 с product/product.twig темы UniShop2 старого сайта. --}}
@@ -45,7 +43,7 @@
                     <div class="row">
                         <div class="product-page col-sm-12 col-md-12 col-lg-10">
                             <div class="row">
-                                <div class="product-page__image col-sm-6">
+                                <div class="product-page__image col-sm-6" x-data="{image: @js($image)}">
                                     <div class="product-page__image-main">
                                         @if ($product->hasSpecial() || $product->hasTradeIn() || $product->is_pickup_only)
                                             <div class="sticker">
@@ -61,7 +59,7 @@
                                             </div>
                                         @endif
                                         <div class="product-page__image-main-carousel">
-                                            <img src="{{ $image }}" alt="{{ $heading }}" title="{{ $heading }}" width="500" height="400" class="product-page__image-main-img img-responsive" id="product-main-image" />
+                                            <img src="{{ $image }}" :src="image" alt="{{ $heading }}" title="{{ $heading }}" width="500" height="400" class="product-page__image-main-img img-responsive" />
                                         </div>
                                     </div>
                                     @if ($product->images->isNotEmpty())
@@ -69,7 +67,7 @@
                                             @foreach ([$product->image, ...$product->images->pluck('path')] as $path)
                                                 @if ($path)
                                                     @php($url = Illuminate\Support\Facades\Storage::disk('public')->url($path))
-                                                    <img src="{{ $url }}" alt="{{ $heading }}" class="product-page__image-addit-img img-responsive" data-full="{{ $url }}" width="74" height="74" loading="lazy" />
+                                                    <img src="{{ $url }}" alt="{{ $heading }}" class="product-page__image-addit-img img-responsive" width="74" height="74" loading="lazy" @click="image = @js($url)" />
                                                 @endif
                                             @endforeach
                                         </div>
@@ -101,7 +99,7 @@
                                         @endif
                                     </div>
 
-                                    <form method="post" action="{{ route('cart.store', $product) }}" id="product-cart-form" data-add-to-cart>
+                                    <form method="post" action="{{ route('cart.store', $product) }}" id="product-cart-form" @submit.prevent="$store.cart.add($el)">
                                         @csrf
                                         @if ($product->hasTradeIn())
                                             <div class="product-page__option option row">
@@ -118,24 +116,24 @@
                                         @endif
 
                                         <div class="product-page__cart">
-                                            <div class="qty-switch">
-                                                <input type="text" name="quantity" value="1" data-minimum="1" data-maximum="{{ \App\Services\Cart\Cart::MAX_QUANTITY }}" class="qty-switch__input form-control" aria-label="Количество" inputmode="numeric" />
+                                            <div class="qty-switch" x-data="qtySwitch({max: {{ \App\Services\Cart\Cart::MAX_QUANTITY }}})">
+                                                <input type="text" name="quantity" value="1" :value="value" @change="set($event.target.value)" class="qty-switch__input form-control" aria-label="Количество" inputmode="numeric" />
                                                 <div>
-                                                    <i class="qty-switch__btn fa fa-plus" data-step="1"></i>
-                                                    <i class="qty-switch__btn fa fa-minus" data-step="-1"></i>
+                                                    <i class="qty-switch__btn fa fa-plus" @click="step(1)"></i>
+                                                    <i class="qty-switch__btn fa fa-minus" @click="step(-1)"></i>
                                                 </div>
                                             </div>
-                                            <button type="submit" class="product-page__add-to-cart add_to_cart btn btn-xl" data-pid="{{ $product->id }}">
+                                            <button type="submit" class="product-page__add-to-cart add_to_cart btn btn-xl" :class="{in_cart: $store.cart.has({{ $product->id }})}">
                                                 @if ($product->isAvailableOnOrder())
-                                                    <i class="fa fa-truck"></i><span>Заказать</span>
+                                                    <x-cart-button-label :product="$product" icon="fa-truck" text="Заказать" />
                                                 @else
-                                                    <i class="fa fa-shopping-bag"></i><span>В корзину</span>
+                                                    <x-cart-button-label :product="$product" />
                                                 @endif
                                             </button>
-                                            <a href="{{ route('quick-order.create', $product) }}" class="product-page__quick-order quick-order btn btn-lg btn-xl" title="Быстрый заказ" aria-label="Быстрый заказ" data-modal-url="{{ route('quick-order.create', $product) }}" data-modal-title="Быстрый заказ"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
+                                            <a href="{{ route('quick-order.create', $product) }}" class="product-page__quick-order quick-order btn btn-lg btn-xl" title="Быстрый заказ" aria-label="Быстрый заказ" @click.prevent="$store.modal.open($el.href, 'Быстрый заказ')"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
                                         </div>
-                                        <button type="submit" title="В закладки" class="product-page__wishlist-btn wishlist" formaction="{{ route('wishlist.store', $product) }}" data-saved-list="wishlist"><i class="far fa-heart"></i><span>В закладки</span></button>
-                                        <button type="submit" title="В сравнение" class="product-page__compare-btn compare" formaction="{{ route('compare.store', $product) }}" data-saved-list="compare"><i class="fas fa-align-right"></i><span>В сравнение</span></button>
+                                        <button type="submit" title="В закладки" class="product-page__wishlist-btn wishlist" formaction="{{ route('wishlist.store', $product) }}" @click.prevent="$store.saved.add('wishlist', $el)"><i class="far fa-heart"></i><span>В закладки</span></button>
+                                        <button type="submit" title="В сравнение" class="product-page__compare-btn compare" formaction="{{ route('compare.store', $product) }}" @click.prevent="$store.saved.add('compare', $el)"><i class="fas fa-align-right"></i><span>В сравнение</span></button>
                                     </form>
 
                                     @if (($shortSpecifications = $specifications->take(6))->isNotEmpty())
@@ -144,11 +142,11 @@
                                                 <div class="product-data__item"><div class="product-data__item-div">{{ $name }}</div>{{ $value }}</div>
                                             @endforeach
                                         </div>
-                                        <a class="product-page__more-attr" href="#tab-specification" data-show-tab="#tab-specification">Все характеристики</a>
+                                        <a class="product-page__more-attr" href="#tab-specification" @click.prevent="$showTab('#tab-specification')">Все характеристики</a>
                                     @endif
 
                                     <div class="product-page__share">
-                                        <div id="goodshare" data-socials="vkontakte,telegram"></div>
+                                        <div id="goodshare"><div class="vkontakte" data-social="vkontakte"></div><div class="telegram" data-social="telegram"></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +167,7 @@
                         </div>
                     </div>
 
-                    <div class="hidden-xs hidden-sm" style="height:20px"></div>
+                    <div class="product-page__tabs-gap hidden-xs hidden-sm"></div>
                     <div>
                         <ul class="product-page-tabs nav nav-tabs">
                             @if ($product->hasDescription())
@@ -199,7 +197,7 @@
                             <div class="tab-pane {{ $product->hasDescription() || $specifications->isNotEmpty() ? '' : 'active' }}" id="tab-question">
                                 <div class="question-info">
                                     <p>Есть вопрос о товаре? Напишите — мы перезвоним и ответим.</p>
-                                    <a href="{{ route('product-question.create', $product) }}" class="btn btn-sm btn-primary" data-modal-url="{{ route('product-question.create', $product) }}" data-modal-title="Задать вопрос">Задать вопрос</a>
+                                    <a href="{{ route('product-question.create', $product) }}" class="btn btn-sm btn-primary" @click.prevent="$store.modal.open($el.href, 'Задать вопрос')">Задать вопрос</a>
                                 </div>
                             </div>
                         </div>
@@ -208,7 +206,7 @@
 
                 @if ($similarProducts->isNotEmpty())
                     <div class="heading">Похожие товары</div>
-                    <div class="uni-module similar-products">
+                    <div class="uni-module similar-products" data-uni-module="carousel">
                         <div class="uni-module__wrapper">
                             @foreach ($similarProducts as $similarProduct)
                                 @include('partials.product-card', ['product' => $similarProduct])
@@ -225,30 +223,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script src="{{ asset('theme/js/goodshare.min.js') }}"></script>
-    <script>
-        $('.similar-products').uniModules({type: 'carousel'});
-
-        // Количество: кнопки «+» и «−» (qty-switch темы).
-        $('.qty-switch__btn').on('click', function () {
-            const input = $(this).closest('.qty-switch').find('.qty-switch__input');
-            const value = (parseInt(input.val(), 10) || 1) + Number($(this).data('step'));
-
-            input.val(Math.min(Math.max(value, input.data('minimum')), input.data('maximum')));
-        });
-
-        // Доп. фото: клик — показать крупно.
-        $('.product-page__image-addit-img').on('click', function () {
-            $('#product-main-image').attr('src', $(this).data('full'));
-        });
-
-        // «Все характеристики» — открыть вкладку и прокрутить к ней.
-        $('[data-show-tab]').on('click', function (e) {
-            e.preventDefault();
-            $('a[href="' + $(this).data('show-tab') + '"]').tab('show');
-            $('html, body').animate({scrollTop: $('.product-page-tabs').offset().top - 20}, 300);
-        });
-    </script>
-@endpush

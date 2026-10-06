@@ -74,7 +74,7 @@ class CartCheckoutTest extends TestCase
         $this->post(route('cart.store', $this->battery));
 
         $this->get(route('home'))
-            ->assertSee('data-products="'.$this->battery->id.'"', false)
+            ->assertSee('data-products="['.$this->battery->id.']"', false)
             ->assertSeeInOrder(['header-cart__dropdown', 'TITAN 60Ah О.П.', 'Перейти к оформлению заказа'], false);
     }
 

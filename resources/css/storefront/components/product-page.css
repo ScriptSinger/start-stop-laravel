@@ -1,0 +1,24 @@
+/* Страница товара. */
+
+/* Главное фото: превью старого сайта — 500×400. */
+.product-page__image-main-img {
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 500 / 400;
+    object-fit: contain;
+    margin: 0 auto;
+}
+.product-page__image-addit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+.product-page__image-addit-img {
+    width: 74px;
+    height: 74px;
+    object-fit: contain;
+    cursor: pointer;
+    border: 1px solid #eee;
+}
+.product-page__tabs-gap {height: 20px}

@@ -4,8 +4,8 @@
 
 @section('title', 'Аккумуляторы для '.$carName.' — '.config('shop.name'))
 
-@push('module-styles')
-    <link href="{{ asset('theme/stylesheet/home-banner.css') }}" rel="stylesheet" media="screen" />
+@push('page-styles')
+    @vite('resources/css/storefront/pages/battery-selection.css')
 @endpush
 
 {{-- На старом сайте подбор вёл на страницу «Аккумуляторы» с фильтром OCFilter,
@@ -24,7 +24,7 @@
         <div class="row">
             <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4">
                 {{-- Параметры, по которым шёл подбор, — чтобы покупатель мог сверить с машиной. --}}
-                <div class="catalog-filter" style="margin-top: 20px;">
+                <div class="catalog-filter">
                     <div class="heading">Ваш автомобиль</div>
                     <dl class="battery-fitment">
                         @if ($fitment->capacities() !== [])
@@ -56,16 +56,7 @@
                     @else
                         @include('partials.catalog-sorts')
 
-                        <div class="products-block row row-flex">
-                            @foreach ($products as $product)
-                                <div class="product-layout product-grid grid-view col-sm-6 col-md-4 col-lg-4 col-xxl-5">
-                                    @include('partials.product-card', ['product' => $product])
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{ $products->links() }}
-                        <div class="pagination-text">Показано с {{ $products->firstItem() }} по {{ $products->lastItem() }} из {{ $products->total() }} (всего {{ $products->lastPage() }} <x-plural :count="$products->lastPage()" forms="страница|страницы|страниц" />)</div>
+                        @include('partials.product-grid', ['columnClass' => 'col-sm-6 col-md-4 col-lg-4 col-xxl-5'])
                     @endif
                 </div>
             </div>

@@ -1,0 +1,20 @@
+/* Каталог: фильтр, подкатегории, подбор АКБ, сравнение, закладки. */
+
+.catalog-filter {margin-top: 20px}
+.catalog-filter__price {margin-top: 5px}
+.catalog-filter__values {max-height: 220px; overflow-y: auto; margin-top: 5px}
+.catalog-filter__values .checkbox {margin: 2px 0}
+
+.category-list__select {margin: 0 0 20px}
+
+/* Подбор АКБ: параметры автомобиля в левой колонке. */
+.battery-fitment {margin: 0 0 15px}
+.battery-fitment dt {font-weight: 600; margin-top: 10px}
+.battery-fitment dd {margin: 2px 0 0}
+
+.compare-page_empty {margin: 0}
+
+.wishlist__remove {margin: -10px 0 20px}
+
+/* «Показать еще» — как в showmore-ajaxpagination.js темы. */
+.show-more {margin: 15px 0 30px; text-align: center}

@@ -2,7 +2,7 @@
 
 @section('title', $page->title.' — '.config('shop.name'))
 
-@include('partials.expanded-category-menu')
+@section('body_class', 'menu-expanded')
 
 {{-- Разметка — 1:1 с information/information.twig темы UniShop2 старого сайта. --}}
 @section('content')

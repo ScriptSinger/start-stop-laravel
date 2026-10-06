@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Attribute;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Js;
 use Tests\TestCase;
 
 class SavedProductsTest extends TestCase
@@ -74,7 +75,7 @@ class SavedProductsTest extends TestCase
             ->assertRedirect(route('product.show', $product))
             ->assertSessionHas('notice', '«TITAN 60» добавлен в сравнение.');
 
-        $this->withSession(['notice' => 'Готово'])->get(route('home'))->assertSee('data-notice="Готово"', false);
+        $this->withSession(['notice' => 'Готово'])->get(route('home'))->assertSee("\$store.alerts.show('success', ".Js::from('Готово').')', false);
     }
 
     public function test_inactive_products_drop_out_and_cannot_be_added(): void

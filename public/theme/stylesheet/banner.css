@@ -1,8 +1,0 @@
-.uni-banner{margin-bottom:15px}
-.uni-banner__item{margin:0 0 20px}
-.uni-banner__a, .uni-banner__div{display:block;overflow:hidden;position:relative;border-radius:4px}
-.uni-banner__a:hover .uni-banner__img, .uni-banner__div:hover .uni-banner__img{transform:scale(1.05)}
-.uni-banner__img{width:100%;max-height:220px;object-fit:cover;transition:all linear .2s}
-#column-left .uni-banner, #column-right .uni-banner{margin-bottom:10px}
-#column-left .uni-banner__item, #column-right .uni-banner__item{width:100%}
-#column-left .uni-banner__img, #column-right .uni-banner__img{max-height:151px}

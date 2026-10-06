@@ -4,8 +4,8 @@
 {{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
 @section('meta_description', (string) $category->meta_description)
 
-@push('module-styles')
-    <link href="{{ asset('theme/stylesheet/home-banner.css') }}" rel="stylesheet" media="screen" />
+@push('page-styles')
+    @vite('resources/css/storefront/pages/category.css')
 @endpush
 
 {{-- Разметка — 1:1 с product/category.twig темы UniShop2 старого сайта. --}}
@@ -44,8 +44,8 @@
                                 </div>
                             @endforeach
                         </div>
-                        <div class="visible-xs" style="margin:0 0 20px">
-                            <select class="form-control" onchange="location = this.value;" aria-label="Подкатегория">
+                        <div class="category-list__select visible-xs">
+                            <select class="form-control" @change="location = $event.target.value" aria-label="Подкатегория">
                                 <option value="">Выберите подкатегорию</option>
                                 @foreach ($categoryLinks as $link)
                                     <option value="{{ $link['url'] }}">{{ $link['title'] }}</option>
@@ -66,16 +66,7 @@
                             @endif
                         </div>
                     @else
-                        <div class="products-block row row-flex">
-                            @foreach ($products as $product)
-                                <div class="product-layout product-grid grid-view col-sm-6 col-md-4 col-lg-4 col-xxl-5">
-                                    @include('partials.product-card', ['product' => $product])
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{ $products->links() }}
-                        <div class="pagination-text">Показано с {{ $products->firstItem() }} по {{ $products->lastItem() }} из {{ $products->total() }} (всего {{ $products->lastPage() }} <x-plural :count="$products->lastPage()" forms="страница|страницы|страниц" />)</div>
+                        @include('partials.product-grid', ['columnClass' => 'col-sm-6 col-md-4 col-lg-4 col-xxl-5'])
                     @endif
                 </div>
                 <div class="content-bottom">

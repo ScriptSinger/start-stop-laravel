@@ -20,7 +20,7 @@ class CustomerRequestsTest extends TestCase
         $this->get(route('callback.create'), ['X-Requested-With' => 'XMLHttpRequest'])
             ->assertOk()
             ->assertDontSee('<html', false)
-            ->assertSee('js-modal-form', false);
+            ->assertSee('x-data="ajaxForm"', false);
 
         $this->postJson(route('callback.store'), ['name' => 'Анна', 'phone' => '+7 (987) 000-00-00', 'comment' => 'Подобрать АКБ'])
             ->assertOk()

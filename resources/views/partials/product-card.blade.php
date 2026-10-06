@@ -64,15 +64,15 @@
             @endif
         </div>
 
-        <form method="post" action="{{ route('cart.store', $product) }}" id="{{ $cardFormId }}" class="product-thumb__cart cart" data-add-to-cart>
+        <form method="post" action="{{ route('cart.store', $product) }}" id="{{ $cardFormId }}" class="product-thumb__cart cart" @submit.prevent="$store.cart.add($el)">
             @csrf
-            <button type="submit" class="product-thumb__add-to-cart add_to_cart btn" title="В корзину" data-pid="{{ $product->id }}"><i class="fa fa-shopping-bag"></i><span>В корзину</span></button>
-            <a href="{{ route('quick-order.create', $product) }}" class="product-thumb__quick-order quick-order btn" title="Быстрый заказ" aria-label="Быстрый заказ" data-modal-url="{{ route('quick-order.create', $product) }}" data-modal-title="Быстрый заказ"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
+            <button type="submit" class="product-thumb__add-to-cart add_to_cart btn" title="В корзину" :class="{in_cart: $store.cart.has({{ $product->id }})}"><x-cart-button-label :product="$product" /></button>
+            <a href="{{ route('quick-order.create', $product) }}" class="product-thumb__quick-order quick-order btn" title="Быстрый заказ" aria-label="Быстрый заказ" @click.prevent="$store.modal.open($el.href, 'Быстрый заказ')"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
             @if (Route::has('wishlist.store'))
-                <button type="submit" class="product-thumb__wishlist wishlist" title="В закладки" formaction="{{ route('wishlist.store', $product) }}" data-saved-list="wishlist"><i class="far fa-heart"></i></button>
+                <button type="submit" class="product-thumb__wishlist wishlist" title="В закладки" formaction="{{ route('wishlist.store', $product) }}" @click.prevent="$store.saved.add('wishlist', $el)"><i class="far fa-heart"></i></button>
             @endif
             @if (Route::has('compare.store'))
-                <button type="submit" class="product-thumb__compare compare" title="В сравнение" formaction="{{ route('compare.store', $product) }}" data-saved-list="compare"><i class="fas fa-align-right"></i></button>
+                <button type="submit" class="product-thumb__compare compare" title="В сравнение" formaction="{{ route('compare.store', $product) }}" @click.prevent="$store.saved.add('compare', $el)"><i class="fas fa-align-right"></i></button>
             @endif
         </form>
     </div>

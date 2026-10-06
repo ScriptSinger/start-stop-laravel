@@ -43,6 +43,25 @@ services:
     profiles:
       - tools
 
+  # Сборка фронтенда (Vite): одинаковая на любой машине и на сервере.
+  #   docker compose run --rm node npm ci
+  #   docker compose run --rm node npm run build
+  #   docker compose run --rm --service-ports node npm run dev
+  node:
+    image: node:22-alpine
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      npm_config_cache: /tmp/.npm
+    volumes:
+      - ./:/var/www/html
+    working_dir: /var/www/html
+    ports:
+      - "5173:5173"
+    networks:
+      - laravel
+    profiles:
+      - tools
+
   # MariaDB (не MySQL, как в fridge-service) — осознанно: legacy-дамп старого
   # проекта (ocStore) создан под MariaDB 10.5, уже проверен на совместимость.
   db:

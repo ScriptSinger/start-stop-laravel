@@ -1,0 +1,9 @@
+/* Корзина и оформление: удаление и трейд-ин — формы вместо onclick темы,
+   внешне как в теме. */
+.checkout-cart__remove-btn {padding: 0; border: none; background: none; color: inherit}
+.checkout-cart__trade-in {display: block; margin: 5px 0 0; font-weight: 400; cursor: pointer}
+.checkout-cart__trade-in input {margin: 0 5px 0 0; vertical-align: middle}
+.checkout-cart__gap {height: 20px}
+
+.order-summary {max-width: 720px}
+.order-summary__price {white-space: nowrap}

@@ -2,8 +2,10 @@
 
 @section('title', 'Оформление заказа — '.config('shop.name'))
 
-@push('module-styles')
-    <link href="{{ asset('theme/stylesheet/checkout.css') }}" rel="stylesheet" media="screen" />
+@section('no_fly_menu', true)
+
+@push('page-styles')
+    @vite('resources/css/storefront/pages/cart.css')
 @endpush
 
 @use('App\Enums\DeliveryMethod')
@@ -68,16 +70,16 @@
                                                         @endif
                                                         @if ($line->product->hasTradeIn())
                                                             <label class="checkout-cart__option checkout-cart__trade-in">
-                                                                <input type="checkbox" name="trade_in" value="1" @checked($line->tradeIn) onchange="this.form.submit()" />
+                                                                <input type="checkbox" name="trade_in" value="1" @checked($line->tradeIn) @change="$el.form.submit()" />
                                                                 Трейд-ин: сдаю старый АКБ (−{{ number_format((float) $line->product->trade_in_discount, 0, '', '') }}р.)
                                                             </label>
                                                         @endif
                                                     </div>
                                                     <div class="checkout-cart__quantity">
-                                                        <div class="qty-switch qty-switch__cart">
-                                                            <i class="qty-switch__btn fa fa-minus" data-step="-1"></i>
-                                                            <input type="text" name="quantity" value="{{ $line->quantity }}" data-minimum="1" data-maximum="{{ \App\Services\Cart\Cart::MAX_QUANTITY }}" class="qty-switch__input form-control" aria-label="Количество" inputmode="numeric" />
-                                                            <i class="qty-switch__btn fa fa-plus" data-step="1"></i>
+                                                        <div class="qty-switch qty-switch__cart" x-data="qtySwitch({value: {{ $line->quantity }}, max: {{ \App\Services\Cart\Cart::MAX_QUANTITY }}, autosubmit: true})">
+                                                            <i class="qty-switch__btn fa fa-minus" @click="step(-1)"></i>
+                                                            <input type="text" name="quantity" value="{{ $line->quantity }}" :value="value" @change="set($event.target.value)" class="qty-switch__input form-control" aria-label="Количество" inputmode="numeric" />
+                                                            <i class="qty-switch__btn fa fa-plus" @click="step(1)"></i>
                                                         </div>
                                                     </div>
                                                     <div class="checkout-cart__price hidden-xs"><div class="checkout-cart__price-text">Цена за шт</div>{{ number_format($line->unitPrice(), 0, '', '') }}р.</div>
@@ -91,11 +93,13 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                    <div style="height:20px"></div>
+                                    <div class="checkout-cart__gap"></div>
                                 </div>
                             </div>
 
-                            <form method="post" action="{{ route('checkout.store') }}" id="unicheckout__form" class="unicheckout__form" novalidate>
+                            <form method="post" action="{{ route('checkout.store') }}" id="unicheckout__form" class="unicheckout__form" novalidate data-checkout
+                                  x-data="checkout({delivery: @js($selectedDelivery->value), payment: @js($selectedPayment), pickup: @js(DeliveryMethod::Pickup->value), cardOnlyPayments: @js(collect(PaymentMethod::cases())->reject->isAllowedFor(DeliveryMethod::City)->map->value->values())})"
+                                  @input="clearWarning" @change="clearWarning">
                                 @csrf
                                 <div class="unicheckout__user">
                                     <div class="heading">Контактные данные</div>
@@ -107,21 +111,21 @@
                                                 ['phone', 'tel', 'Контактный телефон *', 'tel'],
                                                 ['email', 'email', 'Ваш e-mail', 'email'],
                                             ] as [$field, $type, $placeholder, $autocomplete])
-                                                <input type="{{ $type }}" name="{{ $field }}" value="{{ old($field) }}" placeholder="{{ $placeholder }}" aria-label="{{ trim($placeholder, ' *') }}" autocomplete="{{ $autocomplete }}" class="checkout-customer__input form-control @error($field) input-warning @enderror" />
+                                                <input type="{{ $type }}" name="{{ $field }}" value="{{ old($field) }}" placeholder="{{ $placeholder }}" aria-label="{{ trim($placeholder, ' *') }}" autocomplete="{{ $autocomplete }}" class="checkout-customer__input form-control @error($field) input-warning @enderror" @if ($type === 'tel') x-phone-mask @endif />
                                             @endforeach
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="heading">Способ получения</div>
-                                <input type="hidden" name="delivery" value="{{ $selectedDelivery->value }}" />
+                                <input type="hidden" name="delivery" value="{{ $selectedDelivery->value }}" :value="delivery" />
                                 <ul class="unicheckout__pickup-nav nav nav-tabs">
                                     @foreach ($deliveryMethods as $method)
-                                        <li class="{{ $method === $selectedDelivery ? 'active' : '' }}"><a href="#unicheckout-method-{{ $method->value }}" class="{{ $method === DeliveryMethod::Pickup ? 'unicheckout__pickup' : 'unicheckout__delivery' }}" data-toggle="tab" data-delivery="{{ $method->value }}">{{ $method === DeliveryMethod::Pickup ? 'Самовывоз' : 'Доставка' }}</a></li>
+                                        <li class="{{ $method === $selectedDelivery ? 'active' : '' }}" :class="{active: delivery === @js($method->value)}"><a href="#unicheckout-method-{{ $method->value }}" class="{{ $method === DeliveryMethod::Pickup ? 'unicheckout__pickup' : 'unicheckout__delivery' }}" data-delivery="{{ $method->value }}" @click.prevent="delivery = @js($method->value)">{{ $method === DeliveryMethod::Pickup ? 'Самовывоз' : 'Доставка' }}</a></li>
                                     @endforeach
                                 </ul>
                                 <div class="tab-content">
-                                    <div id="unicheckout-method-pickup" class="tab-pane {{ $selectedDelivery === DeliveryMethod::Pickup ? 'active' : '' }}">
+                                    <div id="unicheckout-method-pickup" class="tab-pane {{ $selectedDelivery === DeliveryMethod::Pickup ? 'active' : '' }}" :class="{active: delivery === @js(DeliveryMethod::Pickup->value)}">
                                         <div class="unicheckout__pickup-item">
                                             <div class="unicheckout__pickup-title">Магазин «{{ config('shop.name') }}»</div>
                                             <div class="unicheckout__pickup-address">{{ config('shop.address') }}</div>
@@ -135,7 +139,7 @@
                                         @endif
                                     </div>
                                     @unless ($isPickupOnly)
-                                        <div id="unicheckout-method-city" class="tab-pane {{ $selectedDelivery === DeliveryMethod::City ? 'active' : '' }}">
+                                        <div id="unicheckout-method-city" class="tab-pane {{ $selectedDelivery === DeliveryMethod::City ? 'active' : '' }}" :class="{active: delivery === @js(DeliveryMethod::City->value)}">
                                             <div class="unicheckout__address payment-address">
                                                 <div class="heading">Адрес доставки</div>
                                                 <div class="checkout-address-new row-flex">
@@ -161,9 +165,9 @@
                                     <div class="heading">Способы оплаты</div>
                                     <div class="payment-method">
                                         @foreach ([PaymentMethod::Transfer, PaymentMethod::Card, PaymentMethod::Cash] as $method)
-                                            <div class="radio" @unless ($method->isAllowedFor(DeliveryMethod::City)) data-pickup-only @endunless>
+                                            <div class="radio" :class="{disabled: !isPaymentAllowed(@js($method->value))}">
                                                 <label class="input">
-                                                    <input type="radio" name="payment" value="{{ $method->value }}" @checked($selectedPayment === $method->value) />
+                                                    <input type="radio" name="payment" value="{{ $method->value }}" @checked($selectedPayment === $method->value) x-model="payment" :disabled="!isPaymentAllowed(@js($method->value))" />
                                                     <div class="payment-method__title">{{ $method->label() }}</div>
                                                 </label>
                                             </div>
@@ -209,53 +213,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        // Количество: «+» и «−» сразу пересчитывают корзину (как в теме).
-        $('.checkout-cart .qty-switch__btn').on('click', function () {
-            const input = $(this).siblings('.qty-switch__input');
-            const value = (parseInt(input.val(), 10) || 1) + Number($(this).data('step'));
-
-            input.val(Math.min(Math.max(value, input.data('minimum')), input.data('maximum')));
-            input.closest('form').trigger('submit');
-        });
-        $('.checkout-cart .qty-switch__input').on('change', function () {
-            $(this).closest('form').trigger('submit');
-        });
-
-        // Вкладки «Самовывоз / Доставка» задают способ получения; карта — только
-        // при самовывозе. Сервер проверяет то же самое — здесь только удобство.
-        (function ($) {
-            const form = $('#unicheckout__form');
-            const pickup = @json(DeliveryMethod::Pickup->value);
-
-            function sync() {
-                const isPickup = form.find('input[name=delivery]').val() === pickup;
-
-                form.find('[data-pickup-only]').each(function () {
-                    const input = $(this).find('input');
-
-                    input.prop('disabled', !isPickup);
-                    $(this).toggleClass('disabled', !isPickup);
-
-                    if (!isPickup && input.is(':checked')) {
-                        form.find('input[name=payment]').not(input).first().prop('checked', true);
-                    }
-                });
-            }
-
-            form.find('[data-delivery]').on('shown.bs.tab', function () {
-                form.find('input[name=delivery]').val($(this).data('delivery'));
-                sync();
-            });
-
-            // Поле с ошибкой подсвечено, пока его не исправят (form_error темы).
-            form.on('input change', '.input-warning', function () {
-                $(this).removeClass('input-warning');
-            });
-
-            sync();
-        })(jQuery);
-    </script>
-@endpush

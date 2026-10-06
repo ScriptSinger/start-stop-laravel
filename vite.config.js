@@ -1,22 +1,31 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { bunny } from 'laravel-vite-plugin/fonts';
-import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-            fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
-                }),
+            input: [
+                'resources/css/storefront/base.css',
+                'resources/css/storefront/app.css',
+                'resources/css/storefront/pages/home.css',
+                'resources/css/storefront/pages/category.css',
+                'resources/css/storefront/pages/battery-selection.css',
+                'resources/css/storefront/pages/product.css',
+                'resources/css/storefront/pages/search.css',
+                'resources/css/storefront/pages/cart.css',
+                'resources/css/storefront/pages/contact.css',
+                'resources/css/storefront/pages/compare.css',
+                'resources/js/storefront/app.js',
             ],
+            refresh: true,
         }),
-        tailwindcss(),
     ],
     server: {
+        // Dev-сервер работает в контейнере node (docker compose), браузер — на хосте.
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        hmr: {host: 'localhost'},
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

@@ -1,7 +1,8 @@
 {{-- Фильтр каталога: внутри блока значения через «ИЛИ», между блоками — «И».
      Число рядом со значением — сколько товаров будет с учётом остальных условий. --}}
 
-<form method="get" action="{{ route('category.show', $category) }}" class="catalog-filter" id="catalog-filter" style="margin-top: 20px;">
+{{-- Отметили значение — фильтр применяется сразу; цена — по кнопке «Показать». --}}
+<form method="get" action="{{ route('category.show', $category) }}" class="catalog-filter" id="catalog-filter" @change="$event.target.type === 'checkbox' && $el.submit()">
     <div class="heading">Фильтр</div>
 
     <div class="catalog-filter__group form-group">
@@ -15,7 +16,7 @@
 
     <div class="catalog-filter__group form-group">
         <strong>Цена, р.</strong>
-        <div class="row" style="margin-top: 5px;">
+        <div class="row catalog-filter__price">
             <div class="col-xs-6">
                 <input type="number" min="0" name="price_from" class="form-control input-sm"
                        value="{{ $filter->priceFrom !== null ? (int) $filter->priceFrom : '' }}"
@@ -62,12 +63,3 @@
         @endif
     </div>
 </form>
-
-@push('scripts')
-    <script>
-        // Отметили значение — сразу применяем фильтр (цену — по кнопке «Показать»).
-        $('#catalog-filter').on('change', 'input[type=checkbox]', function () {
-            this.form.submit();
-        });
-    </script>
-@endpush

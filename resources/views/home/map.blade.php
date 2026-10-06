@@ -7,7 +7,7 @@
 
 		
 		<div class="row no-gutters">
-			<div class="col-md-3 blockontact" style="z-index:2;">
+			<div class="col-md-3 blockontact">
 				<div class="infobanner img4 no-link">
 					<div class="infobanner-content">
 
@@ -26,9 +26,8 @@
 					<span class="infobanner-overlay"></span>
 				</div>
 			</div>
-			<div class="col-md-12 map-area" style="z-index:1;">
-							<script type="text/javascript" charset="utf-8" async="" src="{{ config('shop.yandex_map_src') }}"></script>
-      </div>
+			{{-- Карту рисует скрипт конструктора Яндекс.Карт (embeds.js). --}}
+			<div class="col-md-12 map-area" data-yandex-map="{{ config('shop.yandex_map_src') }}"></div>
 		</div>
 	</div>
 </div>

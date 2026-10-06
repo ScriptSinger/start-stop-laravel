@@ -5,7 +5,7 @@
 @php($hasWishlist = Route::has('wishlist.index'))
 @php($hasCompare = Route::has('compare.index'))
 
-<header>
+<header data-saved-counts data-wishlist="{{ $wishlistCount ?? 0 }}" data-compare="{{ $compareCount ?? 0 }}">
     <div id="top" class="top-menu">
         <div class="container">
             <div class="top-menu__links">
@@ -22,14 +22,14 @@
                 @if ($hasWishlist)
                     <div class="top-menu__wishlist status-2">
                         <div class="btn-group">
-                            <button class="top-menu__btn top-menu__wishlist-btn uni-href" data-href="{{ route('wishlist.index') }}"><i class="far fa-heart"></i><span class="top-menu__btn-text">Закладки</span><span class="top-menu__wishlist-total uni-badge">{{ $wishlistCount ?? 0 }}</span></button>
+                            <button class="top-menu__btn top-menu__wishlist-btn uni-href" data-href="{{ route('wishlist.index') }}"><i class="far fa-heart"></i><span class="top-menu__btn-text">Закладки</span><span class="top-menu__wishlist-total uni-badge" x-text="$store.saved.wishlist">{{ $wishlistCount ?? 0 }}</span></button>
                         </div>
                     </div>
                 @endif
                 @if ($hasCompare)
                     <div class="top-menu__compare status-2">
                         <div class="btn-group">
-                            <button class="top-menu__btn top-menu__compare-btn uni-href" data-href="{{ route('compare.index') }}"><i class="top-menu__compare-icon fas fa-align-right"></i><span class="top-menu__btn-text">Сравнение</span><span class="top-menu__compare-total uni-badge">{{ $compareCount ?? 0 }}</span></button>
+                            <button class="top-menu__btn top-menu__compare-btn uni-href" data-href="{{ route('compare.index') }}"><i class="top-menu__compare-icon fas fa-align-right"></i><span class="top-menu__btn-text">Сравнение</span><span class="top-menu__compare-total uni-badge" x-text="$store.saved.compare">{{ $compareCount ?? 0 }}</span></button>
                         </div>
                     </div>
                 @endif
@@ -50,13 +50,7 @@
             </div>
 
             <div id="search" class="header-block__item header-block__item-search hidden-xs hidden-sm">
-                <form class="header-search" action="{{ route('search') }}" method="get">
-                    <div class="header-search__form">
-                        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Поиск" aria-label="Поиск" autocomplete="off" class="header-search__input form-control" />
-                        <button type="button" class="search-btn-clear {{ filled($search ?? null) ? 'show' : '' }}" aria-label="Очистить">&times;</button>
-                        <button type="submit" class="header-search__btn search-btn" title="Поиск"><i class="fa fa-search"></i></button>
-                    </div>
-                </form>
+                @include('partials.search-form')
             </div>
 
             <div class="header-block__item header-block__item-telephone">
@@ -65,7 +59,7 @@
                     <i class="header-phones__show-phone dropdown-toggle fas fa-chevron-down" data-toggle="dropdown" data-target="header-phones__ul"></i>
                     <ul class="header-phones__ul dropdown-menu dropdown-menu-right">
                         <li class="header-phones__li">
-                            <a href="{{ route('callback.create') }}" class="header-phones__callback" data-modal-url="{{ route('callback.create') }}" data-modal-title="Заказать звонок">Заказать звонок</a>
+                            <a href="{{ route('callback.create') }}" class="header-phones__callback" @click.prevent="$store.modal.open($el.href, 'Заказать звонок')">Заказать звонок</a>
                         </li>
                     </ul>
                 </div>
@@ -73,23 +67,23 @@
 
             @if ($hasWishlist)
                 <div class="header-block__item header-block__item-wishlist">
-                    <div class="header-wishlist uni-href" data-href="{{ route('wishlist.index') }}" title="Закладки"><i class="header-wishlist__icon far fa-heart"></i><span class="header-wishlist__total-items">{{ $wishlistCount ?? 0 }}</span></div>
+                    <div class="header-wishlist uni-href" data-href="{{ route('wishlist.index') }}" title="Закладки"><i class="header-wishlist__icon far fa-heart"></i><span class="header-wishlist__total-items" x-text="$store.saved.wishlist">{{ $wishlistCount ?? 0 }}</span></div>
                 </div>
             @endif
             @if ($hasCompare)
                 <div class="header-block__item header-block__item-compare">
-                    <div class="header-compare uni-href" data-href="{{ route('compare.index') }}" title="Сравнение"><i class="header-compare__icon fas fa-align-right"></i><span class="header-compare__total-items">{{ $compareCount ?? 0 }}</span></div>
+                    <div class="header-compare uni-href" data-href="{{ route('compare.index') }}" title="Сравнение"><i class="header-compare__icon fas fa-align-right"></i><span class="header-compare__total-items" x-text="$store.saved.compare">{{ $compareCount ?? 0 }}</span></div>
                 </div>
             @endif
 
             <div class="header-block__item header-block__item-cart">
                 <div id="cart" class="header-cart" title="Корзина">
                     {{-- Без JavaScript — ссылка на корзину, с ним — окно с мини-корзиной. --}}
-                    <a class="header-cart__btn dropdown-toggle" href="{{ route('cart.index') }}" aria-label="Корзина" data-mini-cart-open>
+                    <a class="header-cart__btn dropdown-toggle" href="{{ route('cart.index') }}" aria-label="Корзина" @click.prevent="$store.cart.open()">
                         <i class="header-cart__icon fa fa-shopping-cart"></i>
-                        <span id="cart-total" class="header-cart__total-items">{{ $cartCount }}</span>
+                        <span id="cart-total" class="header-cart__total-items" x-text="$store.cart.count">{{ $cartCount }}</span>
                     </a>
-                    <div class="header-cart__dropdown">
+                    <div class="header-cart__dropdown" data-mini-cart-html data-count="{{ $cartCount }}" data-products="{{ $cartLines->map(fn ($line) => $line->product->id)->values()->toJson() }}" x-html="$store.cart.html">
                         @include('partials.mini-cart')
                     </div>
                 </div>
@@ -108,28 +102,7 @@
                             <i class="menu-close menu__header-icon fas fa-times visible-xs visible-sm"></i>
                         </div>
                         <ul class="menu__collapse main-menu__collapse">
-                            @foreach ($categoryMenu as ['category' => $menuCategory, 'children' => $children])
-                                <li class="menu__level-1-li {{ $children !== [] ? 'has-children' : '' }}">
-                                    <a class="menu__level-1-a" href="{{ route('category.show', $menuCategory) }}">
-                                        @if ($menuCategory->hasFontIcon())
-                                            <i class="menu__level-1-icon {{ $menuCategory->icon }} fa-fw"></i>
-                                        @elseif ($menuCategory->icon)
-                                            <img src="{{ Illuminate\Support\Facades\Storage::disk('public')->url($menuCategory->icon) }}" alt="{{ $menuCategory->name }}" class="menu__level-1-img" loading="lazy" />
-                                        @endif
-                                        {{ $menuCategory->name }}
-                                    </a>
-                                    @if ($children !== [])
-                                        <span class="menu__pm menu__level-1-pm visible-xs visible-sm"><i class="fa fa-plus"></i><i class="fa fa-minus"></i></span>
-                                        <div class="menu__level-2 {{ count($children) > 12 ? 'column-3' : 'column-1' }}">
-                                            @foreach ($children as $child)
-                                                <div class="menu__level-2-ul {{ count($children) > 12 ? 'col-md-4' : 'col-md-12' }}">
-                                                    <a class="menu__level-2-a" href="{{ $child['url'] }}">{{ $child['title'] }}</a>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </li>
-                            @endforeach
+                            @include('partials.category-menu-items')
                         </ul>
                     </nav>
                 </div>
@@ -159,7 +132,11 @@
                     </nav>
                 </div>
             </div>
-            <div id="search2" class="visible-xs visible-sm"></div>
+            <div id="search2" class="visible-xs visible-sm">@include('partials.search-form')</div>
         </div>
     </div>
 </header>
+
+@sectionMissing('no_fly_menu')
+    @include('partials.fly-menu')
+@endif

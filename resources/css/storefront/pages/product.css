@@ -1,0 +1,4 @@
+/* Стили блоков страницы из темы UniShop2 — как старый сайт подключал их на этой странице. */
+@import '../../../theme/stylesheet/goodshare.css';
+@import '../../../theme/stylesheet/product-page.css';
+@import '../../../theme/stylesheet/request.css';
