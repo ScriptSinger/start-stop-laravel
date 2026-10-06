@@ -74,6 +74,16 @@ abstract class SessionProductList
     }
 
     /**
+     * id товаров в списке — чтобы кнопка на карточке показывала «В закладках».
+     *
+     * @return list<int>
+     */
+    public function productIds(): array
+    {
+        return $this->ids();
+    }
+
+    /**
      * @return list<int>
      */
     private function ids(): array

@@ -70,10 +70,10 @@
             <button type="submit" class="product-thumb__add-to-cart add_to_cart btn" title="В корзину" :class="{in_cart: $store.cart.has({{ $product->id }})}"><x-cart-button-label :product="$product" /></button>
             <a href="{{ route('quick-order.create', $product) }}" class="product-thumb__quick-order quick-order btn" title="Быстрый заказ" aria-label="Быстрый заказ" @click.prevent="$store.modal.open($el.href, 'Быстрый заказ')"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
             @if (Route::has('wishlist.store'))
-                <button type="submit" class="product-thumb__wishlist wishlist" title="В закладки" formaction="{{ route('wishlist.store', $product) }}" @click.prevent="$store.saved.add('wishlist', $el)"><i class="far fa-heart"></i></button>
+                <button type="submit" class="product-thumb__wishlist wishlist" title="В закладки" formaction="{{ route('wishlist.store', $product) }}" :class="{active: $store.saved.has('wishlist', {{ $product->id }})}" :title="$store.saved.has('wishlist', {{ $product->id }}) ? 'В закладках' : 'В закладки'" @click.prevent="$store.saved.toggle('wishlist', {{ $product->id }}, $el)"><i class="far fa-heart"></i></button>
             @endif
             @if (Route::has('compare.store'))
-                <button type="submit" class="product-thumb__compare compare" title="В сравнение" formaction="{{ route('compare.store', $product) }}" @click.prevent="$store.saved.add('compare', $el)"><i class="fas fa-align-right"></i></button>
+                <button type="submit" class="product-thumb__compare compare" title="В сравнение" formaction="{{ route('compare.store', $product) }}" :class="{active: $store.saved.has('compare', {{ $product->id }})}" :title="$store.saved.has('compare', {{ $product->id }}) ? 'В сравнении' : 'В сравнение'" @click.prevent="$store.saved.toggle('compare', {{ $product->id }}, $el)"><i class="fas fa-align-right"></i></button>
             @endif
         </form>
     </div>

@@ -5,7 +5,7 @@
 @php($hasWishlist = Route::has('wishlist.index'))
 @php($hasCompare = Route::has('compare.index'))
 
-<header data-saved-counts data-wishlist="{{ $wishlistCount ?? 0 }}" data-compare="{{ $compareCount ?? 0 }}">
+<header data-saved-counts data-wishlist="{{ $wishlistCount ?? 0 }}" data-compare="{{ $compareCount ?? 0 }}" data-wishlist-ids="{{ json_encode($wishlistIds ?? []) }}" data-compare-ids="{{ json_encode($compareIds ?? []) }}">
     <div id="top" class="top-menu">
         <div class="container">
             <div class="top-menu__links">

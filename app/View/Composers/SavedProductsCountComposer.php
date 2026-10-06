@@ -7,7 +7,8 @@ use App\Services\SavedProducts\Wishlist;
 use Illuminate\View\View;
 
 /**
- * Счётчики закладок и сравнения в шапке.
+ * Счётчики закладок и сравнения в шапке и id товаров в них (для отметки
+ * кнопок на карточках).
  */
 class SavedProductsCountComposer
 {
@@ -21,6 +22,8 @@ class SavedProductsCountComposer
         $view->with([
             'wishlistCount' => $this->wishlist->count(),
             'compareCount' => $this->compare->count(),
+            'wishlistIds' => $this->wishlist->productIds(),
+            'compareIds' => $this->compare->productIds(),
         ]);
     }
 }

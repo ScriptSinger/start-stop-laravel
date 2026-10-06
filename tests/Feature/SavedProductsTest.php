@@ -18,15 +18,17 @@ class SavedProductsTest extends TestCase
 
         $this->postJson(route('wishlist.store', $product))
             ->assertOk()
-            ->assertJson(['count' => 1, 'message' => '«TITAN 60» добавлен в закладки.']);
+            ->assertJson(['count' => 1, 'ids' => [$product->id], 'message' => '«TITAN 60» добавлен в закладки.']);
 
         // Повторное добавление не дублирует.
         $this->postJson(route('wishlist.store', $product))->assertJson(['count' => 1]);
 
         $this->get(route('wishlist.index'))->assertOk()->assertSee('TITAN 60');
         $this->get(route('home'))->assertSeeInOrder(['header-wishlist__total-items', '>1<'], false);
+        // Шапка передаёт id отмеченных товаров — кнопка на карточке показывает «В закладках».
+        $this->get(route('home'))->assertSee('data-wishlist-ids="['.$product->id.']"', false);
 
-        $this->deleteJson(route('wishlist.destroy', $product))->assertJson(['count' => 0]);
+        $this->deleteJson(route('wishlist.destroy', $product))->assertJson(['count' => 0, 'ids' => []]);
         $this->get(route('wishlist.index'))->assertSee('Ваши закладки пусты.');
     }
 

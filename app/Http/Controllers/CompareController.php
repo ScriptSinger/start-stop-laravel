@@ -46,7 +46,7 @@ class CompareController extends Controller
     private function respond(Request $request, Compare $compare, string $message): JsonResponse|RedirectResponse
     {
         return $request->expectsJson()
-            ? response()->json(['message' => $message, 'count' => $compare->count()])
+            ? response()->json(['message' => $message, 'count' => $compare->count(), 'ids' => $compare->productIds()])
             : back()->with('notice', $message);
     }
 }

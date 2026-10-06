@@ -133,8 +133,8 @@
                                             </button>
                                             <a href="{{ route('quick-order.create', $product) }}" class="product-page__quick-order quick-order btn btn-lg btn-xl" title="Быстрый заказ" aria-label="Быстрый заказ" @click.prevent="$store.modal.open($el.href, 'Быстрый заказ')"><i class="far fa-paper-plane"></i><span>Быстрый заказ</span></a>
                                         </div>
-                                        <button type="submit" title="В закладки" class="product-page__wishlist-btn wishlist" formaction="{{ route('wishlist.store', $product) }}" @click.prevent="$store.saved.add('wishlist', $el)"><i class="far fa-heart"></i><span>В закладки</span></button>
-                                        <button type="submit" title="В сравнение" class="product-page__compare-btn compare" formaction="{{ route('compare.store', $product) }}" @click.prevent="$store.saved.add('compare', $el)"><i class="fas fa-align-right"></i><span>В сравнение</span></button>
+                                        <button type="submit" title="В закладки" class="product-page__wishlist-btn wishlist" formaction="{{ route('wishlist.store', $product) }}" :class="{active: $store.saved.has('wishlist', {{ $product->id }})}" @click.prevent="$store.saved.toggle('wishlist', {{ $product->id }}, $el)"><i class="far fa-heart"></i><span x-text="$store.saved.has('wishlist', {{ $product->id }}) ? 'В закладках' : 'В закладки'">В закладки</span></button>
+                                        <button type="submit" title="В сравнение" class="product-page__compare-btn compare" formaction="{{ route('compare.store', $product) }}" :class="{active: $store.saved.has('compare', {{ $product->id }})}" @click.prevent="$store.saved.toggle('compare', {{ $product->id }}, $el)"><i class="fas fa-align-right"></i><span x-text="$store.saved.has('compare', {{ $product->id }}) ? 'В сравнении' : 'В сравнение'">В сравнение</span></button>
                                     </form>
 
                                     @if (($shortSpecifications = $specifications->take(6))->isNotEmpty())

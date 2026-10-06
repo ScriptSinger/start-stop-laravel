@@ -35,7 +35,7 @@ class WishlistController extends Controller
     private function respond(Request $request, Wishlist $wishlist, string $message): JsonResponse|RedirectResponse
     {
         return $request->expectsJson()
-            ? response()->json(['message' => $message, 'count' => $wishlist->count()])
+            ? response()->json(['message' => $message, 'count' => $wishlist->count(), 'ids' => $wishlist->productIds()])
             : back()->with('notice', $message);
     }
 }
