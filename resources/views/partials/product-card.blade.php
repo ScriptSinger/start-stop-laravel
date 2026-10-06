@@ -9,7 +9,8 @@
     default => ['Нет в наличии', 't-1'],
 })
 
-<div class="product-thumb uni-item">
+{{-- livePrice: отметили трейд-ин — цена пересчитывается с анимацией, как в теме. --}}
+<div class="product-thumb uni-item" x-data="livePrice({price: {{ $product->hasSpecial() ? (float) $product->price : $product->displayPrice() }}, special: {{ $product->hasSpecial() ? $product->displayPrice() : 'null' }}, tradeInDiscount: {{ (float) $product->trade_in_discount }}})">
     <div class="product-thumb__image">
         @if ($product->hasSpecial() || $product->hasTradeIn() || $product->is_pickup_only)
             <div class="sticker">
@@ -45,7 +46,7 @@
             <div class="product-thumb__option option">
                 <div class="option__group">
                     <label class="option__item" data-toggle="tooltip" title="- {{ number_format((float) $product->trade_in_discount, 0, '', '') }}р.">
-                        <input type="checkbox" name="trade_in" value="1" form="{{ $cardFormId }}" />
+                        <input type="checkbox" name="trade_in" value="1" form="{{ $cardFormId }}" x-model="tradeIn" />
                         <span class="option__name"><i class="fa fa-recycle fa-fw"></i> <span class="option__tit hidden-xs">Трейд-ин</span> <span class="option__val"> {{ number_format($product->priceFor(true), 0, '', '') }}р. </span></span>
                     </label>
                 </div>
@@ -58,9 +59,9 @@
 
         <div class="product-thumb__price price">
             @if ($product->hasSpecial())
-                <span class="price-old">{{ number_format((float) $product->price, 0, '', '') }}р.</span> <span class="price-new">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
+                <span class="price-old" x-text="format(shownPrice)">{{ number_format((float) $product->price, 0, '', '') }}р.</span> <span class="price-new" x-text="format(shownSpecial)">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
             @else
-                {{ number_format($product->displayPrice(), 0, '', '') }}р.
+                <span x-text="format(shownPrice)">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
             @endif
         </div>
 

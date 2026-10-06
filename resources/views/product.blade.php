@@ -74,7 +74,8 @@
                                     @endif
                                 </div>
 
-                                <div class="product-block col-sm-6">
+                                {{-- livePrice: трейд-ин и количество пересчитывают цену с анимацией, как в теме. --}}
+                                <div class="product-block col-sm-6" x-data="livePrice({price: {{ $product->hasSpecial() ? (float) $product->price : $product->displayPrice() }}, special: {{ $product->hasSpecial() ? $product->displayPrice() : 'null' }}, tradeInDiscount: {{ (float) $product->trade_in_discount }}})" @quantity-changed="quantity = $event.detail">
                                     <div class="product-data">
                                         @if ($product->code)
                                             <div class="product-data__item"><div class="product-data__item-div">Код товара:</div> {{ $product->code }}</div>
@@ -93,9 +94,9 @@
 
                                     <div class="product-page__price price">
                                         @if ($product->hasSpecial())
-                                            <span class="price-old">{{ number_format((float) $product->price, 0, '', '') }}р.</span><span class="price-new">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
+                                            <span class="price-old" x-text="format(shownPrice)">{{ number_format((float) $product->price, 0, '', '') }}р.</span><span class="price-new" x-text="format(shownSpecial)">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
                                         @else
-                                            {{ number_format($product->displayPrice(), 0, '', '') }}р.
+                                            <span x-text="format(shownPrice)">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
                                         @endif
                                     </div>
 
@@ -107,7 +108,7 @@
                                                     <label class="option__group-name">Выберите:</label>
                                                     <div>
                                                         <label class="option__item" data-toggle="tooltip" title="- {{ number_format((float) $product->trade_in_discount, 0, '', '') }}р.">
-                                                            <input type="checkbox" name="trade_in" value="1" />
+                                                            <input type="checkbox" name="trade_in" value="1" x-model="tradeIn" />
                                                             <span class="option__name"><i class="fa fa-recycle fa-fw"></i> <span class="option__tit">Трейд-ин</span> <span class="option__val"> {{ number_format($product->priceFor(true), 0, '', '') }}р. </span></span>
                                                         </label>
                                                     </div>

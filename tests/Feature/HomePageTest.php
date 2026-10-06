@@ -67,7 +67,7 @@ class HomePageTest extends TestCase
             ->assertSee('Ваша скидка: 500р.')
             ->assertSee('Трейд-ин 500 руб.')
             ->assertSee('Только самовывоз')
-            ->assertSee('<span class="price-old">5400р.</span> <span class="price-new">4900р.</span>', false)
+            ->assertSee('<span class="price-old" x-text="format(shownPrice)">5400р.</span> <span class="price-new" x-text="format(shownSpecial)">4900р.</span>', false)
             // Галочка трейд-ина — часть формы «В корзину» этой карточки; цена 4900 − 500.
             ->assertSee('form="add-to-cart-'.$promo->id.'"', false)
             ->assertSee('4400р.');
