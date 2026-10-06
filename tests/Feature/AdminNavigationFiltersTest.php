@@ -196,6 +196,21 @@ class AdminNavigationFiltersTest extends TestCase
     /**
      * @param  array<string, mixed>  $query
      */
+    public function test_products_sort_by_quantity_and_by_manufacturer_name(): void
+    {
+        $varta = Manufacturer::query()->create(['name' => 'AAA VARTA', 'slug' => 'varta']);
+        $this->makeProduct('VARTA 74Ah', ['manufacturer_id' => $varta->id, 'quantity' => 9], []);
+
+        $this->productTable(['sort' => '-quantity'])
+            ->assertSeeInOrder(['VARTA 74Ah', 'TITAN 60Ah О.П.']);
+
+        // По названию производителя (AAA VARTA раньше TITAN), а не по его id.
+        $this->productTable(['sort' => 'manufacturer_id'])
+            ->assertSeeInOrder(['VARTA 74Ah', 'TITAN 60Ah']);
+        $this->productTable(['sort' => '-manufacturer_id'])
+            ->assertSeeInOrder(['TITAN 60Ah', 'VARTA 74Ah']);
+    }
+
     private function productTable(array $query): TestResponse
     {
         return $this->get('/admin/component/product-index-page/product-resource?'.http_build_query([

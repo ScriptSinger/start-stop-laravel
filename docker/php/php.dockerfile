@@ -17,9 +17,11 @@ RUN sed -i "s/^user = .*/user = laravel/" /usr/local/etc/php-fpm.d/www.conf \
     && sed -i "s/^group = .*/group = laravel/" /usr/local/etc/php-fpm.d/www.conf
 
 # Установка зависимостей и расширений PHP (gd — нужен под миниатюры товаров,
-# как в старом проекте system/library/cache + model/tool/image)
+# как в старом проекте system/library/cache + model/tool/image;
+# mariadb-client — mariadb-dump для php artisan db:backup)
 RUN apt-get update && apt-get install -y \
     git \
+    mariadb-client \
     bash \
     zip \
     unzip \

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Category\Pages;
 
+use App\MoonShine\Fields\SeoFields;
 use App\MoonShine\Resources\Category\CategoryResource;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -47,6 +48,7 @@ class CategoryFormPage extends FormPage
                 Number::make('Порядок сортировки', 'sort_order')->default(0),
                 Switcher::make('Активна', 'status')->default(true),
             ]),
+            Box::make('SEO', SeoFields::make('название категории')),
         ];
     }
 
@@ -62,7 +64,7 @@ class CategoryFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return SeoFields::rules();
     }
 
     /**

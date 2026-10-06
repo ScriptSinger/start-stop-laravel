@@ -33,11 +33,11 @@ class CategoryIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make(),
-            Text::make('Название', 'name'),
+            ID::make()->sortable(),
+            Text::make('Название', 'name')->sortable(),
             Text::make('Slug', 'slug'),
             BelongsTo::make('Родитель', 'parent', resource: CategoryResource::class),
-            Switcher::make('Активна', 'status'),
+            Switcher::make('Активна', 'status')->sortable(),
         ];
     }
 

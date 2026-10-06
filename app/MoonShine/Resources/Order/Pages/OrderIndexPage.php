@@ -38,7 +38,7 @@ class OrderIndexPage extends IndexPage
         return [
             ID::make()->sortable(),
             Date::make('Дата', 'created_at')->format('d.m.Y H:i')->sortable(),
-            Text::make('Клиент', 'customer_name'),
+            Text::make('Клиент', 'customer_name')->sortable(),
             Phone::make('Телефон', 'customer_phone'),
             Select::make('Статус', 'status')
                 ->options(Order::STATUSES),

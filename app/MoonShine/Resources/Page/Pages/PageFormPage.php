@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Page\Pages;
 
+use App\MoonShine\Fields\SeoFields;
 use App\MoonShine\Resources\Page\PageResource;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -19,7 +20,6 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\Textarea;
 use Throwable;
 
 /**
@@ -37,17 +37,13 @@ class PageFormPage extends FormPage
                 ID::make(),
                 Text::make('Заголовок', 'title')->required(),
                 Slug::make('Slug', 'slug')->from('title')->unique(),
-                Text::make('H1', 'heading')->nullable()
-                    ->hint('Если пусто — выводится заголовок'),
-                Text::make('Meta title', 'meta_title')->nullable()
-                    ->hint('Если пусто — «Заголовок — '.config('shop.name').'»'),
-                Textarea::make('Meta description', 'meta_description')->nullable(),
                 TinyMce::make('Содержимое', 'description')->locale('ru')->nullable(),
                 Switcher::make('В верхней полоске', 'show_in_top')
                     ->hint('Иначе — в нижнем ряду меню шапки'),
                 Number::make('Порядок', 'sort_order')->default(0),
                 Switcher::make('Активна', 'status')->default(true),
             ]),
+            Box::make('SEO', SeoFields::make('заголовок')),
         ];
     }
 
@@ -63,7 +59,7 @@ class PageFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return SeoFields::rules();
     }
 
     /**

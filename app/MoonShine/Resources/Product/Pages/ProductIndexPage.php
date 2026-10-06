@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Product\Pages;
 
 use App\Models\Attribute;
 use App\Models\Category;
+use App\Models\Manufacturer;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
@@ -44,22 +45,27 @@ class ProductIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make(),
+            ID::make()->sortable(),
             Image::make('Фото', 'image'),
-            Text::make('Название', 'name'),
-            Text::make('Код товара', 'code'),
-            Text::make('Артикул', 'sku'),
-            BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class),
+            Text::make('Название', 'name')->sortable(),
+            Text::make('Код товара', 'code')->sortable(),
+            Text::make('Артикул', 'sku')->sortable(),
+            // По названию производителя, а не по его id.
+            BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
+                ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query->orderBy(
+                    Manufacturer::query()->select('name')->whereColumn('manufacturers.id', 'products.manufacturer_id'),
+                    $direction,
+                )),
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
                 ->inLine(
                     separator: ' ',
                     badge: true,
                     link: fn (Category $category, mixed $value, BelongsToMany $field): string => $field->getResource()->getFormPageUrl($category->getKey()),
                 ),
-            Money::make('Цена', 'price'),
-            Number::make('Остаток', 'quantity'),
-            Number::make('У поставщика', 'supplier_quantity'),
-            Switcher::make('Активен', 'status'),
+            Money::make('Цена', 'price')->sortable(),
+            Number::make('Остаток', 'quantity')->sortable(),
+            Number::make('У поставщика', 'supplier_quantity')->sortable(),
+            Switcher::make('Активен', 'status')->sortable(),
         ];
     }
 

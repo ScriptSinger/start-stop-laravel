@@ -8,6 +8,7 @@ use App\Enums\ProductSelection;
 use App\Models\Attribute;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
+use App\MoonShine\Fields\SeoFields;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -97,6 +98,9 @@ class ProductFormPage extends FormPage
                 ]),
                 Tab::make('Характеристики', [
                     Box::make($this->attributeFields()),
+                ]),
+                Tab::make('SEO', [
+                    Box::make(SeoFields::make('название товара')),
                 ]),
             ]),
         ];
@@ -222,7 +226,7 @@ class ProductFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return SeoFields::rules();
     }
 
     /**

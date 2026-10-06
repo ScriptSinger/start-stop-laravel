@@ -33,9 +33,9 @@ class ManufacturerIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make(),
+            ID::make()->sortable(),
             Image::make('Логотип', 'image'),
-            Text::make('Название', 'name'),
+            Text::make('Название', 'name')->sortable(),
             Text::make('Slug', 'slug'),
             Number::make('Товаров', 'products_count')->sortable(),
         ];
