@@ -8,7 +8,7 @@ import './vendor';
 import $ from 'jquery';
 import Alpine from 'alpinejs';
 
-import { uniMenuAim, uniMenuDropdownHeight, uniMenuDropdownPos, uniMenuMobile, uniMenuUpd } from './theme/menu';
+import { uniMenuAim, uniMenuDropdownHeight, uniMenuDropdownPos, uniMenuMobile, uniMenuMobileToggle, uniMenuUpd } from './theme/menu';
 import { initUniModules } from './theme/modules';
 import { initBannerSliders } from './theme/carousels';
 import { initUniHref, scrollBreadcrumbs } from './theme/links';
@@ -71,6 +71,7 @@ if (touchSupport) {
 
 // Порядок — как в common.js темы.
 uniMenuAim();
+uniMenuMobileToggle();
 uniMenuDropdownHeight();
 uniMenuDropdownPos();
 uniMenuMobile();

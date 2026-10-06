@@ -28,7 +28,12 @@ export default () => ({
     },
 
     close() {
+        // Блокировку прокрутки снимаем, только если её поставил поиск: открытое
+        // мобильное меню категорий ставит её само, и клик по нему — «снаружи».
+        if (this.open === 'search') {
+            document.body.classList.remove('scroll-disabled');
+        }
+
         this.open = null;
-        document.body.classList.remove('scroll-disabled');
     },
 });

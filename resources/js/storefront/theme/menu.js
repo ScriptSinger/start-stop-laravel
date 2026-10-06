@@ -103,19 +103,27 @@ export function uniMenuAim() {
 			
 			blur_blocks.removeClass('blur');
 		});
-	} else {
-		$('body').on('click', '.menu__pm', function() {
-			$(this).toggleClass('open');
-			$(this).next().collapse('toggle');
-		});
-	
-		$('.menu-open, .menu-close').on('click', () => {
-			$('body').toggleClass('scroll-disabled');
-			$('.menu-wrapper').toggleClass('show');
-			$('.fly-menu__block').removeClass('show');
-		});
 	}
 };
+
+/**
+ * Мобильное меню: кнопка «Категории», крестик и «+» у разделов. В теме они
+ * навешивались только если страница открылась на узком экране — после
+ * поворота планшета или перехода с широкого окна кнопка не работала.
+ * Кнопки и так видны только на узком экране, поэтому навешиваем всегда, один раз.
+ */
+export function uniMenuMobileToggle() {
+	$('body').on('click', '.menu__pm', function() {
+		$(this).toggleClass('open');
+		$(this).next().collapse('toggle');
+	});
+
+	$('.menu-open, .menu-close').on('click', () => {
+		$('body').toggleClass('scroll-disabled');
+		$('.menu-wrapper').toggleClass('show');
+		$('.fly-menu__block').removeClass('show');
+	});
+}
 
 export function uniMenuDropdownHeight() {
 	const menu_block = $('header .menu1:not(.new) .menu__level-2, header .menu2 .menu__level-2');
