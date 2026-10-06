@@ -27,6 +27,26 @@ services:
     networks:
       - laravel
 
+  # Планировщик Laravel (routes/console.php): каждую минуту schedule:run —
+  # например, ночная пересборка public/sitemap.xml. Как в fridge-service.
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/php.dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    user: "${UID:-1000}:${GID:-1000}"
+    command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
+    depends_on:
+      - db
+    networks:
+      - laravel
+
   composer:
     build:
       context: .

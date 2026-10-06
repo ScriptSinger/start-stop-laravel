@@ -10,7 +10,8 @@
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "moonshine/moonshine": "^4.19",
-        "moonshine/tinymce": "^2.0"
+        "moonshine/tinymce": "^2.0",
+        "spatie/laravel-sitemap": "^8.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

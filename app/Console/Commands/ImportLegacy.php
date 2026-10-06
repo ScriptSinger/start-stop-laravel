@@ -22,6 +22,8 @@ class ImportLegacy extends LegacyImportCommand
         $this->call('import:legacy-pages');
         // После страниц: ссылки меню ведут на них.
         $this->call('import:legacy-theme');
+        // Карта сайта — по только что импортированным данным, не дожидаясь ночи.
+        $this->call('sitemap:generate');
 
         $this->newLine();
         $this->components->info('Сверка количества строк (legacy → новая таблица):');
