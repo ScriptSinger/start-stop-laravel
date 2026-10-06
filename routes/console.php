@@ -9,6 +9,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Ночной пересчёт посадочных «Аккумулятор для …» в кеш — до карты сайта, она их использует.
+Schedule::command('car-landings:refresh')->dailyAt('03:00')->timezone('Asia/Yekaterinburg')->withoutOverlapping();
+
 // Ночная пересборка public/sitemap.xml из базы (контейнер scheduler в docker-compose).
 Schedule::command('sitemap:generate')->dailyAt('03:15')->timezone('Asia/Yekaterinburg')->withoutOverlapping();
 

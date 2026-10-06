@@ -1,0 +1,63 @@
+/* Посадочные «Аккумулятор для <модель>» (resources/views/car-landing). */
+.car-landing__summary {margin-bottom: 30px; padding: 20px; background: #f7f7f7; border-radius: 10px}
+
+.car-landing__specs {display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px}
+.car-landing__spec {display: flex; flex-direction: column; gap: 4px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0 0 0 / .06)}
+.car-landing__spec_accent {background: #c82a00; color: #fff}
+.car-landing__spec-icon {margin-bottom: 4px; font-size: 22px; color: #c82a00}
+.car-landing__spec_accent .car-landing__spec-icon {color: #fff}
+.car-landing__spec-value {font-size: 20px; font-weight: 700; line-height: 1.2}
+.car-landing__spec-label {font-size: 13px; color: #777}
+.car-landing__spec_accent .car-landing__spec-label {color: rgba(255 255 255 / .85)}
+
+/* Габариты отдельными плашками. */
+.car-landing__dims {display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none}
+.car-landing__dim {padding: 3px 9px; background: #f2f2f2; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums}
+.car-landing__spec .car-landing__dims {margin: 2px 0}
+.car-landing__table .car-landing__dim {font-weight: 400}
+
+/* Мини-схема аккумулятора: клеммы на крышке, «+» по умолчанию справа (обратная). */
+.car-landing__terminals {display: flex; justify-content: space-between; width: 46px; height: 24px; margin-bottom: 2px; padding: 0 5px; border: 2px solid #333; border-radius: 4px; font-weight: 700; line-height: 20px; font-size: 14px}
+.car-landing__terminals_direct {flex-direction: row-reverse}
+.car-landing__terminal_plus {color: #c82a00}
+.car-landing__terminal_minus {color: #1f5fbf}
+
+.car-landing__text {margin: 16px 0 12px; line-height: 1.6; color: #555}
+
+.car-landing__perks {display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; margin: 0; padding: 0; list-style: none; font-size: 14px}
+.car-landing__perks i {margin-right: 6px; color: #c82a00}
+.car-landing__perks a {white-space: nowrap}
+.car-landing__perks-action {margin-left: auto}
+
+.car-landing__section {margin-top: 40px}
+.car-landing__section:last-child {margin-bottom: 40px}
+.car-landing__title {margin: 0 0 15px; font-size: 22px; font-weight: 600}
+.car-landing__table .table {margin: 0; background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden}
+.car-landing__table th {background: #f7f7f7; font-weight: 600; white-space: nowrap}
+.car-landing__table td, .car-landing__table th {padding: 10px 14px !important; border-color: #eee !important}
+
+.car-landing__chips {display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none}
+.car-landing__chip {display: inline-block; padding: 7px 14px; background: #f2f2f2; border-radius: 18px; color: #333; transition: background .2s, color .2s}
+.car-landing__chip:hover, .car-landing__chip:focus, .car-landing__chip_active {background: #c82a00; color: #fff; text-decoration: none}
+
+.car-landing__generations-nav {display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px}
+
+/* Страница марки: плитки моделей. */
+.car-landing__intro {margin-bottom: 20px; line-height: 1.6}
+.car-landing__models {display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none}
+.car-landing__models a {display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 14px 16px; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; color: inherit; transition: border-color .2s, box-shadow .2s}
+.car-landing__models a:hover, .car-landing__models a:focus {border-color: #c82a00; box-shadow: 0 2px 8px rgba(0 0 0 / .08); text-decoration: none}
+.car-landing__model-name {font-weight: 600}
+.car-landing__model-meta {color: #888; font-size: .9em}
+
+@media (max-width: 991px) {
+    .car-landing__specs {grid-template-columns: repeat(2, minmax(0, 1fr))}
+}
+
+@media (max-width: 575px) {
+    .car-landing__summary {padding: 12px; margin-left: -5px; margin-right: -5px}
+    .car-landing__spec {padding: 12px}
+    .car-landing__spec-value {font-size: 17px}
+    .car-landing__perks-action {margin-left: 0}
+    .car-landing__title {font-size: 18px}
+}

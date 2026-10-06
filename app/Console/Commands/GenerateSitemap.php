@@ -5,6 +5,10 @@ namespace App\Console\Commands;
 use App\Models\Category;
 use App\Models\Page;
 use App\Models\Product;
+use App\Services\CarLanding\CarBrand;
+use App\Services\CarLanding\CarGeneration;
+use App\Services\CarLanding\CarLandingCatalog;
+use App\Services\CarLanding\CarModel;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -23,7 +27,7 @@ class GenerateSitemap extends Command
      * На старом сайте файл выгрузили один раз в 2024 году — к 2026-му
      * половина адресов в нём отдавала 404.
      */
-    public function handle(): int
+    public function handle(CarLandingCatalog $carLandings): int
     {
         $sitemap = Sitemap::create()
             ->add(Url::create(route('home')))
@@ -51,10 +55,36 @@ class GenerateSitemap extends Command
             Url::create(route('page.show', $page))->setLastModificationDate($page->updated_at),
         ));
 
+        // Посадочные «Аккумулятор для …» — только включённые марки и модели с товарами.
+        $carPages = 0;
+        $carLandings->brands()->each(function (CarBrand $brand) use ($sitemap, $carLandings, &$carPages): void {
+            $models = $carLandings->models($brand);
+
+            if ($models->isEmpty()) {
+                return;
+            }
+
+            $sitemap->add(Url::create(route('car-landing.brand', $brand->slug)));
+            $carPages++;
+
+            $models->each(function (CarModel $model) use ($sitemap, $carLandings, &$carPages): void {
+                $sitemap->add(Url::create($model->url()));
+                $carPages++;
+
+                // Поколения — только со своим набором аккумуляторов, иначе это копии страницы модели.
+                $carLandings->generations($model)
+                    ->filter(fn (CarGeneration $generation): bool => $carLandings->hasOwnProducts($generation))
+                    ->each(function (CarGeneration $generation) use ($sitemap, &$carPages): void {
+                        $sitemap->add(Url::create($generation->url()));
+                        $carPages++;
+                    });
+            });
+        });
+
         $path = $this->option('path') ?: public_path('sitemap.xml');
         $sitemap->writeToFile($path);
 
-        $this->info("sitemap.xml: разделов {$categories->count()}, товаров {$products}, страниц {$pages->count()} → {$path}");
+        $this->info("sitemap.xml: разделов {$categories->count()}, товаров {$products}, страниц {$pages->count()}, подбор по авто {$carPages} → {$path}");
 
         return self::SUCCESS;
     }

@@ -25,10 +25,26 @@ export default ({modelsUrl, generationsUrl, resultUrl}) => ({
     async loadGenerations(model) {
         const generations = await this.fetchJson(generationsUrl, {brand: this.brand, model});
 
+        // У модели с посадочной страницей и одним поколением выбирать нечего.
+        if (generations.length === 1 && generations[0].url) {
+            location.href = generations[0].url;
+
+            return;
+        }
+
         if (generations.length) {
             this.model = model;
             this.generations = generations;
             this.step = 3;
+        }
+    },
+
+    // У поколений с посадочной страницей есть готовая ссылка (url).
+    choose(generation) {
+        if (generation.url) {
+            location.href = generation.url;
+        } else {
+            this.finish(generation.name);
         }
     },
 

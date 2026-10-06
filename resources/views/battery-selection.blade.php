@@ -35,6 +35,9 @@
                             <dd>{{ collect($fitment->dimensions())->map(fn (array $dims) => implode('×', $dims))->implode(', ') }}</dd>
                         @endif
                     </dl>
+                    @if ($landing)
+                        <a href="{{ route('car-landing.model', [$landing->brand->slug, $landing->slug]) }}" class="battery-fitment__landing">Все аккумуляторы для {{ $landing->fullName() }} →</a>
+                    @endif
                     <a href="{{ route('home') }}#battery-wizard" class="btn btn-default btn-block">Выбрать другой автомобиль</a>
                 </div>
             </aside>

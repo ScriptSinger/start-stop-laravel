@@ -2,6 +2,7 @@ FROM php:8.4-fpm-bookworm
 
 ARG UID
 ARG GID
+ARG REDIS_VERSION=6.1.0
 
 ENV UID=${UID:-1000}
 ENV GID=${GID:-1000}
@@ -18,7 +19,8 @@ RUN sed -i "s/^user = .*/user = laravel/" /usr/local/etc/php-fpm.d/www.conf \
 
 # Установка зависимостей и расширений PHP (gd — нужен под миниатюры товаров,
 # как в старом проекте system/library/cache + model/tool/image;
-# mariadb-client — mariadb-dump для php artisan db:backup)
+# mariadb-client — mariadb-dump для php artisan db:backup;
+# redis — расширение phpredis для кеша, как в fridge-service)
 RUN apt-get update && apt-get install -y \
     git \
     mariadb-client \
@@ -31,7 +33,11 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql zip gd opcache \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y $PHPIZE_DEPS \
+    && pecl install https://pecl.php.net/get/redis-${REDIS_VERSION}.tgz \
+    && docker-php-ext-enable redis \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 EXPOSE 9000
 CMD ["php-fpm"]

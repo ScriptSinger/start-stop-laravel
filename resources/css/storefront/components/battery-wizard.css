@@ -12,3 +12,7 @@
 .gens img {width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px}
 .w-btn-more {margin-top: 20px; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 25px; border-radius: 20px; color: #555; cursor: pointer}
 .battery-wizard-container .mt-3 {margin-top: 15px}
+
+/* Ссылки на посадочные «Аккумулятор для <модель>». */
+.w-landings {margin-top: 15px; text-align: center; color: #777}
+.w-landings a {margin-left: 6px; font-weight: 600}

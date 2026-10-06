@@ -80,7 +80,7 @@ class BatterySelection
 
                 return [
                     'name' => $name ?: self::DEFAULT_GENERATION_LABEL,
-                    'image' => $this->generationImageUrl($name),
+                    'image' => $this->generationImage($name),
                 ];
             })
             ->values();
@@ -132,7 +132,7 @@ class BatterySelection
      * Имена файлов фото машин нормализованы скриптом fix_cars.php старого
      * проекта; варианты с «_» по краям — как в его battery_filter.php.
      */
-    private function generationImageUrl(string $generation): string
+    public function generationImage(string $generation): string
     {
         $fileName = str_replace([' - ', ' '], '_', $generation);
         $fileName = str_replace(['(', ')', '.', ','], '', $fileName);

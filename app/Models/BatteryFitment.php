@@ -102,7 +102,8 @@ class BatteryFitment extends Model
     public function matchingAttributeValueIds(): array
     {
         $attributeIds = config('shop.battery_fitment.attributes');
-        $tolerance = (int) config('shop.battery_fitment.length_tolerance_mm');
+        $lengthTolerance = (int) config('shop.battery_fitment.length_tolerance_mm');
+        $sizeTolerance = (int) config('shop.battery_fitment.size_tolerance_mm');
 
         /** @var Collection<int, Collection<int, AttributeValue>> $values */
         $values = AttributeValue::query()
@@ -129,16 +130,20 @@ class BatteryFitment extends Model
                     return collect($capacities)->contains(fn (int $capacity): bool => $capacity >= (int) $range[1] && $capacity <= (int) $range[2]);
                 })
                 ->modelKeys(),
-            // Сравниваем длину из «Д×Ш×В», а не любое число в названии
-            // («Азия D26 (260 x 173 x 225 мм)» — в старом коде совпадало и с 26, и с 173).
-            // Габариты без размеров («Груз B (180 - 190 Ah)» у грузовых АКБ) длину
+            // АКБ подходит, если совпадает по длине с одним из размеров машины
+            // (из «Д×Ш×В», а не любое число в названии: «Азия D26 (260 x 173 x 225 мм)»
+            // в старом коде совпадало и с 26, и с 173) и не шире и не выше его.
+            // Габариты без размеров («Груз B (180 - 190 Ah)» у грузовых АКБ)
             // не ограничивают — такой АКБ подбирается по ёмкости и полярности.
             'dimensions' => $dimensions === [] ? null : $valuesOf('dimensions')
-                ->filter(function (AttributeValue $value) use ($dimensions, $tolerance): bool {
-                    $batteryDimensions = self::parseDimensions($value->value);
+                ->filter(function (AttributeValue $value) use ($dimensions, $lengthTolerance, $sizeTolerance): bool {
+                    $battery = self::parseDimensions($value->value);
 
-                    return $batteryDimensions === null || collect($dimensions)
-                        ->contains(fn (array $car): bool => abs($car[0] - $batteryDimensions[0]) <= $tolerance);
+                    return $battery === null || collect($dimensions)->contains(
+                        fn (array $car): bool => abs($car[0] - $battery[0]) <= $lengthTolerance
+                            && $battery[1] <= $car[1] + $sizeTolerance
+                            && $battery[2] <= $car[2] + $sizeTolerance,
+                    );
                 })
                 ->modelKeys(),
         ];

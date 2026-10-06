@@ -25,6 +25,15 @@
         <div class="text-center">
             <button type="button" class="w-btn-more" x-show="!allBrands" @click="allBrands = true">Показать все марки</button>
         </div>
+
+        @if ($landingBrands->isNotEmpty())
+            <div class="w-landings">
+                Аккумуляторы по моделям:
+                @foreach ($landingBrands as $landingBrand)
+                    <a href="{{ route('car-landing.brand', $landingBrand->slug) }}">{{ $landingBrand->name }}</a>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <div class="w-step" x-show="step === 2" x-cloak>
@@ -40,7 +49,7 @@
         <h3 class="w-title"><span class="w-back" @click="step = 2">←</span> Выберите поколение / кузов</h3>
         <div class="w-grid gens">
             <template x-for="item in generations" :key="item.name">
-                <div class="w-item" @click="finish(item.name)">
+                <div class="w-item" @click="choose(item)">
                     <img :src="item.image" :alt="item.name">
                     <div x-text="item.name"></div>
                 </div>

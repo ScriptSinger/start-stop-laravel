@@ -24,6 +24,7 @@ services:
       - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
     depends_on:
       - db
+      - redis
     networks:
       - laravel
 
@@ -44,6 +45,17 @@ services:
       - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
     depends_on:
       - db
+      - redis
+    networks:
+      - laravel
+
+  # Кеш Laravel (CACHE_STORE=redis, REDIS_HOST=redis) — как в fridge-service:
+  # посадочные страницы подбора считаются раз в сутки и берутся отсюда.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
     networks:
       - laravel
 
@@ -114,6 +126,7 @@ services:
 
 volumes:
   db_data:
+  redis_data:
 
 networks:
   laravel:

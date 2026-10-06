@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BatteryFilterController;
 use App\Http\Controllers\CallbackRequestController;
+use App\Http\Controllers\CarLandingController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
@@ -63,6 +64,11 @@ Route::get('/product-question/{product}', [ProductQuestionController::class, 'cr
 Route::post('/product-question/{product}', [ProductQuestionController::class, 'store'])->middleware('throttle:5,1')->name('product-question.store');
 
 Route::get('/podbor-akb', [BatteryFilterController::class, 'show'])->name('battery-selection');
+
+// Посадочные «Аккумулятор для <модель>» — марки включаются в shop.car_landings.
+Route::get('/akkumulyator-dlya/{brand}', [CarLandingController::class, 'brand'])->name('car-landing.brand');
+Route::get('/akkumulyator-dlya/{brand}/{model}', [CarLandingController::class, 'model'])->name('car-landing.model');
+Route::get('/akkumulyator-dlya/{brand}/{model}/{generation}', [CarLandingController::class, 'generation'])->name('car-landing.generation');
 
 Route::prefix('battery-filter')->name('battery-filter.')->group(function () {
     Route::get('/models', [BatteryFilterController::class, 'getModels'])->name('models');

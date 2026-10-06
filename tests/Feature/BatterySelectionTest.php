@@ -25,7 +25,7 @@ class BatterySelectionTest extends TestCase
         // id характеристик — как в OCFilter (см. shop.battery_fitment.attributes).
         $this->attribute(13, 'Полярность', ['Обратная', 'Прямая', 'Универсальная']);
         $this->attribute(20, 'Ёмкость (Ah)', ['55 - 65 Ah', '66 - 77 Ah', '180 - 190 Ah']);
-        $this->attribute(16, 'Габариты', ['Евро L2 (242 x 175 x 190 мм)', 'Евро L3 (278 x 175 x 190 мм)', 'Азия D26 (260 x 173 x 225 мм)', 'Груз B (180 - 190 Ah)']);
+        $this->attribute(16, 'Габариты', ['Евро L2 (242 x 175 x 190 мм)', 'Евро LB2 (242 x 175 x 175 мм)', 'Евро L3 (278 x 175 x 190 мм)', 'Азия D26 (260 x 173 x 225 мм)', 'Азия B24 (234 x 127 x 227 мм)', 'Груз B (180 - 190 Ah)']);
     }
 
     public function test_matches_polarity_capacity_range_and_length(): void
@@ -59,6 +59,33 @@ class BatterySelectionTest extends TestCase
         $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Узкий']))
             ->assertOk()
             ->assertDontSee('Азия D26');
+    }
+
+    public function test_battery_taller_or_wider_than_car_compartment_is_not_offered(): void
+    {
+        // Низкий отсек: подходит только LB2 высотой 175, обычный L2 (190) не встанет.
+        $this->fitment(['generation' => 'Низкий', 'dims' => '242x175x175']);
+        $this->battery('Низкий LB2', ['Обратная', '55 - 65 Ah', 'Евро LB2 (242 x 175 x 175 мм)']);
+        $this->battery('Обычный L2', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Низкий']))
+            ->assertOk()
+            ->assertSee('Низкий LB2')
+            ->assertDontSee('Обычный L2');
+
+        // Узкий азиатский отсек 127 мм: европейский 175 мм не встанет по ширине.
+        $this->fitment(['generation' => 'Узкий азиат', 'dims' => '242x127x227']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Узкий азиат']))
+            ->assertOk()
+            ->assertDontSee('Низкий LB2')
+            ->assertDontSee('Обычный L2');
+
+        // Обычный отсек 190 принимает и низкий аккумулятор.
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Kia Rio IV 2017 - 2020']))
+            ->assertOk()
+            ->assertSee('Низкий LB2')
+            ->assertSee('Обычный L2');
     }
 
     public function test_unknown_polarity_does_not_filter_by_polarity(): void

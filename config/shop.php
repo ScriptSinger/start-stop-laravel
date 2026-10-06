@@ -69,6 +69,16 @@ return [
     // порог 5 был зашит прямо в шаблон.
     'supplier_order_min_quantity' => (int) env('SHOP_SUPPLIER_ORDER_MIN_QUANTITY', 5),
 
+    // Посадочные страницы «Аккумулятор для <модель>» (/akkumulyator-dlya/…)
+    // для поиска. Включаются по маркам постепенно: ключ — адрес марки,
+    // fitment_brand — как марка записана в данных подбора (battery_fitments).
+    'car_landings' => [
+        'brands' => [
+            // skip_models — модели без спроса (концепт-кары, прототипы).
+            'lada' => ['name' => 'Lada', 'fitment_brand' => 'ВАЗ (Lada)', 'skip_models' => ['XRAY concept', 'Revolution']],
+        ],
+    ],
+
     // Подбор АКБ по автомобилю (battery_fitments → характеристики товаров).
     // id характеристик — это filter_id из OCFilter, импорт их сохраняет.
     'battery_fitment' => [
@@ -81,5 +91,9 @@ return [
         ],
         // Допуск по длине АКБ, мм (как в старом battery_filter.php).
         'length_tolerance_mm' => 2,
+        // На сколько АКБ может быть шире или выше размера из данных машины, мм.
+        // Старый подбор высоту не проверял и низким отсекам (175 мм)
+        // предлагал аккумуляторы высотой 190.
+        'size_tolerance_mm' => 5,
     ],
 ];
