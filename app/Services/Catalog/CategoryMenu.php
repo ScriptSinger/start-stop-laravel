@@ -43,15 +43,20 @@ class CategoryMenu
     }
 
     /**
-     * Ссылки второго уровня одного раздела — для плиток на странице категории.
+     * Плитки подразделов на странице раздела. Производителей здесь нет —
+     * они уже есть в фильтре («Производитель»).
      *
      * @return list<array{title: string, url: string}>
      */
-    public function linksFor(Category $category): array
+    public function subcategoryLinks(Category $category): array
     {
-        $category->loadMissing(['children' => fn ($query) => $query->where('status', true)->orderBy('sort_order')->orderBy('name')]);
-
-        return $this->buildLinks($category, $this->manufacturersByCategory([$category->id])->get($category->id, collect()));
+        return $category->children()
+            ->where('status', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Category $child): array => ['title' => $child->name, 'url' => route('category.show', $child)])
+            ->all();
     }
 
     /**

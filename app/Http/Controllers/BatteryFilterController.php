@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\BannerPosition;
 use App\Http\Requests\CatalogFilterRequest;
-use App\Models\Banner;
 use App\Models\BatteryFitment;
 use App\Services\BatterySelection;
 use Illuminate\Http\JsonResponse;
@@ -61,9 +59,6 @@ class BatteryFilterController extends Controller
             'products' => $selection->products($fitment, $request->sort(), $request->perPage())->withQueryString(),
             'sort' => $request->sort(),
             'perPage' => $request->perPage(),
-            // Баннеры — как над товарами в категории, куда вёл подбор на старом сайте.
-            'sliderBanners' => Banner::query()->shownAt(BannerPosition::HomeSlider)->get(),
-            'stripBanners' => Banner::query()->shownAt(BannerPosition::HomeStrip)->get(),
         ]);
     }
 

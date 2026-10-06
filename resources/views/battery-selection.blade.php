@@ -4,10 +4,6 @@
 
 @section('title', 'Аккумуляторы для '.$carName.' — '.config('shop.name'))
 
-@push('page-styles')
-    @vite('resources/css/storefront/pages/battery-selection.css')
-@endpush
-
 {{-- На старом сайте подбор вёл на страницу «Аккумуляторы» с фильтром OCFilter,
      поэтому раскладка — как у категории (product/category.twig темы UniShop2):
      слева выбранные параметры, справа товары. --}}
@@ -44,9 +40,6 @@
                 </div>
             </aside>
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
-                <div class="content-top">
-                    @include('home.banners')
-                </div>
                 <div class="uni-wrapper">
                     @if ($products->isEmpty())
                         <div class="div-text-empty">

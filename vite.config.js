@@ -8,8 +8,6 @@ export default defineConfig({
                 'resources/css/storefront/base.css',
                 'resources/css/storefront/app.css',
                 'resources/css/storefront/pages/home.css',
-                'resources/css/storefront/pages/category.css',
-                'resources/css/storefront/pages/battery-selection.css',
                 'resources/css/storefront/pages/product.css',
                 'resources/css/storefront/pages/search.css',
                 'resources/css/storefront/pages/cart.css',

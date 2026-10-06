@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\BannerPosition;
 use App\Http\Requests\CatalogFilterRequest;
-use App\Models\Banner;
 use App\Models\Category;
 use App\Services\Catalog\CatalogFacets;
 use App\Services\Catalog\CategoryMenu;
@@ -26,7 +24,7 @@ class CategoryController extends Controller
 
         return view('category', [
             'category' => $category,
-            'categoryLinks' => $categoryMenu->linksFor($category),
+            'categoryLinks' => $categoryMenu->subcategoryLinks($category),
             'products' => $products,
             'filter' => $filter,
             'sort' => $request->sort(),
@@ -34,9 +32,6 @@ class CategoryController extends Controller
             'manufacturerFacet' => $facets->manufacturers($category, $filter),
             'attributeFacets' => $facets->attributes($category, $filter),
             'priceBounds' => $facets->priceBounds($category),
-            // Над товарами — те же баннеры, что на главной (content_top раскладки «Категория»).
-            'sliderBanners' => Banner::query()->shownAt(BannerPosition::HomeSlider)->get(),
-            'stripBanners' => Banner::query()->shownAt(BannerPosition::HomeStrip)->get(),
         ]);
     }
 }

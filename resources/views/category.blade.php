@@ -4,10 +4,6 @@
 {{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
 @section('meta_description', (string) $category->meta_description)
 
-@push('page-styles')
-    @vite('resources/css/storefront/pages/category.css')
-@endpush
-
 {{-- Разметка — 1:1 с product/category.twig темы UniShop2 старого сайта. --}}
 @section('content')
     <div id="product-category" class="container">
@@ -26,9 +22,6 @@
                 @include('partials.catalog-filter')
             </aside>
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
-                <div class="content-top">
-                    @include('home.banners')
-                </div>
                 <div class="uni-wrapper">
                     @if ($category->hasDescription())
                         <div class="category-info">{!! $category->description !!}</div>
