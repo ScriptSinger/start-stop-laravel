@@ -8,7 +8,17 @@
     <title>@yield('title', config('shop.name'))</title>
     @if (trim($__env->yieldContent('meta_description')) !== '')
         <meta name="description" content="@yield('meta_description')" />
+        <meta property="og:description" content="@yield('meta_description')" />
     @endif
+    {{-- Превью ссылки в соцсетях и мессенджерах; картинку страница может
+         заменить своей (товар — фото), иначе логотип. --}}
+    <meta property="og:title" content="@yield('title', config('shop.name'))" />
+    <meta property="og:type" content="@yield('og_type', 'website')" />
+    <meta property="og:url" content="{{ url()->current() }}" />
+    <meta property="og:image" content="@yield('og_image', Illuminate\Support\Facades\Storage::disk('public')->url(config('shop.logo')))" />
+    <meta property="og:site_name" content="{{ config('shop.name') }}" />
+    <meta name="theme-color" content="{{ config('shop.theme_color') }}" />
+    <meta name="format-detection" content="telephone=no" />
 
     {{-- Стили в порядке старого сайта: тема (base), стили блоков страницы
          (каждая страница добавляет свои в page-styles), общие стили и наши

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Контакты — '.config('shop.name'))
+@section('title', 'Связаться с нами — '.config('shop.name'))
 
 {{-- Разметка — 1:1 с information/contact.twig темы UniShop2. Форму «Написать
      нам» не переносим: без уведомлений сообщения некуда доставить. --}}
@@ -15,6 +15,7 @@
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
                 <li>Связаться с нами</li>
             </ul>
+            <h1>Связаться с нами</h1>
         </div>
         <div class="row">
             <div id="content" class="col-sm-12">

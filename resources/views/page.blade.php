@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', $page->title.' — '.config('shop.name'))
+@section('title', $page->meta_title ?: $page->title.' — '.config('shop.name'))
+{{-- Строкой: при null Blade открыл бы секцию и не закрыл буфер вывода. --}}
+@section('meta_description', (string) $page->meta_description)
 
 @section('body_class', 'menu-expanded')
 
@@ -12,7 +14,7 @@
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
                 <li>{{ $page->title }}</li>
             </ul>
-            <h1>{{ $page->title }}</h1>
+            <h1>{{ $page->heading ?: $page->title }}</h1>
         </div>
         <div class="row">
             <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs hidden-sm"></aside>

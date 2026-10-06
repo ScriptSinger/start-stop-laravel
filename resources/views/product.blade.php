@@ -11,6 +11,10 @@
 {{-- Разметка — 1:1 с product/product.twig темы UniShop2 старого сайта. --}}
 @php($category = $product->categories->first())
 @php($image = Illuminate\Support\Facades\Storage::disk('public')->url($product->image ?: 'no_image.png'))
+@section('og_type', 'product')
+@if ($product->image)
+    @section('og_image', $image)
+@endif
 @php($heading = $product->heading ?: $product->name)
 @php([$availabilityText, $availabilityClass] = match (true) {
     $product->quantity > 0 => ['В наличии', 't-5'],

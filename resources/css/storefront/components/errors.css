@@ -1,0 +1,4 @@
+/* Страницы ошибок (resources/views/errors). Круг с кодом — из темы. */
+.error-not-found__actions{margin-top:20px}
+.error-page__logo{max-width:260px;margin:30px auto 0}
+.error-page__contacts{text-align:center;color:#888;margin-bottom:30px}

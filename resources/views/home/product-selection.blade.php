@@ -5,7 +5,9 @@
     <div class="heading">{{ $selection->toString() }}@if ($link) <a href="{{ route('category.show', $link['category']) }}" class="heading__link">{{ $link['title'] }}</a>@endif</div>
     <div class="tab-content">
         <div class="tab-pane active">
-            <div class="uni-module {{ $moduleClass }}" data-uni-module="carousel">
+            {{-- Тема на широких экранах ставит 5 карточек в ряд; у нас — 4,
+                 как в «Популярных категориях» над подборкой. --}}
+            <div class="uni-module {{ $moduleClass }}" data-uni-module="carousel" data-uni-module-items='{"0":{"items":2},"700":{"items":3},"992":{"items":4}}'>
                 <div class="uni-module__wrapper">
                     @foreach ($products as $product)
                         @include('partials.product-card', ['product' => $product])
