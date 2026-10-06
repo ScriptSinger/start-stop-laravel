@@ -18,7 +18,7 @@
             <h1>{{ $category->heading ?: $category->name }}</h1>
         </div>
         <div class="row">
-            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs">
+            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4" x-data="catalogFilter({countUrl: @js(route('category.count', $category)), priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }}})" @keydown.escape.window="close()">
                 @include('partials.catalog-filter')
             </aside>
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">

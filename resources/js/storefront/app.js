@@ -31,6 +31,7 @@ import ajaxForm from './components/ajax-form';
 import cookieNotice from './components/cookie-notice';
 import flyMenu from './components/fly-menu';
 import livePrice from './components/live-price';
+import catalogFilter from './components/catalog-filter';
 
 // Картинки из resources/images, на которые ссылаются шаблоны через Vite::asset().
 import.meta.glob('../../images/**', {eager: true, query: '?url', import: 'default'});
@@ -49,6 +50,7 @@ Alpine.data('ajaxForm', ajaxForm);
 Alpine.data('cookieNotice', cookieNotice);
 Alpine.data('flyMenu', flyMenu);
 Alpine.data('livePrice', livePrice);
+Alpine.data('catalogFilter', catalogFilter);
 
 // Маска телефона, как в формах старого сайта: <input type="tel" x-phone-mask>.
 Alpine.directive('phone-mask', (el) => {

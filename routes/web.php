@@ -20,6 +20,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', SearchController::class)->name('search');
 Route::get('/catalog/{product:slug}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->name('category.show');
+// Сколько товаров будет с выбранным фильтром — для кнопки «Показать N товаров» на телефоне.
+Route::get('/category/{category:slug}/count', [CategoryController::class, 'count'])->name('category.count');
 // Адрес как на старом сайте (OpenCart information/contact).
 Route::get('/contact-us', ContactController::class)->name('contact');
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.show');

@@ -114,9 +114,19 @@ class CatalogFilterTest extends TestCase
         $html = $this->category(['manufacturer' => [$this->varta->id]])->getContent();
 
         $this->assertMatchesRegularExpression(
-            '/value="'.$this->value('Прямая').'"\s+disabled/',
+            '/value="'.$this->value('Прямая').'"[^>]*\sdisabled/',
             $html,
         );
+    }
+
+    public function test_count_endpoint_for_mobile_filter_button(): void
+    {
+        $this->getJson(route('category.count', ['category' => $this->batteries]))
+            ->assertOk()
+            ->assertExactJson(['count' => 4]);
+
+        $this->getJson(route('category.count', ['category' => $this->batteries, 'manufacturer' => [$this->titan->id], 'attr' => [$this->polarity->id => [$this->value('Прямая')]]]))
+            ->assertExactJson(['count' => 1]);
     }
 
     public function test_default_sort_is_price_ascending_with_specials_and_can_be_changed(): void
