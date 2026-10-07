@@ -5,22 +5,30 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Product\Pages;
 
 use App\Models\Attribute;
+use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
+use App\Services\Catalog\BulkAttributeAssigner;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Contracts\UI\FormBuilderContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
+use MoonShine\Laravel\Http\Responses\MoonShineJsonResponse;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\QueryTags\QueryTag;
+use MoonShine\Support\Attributes\AsyncMethod;
+use MoonShine\Support\Enums\ToastType;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Checkbox;
@@ -86,7 +94,114 @@ class ProductIndexPage extends IndexPage
      */
     protected function buttons(): ListOf
     {
-        return parent::buttons();
+        return parent::buttons()->add(
+            $this->bulkButton('Присвоить характеристику', 'tag', 'assignAttribute', [
+                Select::make('Значение', 'attribute_value_id')
+                    ->options($this->attributeValueOptions())
+                    ->searchable()
+                    ->required(),
+                Select::make('Если у товара уже есть значение этой характеристики', 'mode')
+                    ->options(['replace' => 'Заменить', 'add' => 'Добавить к имеющимся'])
+                    ->default('replace'),
+            ], 'Точная ёмкость («60 Ah») сразу добавляет и диапазон («55 - 65 Ah») — по нему работает подбор по машине.'),
+            $this->bulkButton('Убрать характеристику', 'tag', 'detachAttribute', [
+                Select::make('Характеристика', 'attribute_id')
+                    ->options(Attribute::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->searchable()
+                    ->required(),
+            ], 'У отмеченных товаров будут удалены все значения этой характеристики.'),
+        );
+    }
+
+    /**
+     * Присвоить отмеченным товарам значение характеристики (массовое действие).
+     */
+    #[AsyncMethod]
+    public function assignAttribute(Request $request, BulkAttributeAssigner $assigner): MoonShineJsonResponse
+    {
+        $productIds = $this->selectedIds($request);
+        $value = AttributeValue::query()->with('attribute')->find($request->integer('attribute_value_id'));
+
+        if ($productIds === [] || $value === null) {
+            return MoonShineJsonResponse::make()->toast('Отметьте товары и выберите значение', ToastType::ERROR);
+        }
+
+        $assigned = $assigner->assign($productIds, $value, $request->input('mode', 'replace') === 'replace');
+
+        return $this->bulkDone('Товаров: '.count($productIds).'. Присвоено: '.$value->attribute->name.' — '.implode(', ', $assigned));
+    }
+
+    /**
+     * Убрать у отмеченных товаров все значения характеристики.
+     */
+    #[AsyncMethod]
+    public function detachAttribute(Request $request, BulkAttributeAssigner $assigner): MoonShineJsonResponse
+    {
+        $productIds = $this->selectedIds($request);
+        $attribute = Attribute::query()->find($request->integer('attribute_id'));
+
+        if ($productIds === [] || $attribute === null) {
+            return MoonShineJsonResponse::make()->toast('Отметьте товары и выберите характеристику', ToastType::ERROR);
+        }
+
+        $assigner->detach($productIds, $attribute->id);
+
+        return $this->bulkDone('Товаров: '.count($productIds).'. Убрано: '.$attribute->name);
+    }
+
+    /**
+     * Массовая кнопка над таблицей: окно с полями, отмеченные строки — в ids.
+     *
+     * @param  list<FieldContract>  $fields
+     */
+    private function bulkButton(string $label, string $icon, string $method, array $fields, string $hint): ActionButton
+    {
+        $resource = $this->getResource();
+
+        return ActionButton::make($label)
+            ->bulk($resource->getListComponentName())
+            ->method($method)
+            ->withConfirm(
+                title: $label,
+                content: $hint,
+                button: 'Применить',
+                fields: $fields,
+                formBuilder: fn (FormBuilderContract $form): FormBuilderContract => $form->async(events: [$resource->getListEventName()]),
+            )
+            ->icon($icon)
+            ->showInLine();
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function selectedIds(Request $request): array
+    {
+        return array_values(array_unique(array_map('intval', array_filter((array) $request->input('ids', [])))));
+    }
+
+    private function bulkDone(string $message): MoonShineJsonResponse
+    {
+        return MoonShineJsonResponse::make()
+            ->toast($message, ToastType::SUCCESS)
+            ->events([$this->getResource()->getListEventName()]);
+    }
+
+    /**
+     * Значения, сгруппированные по характеристикам: «Ёмкость → 60 Ah».
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function attributeValueOptions(): array
+    {
+        return Attribute::query()
+            ->with(['values' => fn ($query) => $query->orderBy('sort_order')->orderBy('value')])
+            ->orderBy('name')
+            ->get()
+            ->mapWithKeys(fn (Attribute $attribute): array => [
+                $attribute->name => $attribute->values->pluck('value', 'id')->all(),
+            ])
+            ->all();
     }
 
     /**
@@ -95,7 +210,14 @@ class ProductIndexPage extends IndexPage
     protected function filters(): iterable
     {
         return [
-            Text::make('Название', 'name'),
+            // Несколько вариантов через запятую: «60, 65» — название содержит любой из них.
+            Text::make('Название', 'name')
+                ->hint('Несколько вариантов через запятую: 60, 65')
+                ->onApply(fn (Builder $query, mixed $value): Builder => $query->where(function (Builder $query) use ($value): void {
+                    foreach (array_filter(array_map('trim', explode(',', (string) $value))) as $term) {
+                        $query->orWhere('products.name', 'like', '%'.addcslashes($term, '%_\\').'%');
+                    }
+                })),
             Text::make('Код товара', 'code'),
             Text::make('Артикул', 'sku'),
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
