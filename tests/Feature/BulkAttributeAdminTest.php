@@ -60,7 +60,9 @@ class BulkAttributeAdminTest extends TestCase
         $this->get('/admin/component/product-index-page/product-resource?_component_name=index-table-product-resource')
             ->assertOk()
             ->assertSee('Присвоить характеристику')
-            ->assertSee('Убрать характеристику');
+            ->assertSee('Убрать характеристику')
+            ->assertSee('Емкость · 60 Ah')
+            ->assertSee('Полярность · Обратная');
     }
 
     public function test_assign_replaces_value_and_adds_capacity_range(): void

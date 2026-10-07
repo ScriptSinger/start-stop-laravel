@@ -96,7 +96,7 @@ class ProductIndexPage extends IndexPage
     {
         return parent::buttons()->add(
             $this->bulkButton('Присвоить характеристику', 'tag', 'assignAttribute', [
-                Select::make('Значение', 'attribute_value_id')
+                Select::make('Значение (поиск: «емкость 60», «полярность»)', 'attribute_value_id')
                     ->options($this->attributeValueOptions())
                     ->searchable()
                     ->required(),
@@ -188,7 +188,8 @@ class ProductIndexPage extends IndexPage
     }
 
     /**
-     * Значения, сгруппированные по характеристикам: «Ёмкость → 60 Ah».
+     * Значения, сгруппированные по характеристикам; в подписи — и
+     * характеристика: «Емкость · 60 Ah».
      *
      * @return array<string, array<int, string>>
      */
@@ -199,7 +200,10 @@ class ProductIndexPage extends IndexPage
             ->orderBy('name')
             ->get()
             ->mapWithKeys(fn (Attribute $attribute): array => [
-                $attribute->name => $attribute->values->pluck('value', 'id')->all(),
+                // «Емкость · 60 Ah»: поиск находит и по характеристике, и по значению.
+                $attribute->name => $attribute->values
+                    ->mapWithKeys(fn (AttributeValue $value): array => [$value->id => $attribute->name.' · '.$value->value])
+                    ->all(),
             ])
             ->all();
     }
