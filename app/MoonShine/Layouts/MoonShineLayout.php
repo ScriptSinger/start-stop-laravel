@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
+use App\Models\CustomerRequest;
+use App\Models\Order;
 use App\MoonShine\Pages\Dashboard;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
@@ -47,10 +49,17 @@ final class MoonShineLayout extends AppLayout
      */
     protected function menu(): array
     {
+        $newOrders = Order::query()->where('status', 'new')->count();
+        $newRequests = CustomerRequest::query()->where('is_processed', false)->count();
+
         return [
             MenuItem::make(Dashboard::class, 'Главная')->icon('home'),
-            MenuItem::make(OrderResource::class, 'Заказы')->icon('shopping-cart'),
-            MenuItem::make(CustomerRequestResource::class, 'Заявки')->icon('chat-bubble-left-right'),
+            // Счётчик новых — видно сразу, без захода на панель. Ставим только
+            // ненулевой: пустой badge MoonShine передаёт кнопке как false и падает.
+            MenuItem::make(OrderResource::class, 'Заказы')->icon('shopping-cart')
+                ->when($newOrders > 0, fn (MenuItem $item): MenuItem => $item->badge($newOrders)),
+            MenuItem::make(CustomerRequestResource::class, 'Заявки')->icon('chat-bubble-left-right')
+                ->when($newRequests > 0, fn (MenuItem $item): MenuItem => $item->badge($newRequests)),
             MenuItem::make(CustomerResource::class, 'Клиенты')->icon('users'),
             MenuGroup::make('Каталог', [
                 MenuItem::make(ProductResource::class, 'Товары')->icon('cube'),

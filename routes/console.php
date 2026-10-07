@@ -13,6 +13,10 @@ Artisan::command('inspire', function () {
 Schedule::command('car-landings:refresh')->dailyAt('03:00')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::error('Ночной пересчёт посадочных «Аккумулятор для …» не выполнен.'));
 
+// Ночной расчёт «спроса без ассортимента» для панели и страницы «Остатки».
+Schedule::command('assortment:gaps')->dailyAt('03:30')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
+    ->onFailure(fn () => Log::error('Ночной расчёт «спроса без ассортимента» не выполнен.'));
+
 // Ночная пересборка public/sitemap.xml из базы (контейнер scheduler в docker-compose).
 Schedule::command('sitemap:generate')->dailyAt('03:15')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::error('Ночная пересборка sitemap.xml не выполнена.'));

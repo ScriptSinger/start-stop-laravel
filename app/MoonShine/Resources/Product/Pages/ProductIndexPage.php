@@ -112,6 +112,7 @@ class ProductIndexPage extends IndexPage
             $this->missingFilter('Без производителя', 'without_manufacturer', fn (Builder $query) => $query->whereNull('manufacturer_id')),
             $this->missingFilter('Без категории', 'without_categories', fn (Builder $query) => $query->doesntHave('categories')),
             $this->missingFilter('Без фото', 'without_image', fn (Builder $query) => $query->whereNull('image')),
+            $this->missingFilter('АКБ без данных для подбора', 'without_fitment_data', fn (Builder $query) => $query->missingFitmentData()),
         ];
     }
 

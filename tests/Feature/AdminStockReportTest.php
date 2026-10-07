@@ -2,9 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Attribute;
+use App\Models\AttributeValue;
+use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Services\Catalog\AssortmentGaps;
 use App\Services\Catalog\StockSummary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use MoonShine\Laravel\Models\MoonshineUser;
@@ -27,6 +31,7 @@ class AdminStockReportTest extends TestCase
 
         $this->zubr = Manufacturer::query()->create(['name' => 'ZUBR', 'slug' => 'zubr']);
         $this->batteries = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori']);
+        config(['shop.battery_fitment.category_ids' => [$this->batteries->id]]);
 
         $this->product('В наличии', quantity: 3, price: 7000, manufacturer: $this->zubr);
         $this->product('Ещё в наличии', quantity: 1, price: 5000);
@@ -60,6 +65,35 @@ class AdminStockReportTest extends TestCase
         );
 
         $this->assertSame([['Аккумуляторы', 4, 4]], $summary->byCategory()->map(fn (array $row): array => [$row['name'], $row['total'], $row['units']])->all());
+    }
+
+    public function test_assortment_gaps_count_cars_without_batteries_by_size(): void
+    {
+        Attribute::query()->forceCreate(['id' => 13, 'name' => 'Полярность'])->values()->createMany([['value' => 'Обратная'], ['value' => 'Прямая']]);
+        Attribute::query()->forceCreate(['id' => 20, 'name' => 'Ёмкость (Ah)'])->values()->create(['value' => '55 - 65 Ah']);
+        Attribute::query()->forceCreate(['id' => 16, 'name' => 'Габариты'])->values()->createMany([['value' => 'Евро L2 (242 x 175 x 190 мм)'], ['value' => 'Азия B24 (234 x 127 x 227 мм)']]);
+
+        $battery = Product::query()->where('name', 'В наличии')->first();
+        $battery->attributeValues()->attach(AttributeValue::query()->whereIn('value', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)'])->pluck('id'));
+
+        BatteryFitment::query()->create(['brand' => 'Kia', 'model' => 'Rio', 'capacity' => '60 Ач', 'polarity' => 'Обратная', 'dims' => '242x175x190']);
+        BatteryFitment::query()->create(['brand' => 'Honda', 'model' => 'Fit', 'capacity' => '60 Ач', 'polarity' => 'Обратная', 'dims' => '236x128x220']);
+        BatteryFitment::query()->create(['brand' => 'Honda', 'model' => 'Jazz', 'capacity' => '60 Ач', 'polarity' => 'Обратная', 'dims' => '236x128x220']);
+        BatteryFitment::query()->create(['brand' => 'Грузовики', 'model' => 'КамАЗ', 'capacity' => '190 Ач', 'polarity' => 'Обратная']);
+        config(['shop.car_landings.excluded_brands' => ['Грузовики']]);
+
+        $this->assertSame([
+            'cars' => 3,
+            'without_batteries' => 2,
+            'sizes' => [['size' => 'Азия B24 (234 x 127 x 227 мм)', 'polarity' => 'Обратная', 'cars' => 2]],
+        ], app(AssortmentGaps::class)->refresh());
+
+        $this->artisan('assortment:gaps')->expectsOutputToContain('Машин без подходящего АКБ: 2 из 3')->assertSuccessful();
+    }
+
+    public function test_batteries_without_fitment_data_are_found(): void
+    {
+        $this->assertSame(['В наличии', 'Ещё в наличии', 'Под заказ', 'Мало у поставщика', 'Неактивный'], Product::query()->missingFitmentData()->orderBy('id')->pluck('name')->all());
     }
 
     public function test_page_shows_summary_with_links_to_filtered_products(): void

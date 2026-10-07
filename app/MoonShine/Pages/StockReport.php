@@ -6,6 +6,7 @@ namespace App\MoonShine\Pages;
 
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
 use App\MoonShine\Resources\Product\ProductResource;
+use App\Services\Catalog\AssortmentGaps;
 use App\Services\Catalog\StockSummary;
 use Closure;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -79,7 +80,28 @@ class StockReport extends Page
                 Heading::make('Товар из нескольких категорий посчитан в каждой', h: 6),
                 $this->table($summary->byCategory()->all(), fn (?int $id): array => ['categories' => [$id]]),
             ]),
+
+            $this->assortmentGaps(),
         ];
+    }
+
+    /**
+     * Машины из базы подбора без единого подходящего АКБ — что заказать.
+     */
+    private function assortmentGaps(): Box
+    {
+        $gaps = app(AssortmentGaps::class)->summary();
+
+        return Box::make('Спрос, которого нет в ассортименте', [
+            Heading::make("Подбор не находит ни одного аккумулятора для {$gaps['without_batteries']} машин из {$gaps['cars']} (без спецтехники). Нужные им типоразмеры — по числу машин; пересчёт каждую ночь.", h: 6),
+            TableBuilder::make(items: $gaps['sizes'])
+                ->fields([
+                    Text::make('Типоразмер', 'size'),
+                    Text::make('Полярность', 'polarity'),
+                    Number::make('Машин', 'cars'),
+                ])
+                ->withNotFound(),
+        ]);
     }
 
     private function metric(string $label, int|string $value): Column

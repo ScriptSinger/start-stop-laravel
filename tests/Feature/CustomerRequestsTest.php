@@ -79,7 +79,7 @@ class CustomerRequestsTest extends TestCase
         $this->postJson(route('quick-order.store', $product), ['name' => 'Иван', 'phone' => '89870000000'])->assertNotFound();
     }
 
-    public function test_new_requests_are_on_dashboard_and_cannot_be_created_in_admin(): void
+    public function test_new_requests_are_counted_on_dashboard_and_cannot_be_created_in_admin(): void
     {
         CustomerRequest::query()->create(['type' => CustomerRequestType::Callback, 'name' => 'Новая Анна', 'phone' => '89870000000']);
         CustomerRequest::query()->create(['type' => CustomerRequestType::Question, 'name' => 'Старый Пётр', 'phone' => '89870000001', 'is_processed' => true]);
@@ -91,11 +91,11 @@ class CustomerRequestsTest extends TestCase
             'password' => bcrypt('secret'),
         ]), 'moonshine');
 
+        // Список заявок — в разделе «Заявки»; на панели число, в меню — счётчик новых.
         $this->get('/admin')
             ->assertOk()
-            ->assertSee('Новые заявки — перезвонить')
-            ->assertSee('Новая Анна')
-            ->assertDontSee('Старый Пётр');
+            ->assertSee('Заявки — перезвонить')
+            ->assertSeeInOrder(['Заявки', '>1<'], false);
 
         $this->get('/admin/resource/customer-request-resource/customer-request-index-page')->assertOk();
         $this->get('/admin/resource/customer-request-resource/customer-request-form-page')->assertForbidden();

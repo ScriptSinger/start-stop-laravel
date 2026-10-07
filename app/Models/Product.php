@@ -130,6 +130,26 @@ class Product extends Model
     }
 
     /**
+     * Аккумуляторы, которых подбор по машине не покажет никогда: не
+     * заполнена полярность, ёмкость или габариты.
+     */
+    #[Scope]
+    protected function missingFitmentData(Builder $query): void
+    {
+        $attributes = config('shop.battery_fitment.attributes');
+
+        $query
+            ->whereHas('categories', fn (Builder $categories) => $categories
+                ->whereIn('categories.id', config('shop.battery_fitment.category_ids')))
+            ->where(function (Builder $query) use ($attributes): void {
+                foreach (['polarity', 'capacity_range', 'dimensions'] as $criterion) {
+                    $query->orWhereDoesntHave('attributeValues', fn (Builder $values) => $values
+                        ->where('attribute_values.attribute_id', $attributes[$criterion]));
+                }
+            });
+    }
+
+    /**
      * Условия по характеристикам: внутри одного условия значения через «ИЛИ»
      * (60 или 62 Ah), между условиями — «И» (и ёмкость, и полярность).
      * null вместо списка — условия нет; пустой список — ничего не подходит.
