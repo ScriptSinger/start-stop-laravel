@@ -39,7 +39,6 @@ jobs:
       - name: Run Tests
         run: |
           cp .env.example .env
-          php artisan key:generate
           php artisan test
 
       - name: Install Production Dependencies

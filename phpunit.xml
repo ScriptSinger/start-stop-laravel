@@ -19,6 +19,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Только для тестов: CI собирается без .env с ключом. -->
+        <env name="APP_KEY" value="base64:YNj/h7UNY+apD1TRU+IBZfHrS0doWMf4D6KBuocs5n8="/>
         <env name="APP_LOCALE" value="ru"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
