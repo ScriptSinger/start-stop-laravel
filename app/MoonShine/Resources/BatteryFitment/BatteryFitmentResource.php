@@ -11,6 +11,7 @@ use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentIndexPage;
 use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\Support\Enums\SortDirection;
 
 /**
  * @extends ModelResource<BatteryFitment, BatteryFitmentIndexPage, BatteryFitmentFormPage, BatteryFitmentDetailPage>
@@ -25,12 +26,17 @@ class BatteryFitmentResource extends ModelResource
 
     protected string $column = 'brand';
 
+    // По алфавиту: марка → модель → поколение, а не в порядке загрузки.
+    protected string $sortColumn = 'brand';
+
+    protected SortDirection $sortDirection = SortDirection::ASC;
+
     /**
      * @return string[]
      */
     protected function search(): array
     {
-        return ['brand', 'model', 'generation'];
+        return ['brand', 'model', 'generation', 'engine'];
     }
 
     /**

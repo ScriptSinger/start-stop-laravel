@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\BatteryFitment\Pages;
 
+use App\Models\BatteryFitment;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use Illuminate\Database\Eloquent\Builder;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
@@ -12,7 +14,9 @@ use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
+use MoonShine\UI\Fields\Checkbox;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -29,12 +33,14 @@ class BatteryFitmentIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make(),
-            Text::make('Марка', 'brand'),
-            Text::make('Модель', 'model'),
-            Text::make('Поколение', 'generation'),
+            ID::make()->sortable(),
+            Text::make('Марка', 'brand')->sortable(),
+            Text::make('Модель', 'model')->sortable(),
+            Text::make('Поколение', 'generation')->sortable(),
+            Text::make('Двигатель', 'engine')->sortable(),
             Text::make('Ёмкость', 'capacity'),
-            Text::make('Полярность', 'polarity'),
+            Text::make('Полярность', 'polarity')->sortable(),
+            Text::make('Клеммы', 'terminals', fn (BatteryFitment $fitment): string => (string) $fitment->terminalsLabel())->sortable(),
         ];
     }
 
@@ -52,12 +58,38 @@ class BatteryFitmentIndexPage extends IndexPage
     protected function filters(): iterable
     {
         return [
-            Text::make('Марка', 'brand'),
-            Text::make('Модель', 'model'),
-            Text::make('Поколение', 'generation'),
-            Text::make('Ёмкость', 'capacity'),
-            Text::make('Полярность', 'polarity'),
+            Select::make('Марка', 'brand')
+                ->options(BatteryFitment::query()->distinct()->orderBy('brand')->pluck('brand', 'brand')->all())
+                ->searchable()
+                ->nullable(),
+            $this->containsFilter('Модель', 'model'),
+            $this->containsFilter('Поколение', 'generation'),
+            $this->containsFilter('Двигатель', 'engine'),
+            $this->containsFilter('Ёмкость', 'capacity')->hint('Например: 60'),
+            Select::make('Полярность', 'polarity')
+                ->options(['Обратная' => 'Обратная', 'Прямая' => 'Прямая', 'Универсальная' => 'Универсальная'])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => $query->where('polarity', 'like', '%'.$value.'%')),
+            Select::make('Клеммы', 'terminals')
+                ->options(collect(config('shop.battery_fitment.terminal_values'))
+                    ->keys()
+                    ->mapWithKeys(fn (string $key): array => [$key => (string) (new BatteryFitment(['terminals' => $key]))->terminalsLabel()])
+                    ->all())
+                ->nullable(),
+            Checkbox::make('Без данных для подбора', 'without_data')
+                ->onApply(fn (Builder $query, mixed $value): Builder => filter_var($value, FILTER_VALIDATE_BOOLEAN)
+                    ? $query->where(fn (Builder $query) => $query->whereNull('capacity')->whereNull('dims')->where(fn (Builder $query) => $query->whereNull('polarity')->orWhere('polarity', 'Универсальная')))
+                    : $query),
         ];
+    }
+
+    /**
+     * Текстовый фильтр «содержит»: «Vesta» найдёт и «Lada Vesta», «60» — «55 Ач, 60 Ач».
+     */
+    private function containsFilter(string $label, string $column): Text
+    {
+        return Text::make($label, $column)
+            ->onApply(fn (Builder $query, mixed $value): Builder => $query->where($column, 'like', '%'.addcslashes((string) $value, '%_\\').'%'));
     }
 
     /**

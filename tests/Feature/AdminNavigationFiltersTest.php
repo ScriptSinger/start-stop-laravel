@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Attribute;
+use App\Models\BatteryFitment;
 use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
@@ -149,6 +150,34 @@ class AdminNavigationFiltersTest extends TestCase
             ->assertSeeInOrder(['DELKOR 100Ah О.П.', 'TITAN 60Ah О.П.', 'H7 Philips']);
         $this->productTable(['sort' => '-categories'])
             ->assertSeeInOrder(['H7 Philips', 'DELKOR 100Ah О.П.']);
+    }
+
+    public function test_battery_fitments_filters_and_sorting(): void
+    {
+        BatteryFitment::query()->create(['brand' => 'ВАЗ (Lada)', 'model' => 'Vesta', 'generation' => 'I 2015 - 2022', 'engine' => '1.6 (106 л.с.)', 'capacity' => '55 Ач, 60 Ач', 'polarity' => 'Обратная, Универсальная', 'terminals' => 'standard']);
+        BatteryFitment::query()->create(['brand' => 'ВАЗ (Lada)', 'model' => '2107', 'capacity' => '60 Ач', 'polarity' => 'Прямая']);
+        BatteryFitment::query()->create(['brand' => 'Acura', 'model' => 'ILX', 'capacity' => '70 Ач', 'polarity' => 'Прямая', 'terminals' => 'thin']);
+        BatteryFitment::query()->create(['brand' => 'Без данных', 'model' => 'Пусто']);
+
+        $table = fn (array $query) => $this->get('/admin/component/battery-fitment-index-page/battery-fitment-resource?'.http_build_query([
+            '_component_name' => 'index-table-battery-fitment-resource',
+            ...$query,
+        ]))->assertOk();
+
+        // По умолчанию — по марке по алфавиту.
+        $table([])->assertSeeInOrder(['Acura', 'ВАЗ (Lada)'])->assertSee('Узкие (азиатские)');
+
+        $table(['filter' => ['brand' => 'ВАЗ (Lada)', 'model' => 'est']])
+            ->assertSee('Vesta')->assertDontSee('2107')->assertDontSee('ILX');
+        $table(['filter' => ['polarity' => 'Обратная']])
+            ->assertSee('Vesta')->assertDontSee('ILX');
+        $table(['filter' => ['capacity' => '70']])
+            ->assertSee('ILX')->assertDontSee('Vesta');
+        $table(['filter' => ['terminals' => 'thin']])
+            ->assertSee('ILX')->assertDontSee('Vesta');
+        $table(['filter' => ['without_data' => '1']])
+            ->assertSee('Пусто')->assertDontSee('ILX');
+        $table(['sort' => '-model'])->assertSeeInOrder(['Vesta', 'ILX', '2107']);
     }
 
     public function test_product_list_shows_linked_categories(): void
