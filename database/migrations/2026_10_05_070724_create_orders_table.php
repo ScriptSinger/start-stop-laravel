@@ -21,8 +21,11 @@ return new class extends Migration
             $table->string('customer_email')->nullable();
             $table->string('status')->default('new');
             $table->string('payment_method')->nullable();
+            // Снимок подписи способа доставки, как и payment_method.
+            $table->string('delivery_method')->nullable();
             $table->decimal('total', 15, 4)->default(0);
             $table->text('shipping_address')->nullable();
+            $table->text('comment')->nullable();
             $table->timestamps();
         });
     }

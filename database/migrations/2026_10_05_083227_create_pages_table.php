@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            // SEO из ocStore (oc_information_description): заголовок H1 на
+            // странице, <title> и description.
+            $table->string('heading')->nullable();
+            $table->string('meta_title')->nullable();
+            $table->string('meta_description', 500)->nullable();
             $table->string('slug')->unique();
             $table->longText('description')->nullable();
             // Соответствует `bottom` в oc_information: такие страницы показывались

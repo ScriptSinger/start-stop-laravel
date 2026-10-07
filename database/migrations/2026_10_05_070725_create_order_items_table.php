@@ -19,6 +19,9 @@ return new class extends Migration
             // переименован/удалён позже, история заказа не должна "плыть".
             $table->string('name');
             $table->decimal('price', 15, 4);
+            // Скидка по трейд-ину на единицу товара; null — без обмена.
+            // price в позиции — уже с учётом этой скидки.
+            $table->decimal('trade_in_discount', 15, 4)->nullable();
             $table->unsignedInteger('quantity');
             $table->decimal('total', 15, 4);
             $table->timestamps();

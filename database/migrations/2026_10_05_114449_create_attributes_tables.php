@@ -18,6 +18,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->unsignedInteger('sort_order')->default(0);
+            // Порядок на карточке и странице товара (oc_attribute), отдельно от
+            // порядка в фильтре (sort_order, из OCFilter): на старом сайте они разные.
+            $table->unsignedInteger('display_sort_order')->default(0);
             // Показывать в фильтре каталога (status фильтра в OCFilter).
             $table->boolean('is_filterable')->default(true);
             $table->timestamps();

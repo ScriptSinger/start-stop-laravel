@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('password')->nullable();
+            $table->rememberToken();
+            // Пароль со старого сайта (OpenCart: sha1 с солью). При первом входе
+            // проверяется, пересохраняется в password обычным хешем и стирается.
+            $table->string('legacy_password_hash', 40)->nullable();
+            $table->string('legacy_password_salt', 9)->nullable();
             $table->timestamps();
         });
     }

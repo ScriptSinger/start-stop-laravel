@@ -16,9 +16,15 @@ return new class extends Migration
             $table->string('brand')->index();
             $table->string('model')->index();
             $table->string('generation')->nullable();
+            // Двигатель внутри поколения — разным моторам бывают нужны разные АКБ
+            // (из выгрузки подбора podbor.xlsx).
+            $table->string('engine')->nullable();
             $table->text('capacity')->nullable();
+            // Одна или несколько через запятую: «Обратная, Универсальная».
             $table->text('polarity')->nullable();
             $table->text('dims')->nullable();
+            // Тип клемм: standard, thin, side, bolt, threaded (shop.battery_fitment.terminal_values).
+            $table->string('terminals', 20)->nullable();
             $table->string('image')->nullable();
             $table->timestamps();
         });
