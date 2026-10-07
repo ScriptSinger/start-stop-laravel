@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\AttributeValue\AttributeValueResource;
+use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
@@ -48,6 +49,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 ProductImageResource::class,
                 MenuItemResource::class,
                 CustomerRequestResource::class,
+                BannerResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

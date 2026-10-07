@@ -7,7 +7,7 @@ namespace App\MoonShine\Resources\Product;
 use App\Models\Manufacturer;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
-use App\MoonShine\Handlers\ProductImportHandler;
+use App\MoonShine\Handlers\SafeImportHandler;
 use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Product\Pages\ProductDetailPage;
 use App\MoonShine\Resources\Product\Pages\ProductFormPage;
@@ -59,7 +59,8 @@ class ProductResource extends ModelResource implements HasImportExportContract
 
     protected function import(): ?Handler
     {
-        return ProductImportHandler::make('Импорт из Excel');
+        return SafeImportHandler::make('Импорт из Excel')
+            ->hint('Файл — выгрузка «Экспорт в Excel» с вашими правками. Товары находятся по колонке ID; новые импортом не создаются.');
     }
 
     /**

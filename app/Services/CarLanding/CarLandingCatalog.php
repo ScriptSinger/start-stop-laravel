@@ -21,8 +21,9 @@ use Illuminate\Support\Str;
  *
  * Расчёт тяжёлый (у Toyota около секунды), поэтому модели и наборы товаров
  * лежат в общем кеше. Каждую ночь refresh() считает всё заново под новой
- * версией ключей (car-landings:refresh в routes/console.php) — днём их
- * никто не считает. Цены и наличие на страницах берутся из базы как есть.
+ * версией ключей (car-landings:refresh в routes/console.php). Правка
+ * подбора в админке сбрасывает кеш сразу (invalidate()), страницы
+ * пересчитываются при открытии. Цены и наличие берутся из базы как есть.
  */
 class CarLandingCatalog
 {
@@ -124,6 +125,17 @@ class CarLandingCatalog
     }
 
     /**
+     * Сбросить кеш: следующая версия ключей, страницы посчитаются заново
+     * при первом открытии.
+     */
+    public function invalidate(): void
+    {
+        Cache::forever(self::VERSION_KEY, $this->version() + 1);
+        $this->releaseMemory();
+        $this->brandsCache = null;
+    }
+
+    /**
      * Пересчитать всё для всех марок под новой версией ключей: старые
      * значения доживают своё и удаляются по сроку.
      *
@@ -131,9 +143,7 @@ class CarLandingCatalog
      */
     public function refresh(): int
     {
-        Cache::forever(self::VERSION_KEY, $this->version() + 1);
-        $this->releaseMemory();
-        $this->brandsCache = null;
+        $this->invalidate();
 
         return $this->brands()->sum(function (CarBrand $brand): int {
             $pages = $this->models($brand)->sum(fn (CarModel $model): int => 1 + $this->generations($model)->count());

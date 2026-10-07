@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\MoonShine\Pages\Dashboard;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
+use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
@@ -73,6 +74,7 @@ final class MoonShineLayout extends AppLayout
             MenuGroup::make('Сайт', [
                 MenuItem::make(PageResource::class, 'Страницы')->icon('document-text'),
                 MenuItem::make(MenuItemResource::class, 'Меню сайта')->icon('bars-3'),
+                MenuItem::make(BannerResource::class, 'Баннеры')->icon('photo'),
             ])->icon('globe-alt'),
             MenuGroup::make('Система', [
                 MenuItem::make(MoonShineUserResource::class, 'Администраторы')->icon('user-group'),

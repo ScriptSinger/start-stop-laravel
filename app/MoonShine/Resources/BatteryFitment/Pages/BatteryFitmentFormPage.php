@@ -42,10 +42,7 @@ class BatteryFitmentFormPage extends FormPage
                 Text::make('Полярность', 'polarity')->nullable()->hint('Одна или несколько через запятую: Обратная, Универсальная'),
                 Text::make('Габариты (ДxШxВ, через запятую)', 'dims')->nullable(),
                 Select::make('Клеммы', 'terminals')
-                    ->options(collect(config('shop.battery_fitment.terminal_values'))
-                        ->keys()
-                        ->mapWithKeys(fn (string $key): array => [$key => (string) (new BatteryFitment(['terminals' => $key]))->terminalsLabel()])
-                        ->all())
+                    ->options(BatteryFitment::terminalLabels())
                     ->nullable(),
                 Image::make('Фото авто', 'image')->nullable(),
             ]),

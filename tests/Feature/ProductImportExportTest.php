@@ -99,7 +99,7 @@ class ProductImportExportTest extends TestCase
         $path = tempnam(sys_get_temp_dir(), 'import').'.xlsx';
         (new FastExcel(collect($rows)))->export($path);
 
-        return $this->post('/admin/resource/product-resource/handler/product-import-handler', [
+        return $this->post('/admin/resource/product-resource/handler/safe-import-handler', [
             'import_file' => new UploadedFile($path, 'tovary.xlsx', null, null, true),
         ]);
     }

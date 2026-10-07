@@ -74,10 +74,7 @@ class BatteryFitmentIndexPage extends IndexPage
                 ->nullable()
                 ->onApply(fn (Builder $query, mixed $value): Builder => $query->where('polarity', 'like', '%'.$value.'%')),
             Select::make('Клеммы', 'terminals')
-                ->options(collect(config('shop.battery_fitment.terminal_values'))
-                    ->keys()
-                    ->mapWithKeys(fn (string $key): array => [$key => (string) (new BatteryFitment(['terminals' => $key]))->terminalsLabel()])
-                    ->all())
+                ->options(BatteryFitment::terminalLabels())
                 ->nullable(),
             Checkbox::make('Без данных для подбора', 'without_data')
                 ->onApply(fn (Builder $query, mixed $value): Builder => filter_var($value, FILTER_VALIDATE_BOOLEAN)

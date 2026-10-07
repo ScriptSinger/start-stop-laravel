@@ -82,6 +82,17 @@ class CarLandingTest extends TestCase
             ->assertDontSee('Разным двигателям подходят разные аккумуляторы');
     }
 
+    public function test_fitment_edit_shows_on_landing_without_waiting_for_night(): void
+    {
+        $this->get(route('car-landing.brand', 'kia'))->assertSee(route('car-landing.model', ['kia', 'rio']));
+
+        BatteryFitment::query()->where('model', 'Rio')->sole()->update(['model' => 'Ceed']);
+
+        $this->get(route('car-landing.brand', 'kia'))
+            ->assertSee(route('car-landing.model', ['kia', 'ceed']))
+            ->assertDontSee(route('car-landing.model', ['kia', 'rio']));
+    }
+
     public function test_brand_page_lists_only_models_with_products(): void
     {
         $this->get(route('car-landing.brand', 'lada'))

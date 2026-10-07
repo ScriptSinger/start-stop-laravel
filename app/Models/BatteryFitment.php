@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CarLanding\CarLandingCatalog;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -19,6 +20,17 @@ class BatteryFitment extends Model
         'terminals',
         'image',
     ];
+
+    /**
+     * Правка подбора сразу видна на страницах «Аккумулятор для …».
+     */
+    protected static function booted(): void
+    {
+        $invalidate = fn (): mixed => app(CarLandingCatalog::class)->invalidate();
+
+        static::saved($invalidate);
+        static::deleted($invalidate);
+    }
 
     /**
      * Название машины без повторов: в данных модель иногда уже содержит марку
@@ -132,6 +144,19 @@ class BatteryFitment extends Model
             'threaded' => 'Под гайку (американские)',
             default => null,
         };
+    }
+
+    /**
+     * Все типы клемм: код → подпись.
+     *
+     * @return array<string, string>
+     */
+    public static function terminalLabels(): array
+    {
+        return collect(config('shop.battery_fitment.terminal_values'))
+            ->keys()
+            ->mapWithKeys(fn (string $key): array => [$key => (string) (new self(['terminals' => $key]))->terminalsLabel()])
+            ->all();
     }
 
     /**

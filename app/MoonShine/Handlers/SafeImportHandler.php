@@ -20,12 +20,24 @@ use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
- * Импорт товаров из Excel (замена Batch Editor старой админки): правит сразу
- * много товаров, поэтому перед ним — копия базы, а сам он — одной
- * транзакцией: ошибка в любой строке, и не меняется ничего.
+ * Импорт из Excel (замена Batch Editor старой админки): правит сразу много
+ * записей, поэтому перед ним — копия базы, а сам он — одной транзакцией:
+ * ошибка в любой строке, и не меняется ничего.
  */
-class ProductImportHandler extends ImportHandler
+class SafeImportHandler extends ImportHandler
 {
+    private string $hint = '';
+
+    /**
+     * Подсказка над полем файла: откуда взять файл и что он меняет.
+     */
+    public function hint(string $hint): static
+    {
+        $this->hint = $hint;
+
+        return $this;
+    }
+
     public function handle(): Response
     {
         if (! request()->hasFile($this->getInputName())) {
@@ -44,7 +56,7 @@ class ProductImportHandler extends ImportHandler
             return DB::transaction(fn (): Response => parent::handle());
         } catch (Throwable $exception) {
             report($exception);
-            toast('Импорт не выполнен, товары не изменены: '.$exception->getMessage(), ToastType::ERROR);
+            toast('Импорт не выполнен, ничего не изменено: '.$exception->getMessage(), ToastType::ERROR);
 
             return back();
         }
@@ -67,7 +79,7 @@ class ProductImportHandler extends ImportHandler
                     fn (): string => $this->getLabel(),
                     fn (): FormBuilderContract => FormBuilder::make($this->getUrl())
                         ->fields([
-                            Heading::make('Файл — выгрузка «Экспорт в Excel» с вашими правками. Товары находятся по колонке ID; новые импортом не создаются. Перед импортом снимается копия базы; если в файле ошибка, не изменится ничего.', h: 6),
+                            Heading::make($this->hint.' Перед импортом снимается копия базы; если в файле ошибка, не изменится ничего.', h: 6),
                             File::make(column: $this->getInputName())->required(),
                         ])
                         ->class('js-change-query')
