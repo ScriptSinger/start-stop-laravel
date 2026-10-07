@@ -44,7 +44,7 @@ class BannerFormPage extends FormPage
                     // (catalog/revslider_media_folder/…) не показывались бы.
                     ->customName(fn (UploadedFile $file): string => 'banners/'.Str::random(40).'.'.$file->extension())
                     ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
-                    ->hint('Слайдер — 960×350 px, полоса под слайдером — 960×132 px. Другой размер растянется или обрежется по краям.'),
+                    ->hint('Размер: слайдер — 1920×700 px, полоса под слайдером — 1920×264 px (вдвое больше места на сайте — чётко на телефонах; главное — пропорции). Формат: JPG — для фото, PNG — для текста и графики на однотонном фоне, WebP — то же, но легче. До 2 МБ, лучше до 300 КБ — баннер грузится первым.'),
                 Text::make('Подпись', 'title')->nullable()->hint('Не видна на сайте: для поисковиков и незрячих. Например: «Трейд-ин: сдайте старый аккумулятор»'),
                 Text::make('Ссылка', 'url')->nullable()->hint('Куда ведёт клик: /page/trade-in, /category/akkumulyatori или полный адрес. Пусто — баннер без ссылки.'),
                 Number::make('Порядок', 'sort_order')->default(0)->hint('Меньше — раньше в слайдере'),
