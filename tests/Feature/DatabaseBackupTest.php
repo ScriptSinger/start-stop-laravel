@@ -21,6 +21,7 @@ class DatabaseBackupTest extends TestCase
         config([
             'backup.path' => $this->directory,
             'backup.keep_days' => 14,
+            'database.default' => 'mysql',
             'database.connections.mysql' => [
                 'driver' => 'mysql',
                 'host' => 'db',

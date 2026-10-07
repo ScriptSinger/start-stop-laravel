@@ -19,9 +19,15 @@ use RuntimeException;
  */
 class DatabaseBackup
 {
-    public function __construct(
-        private readonly string $connection = 'mysql',
-    ) {}
+    private readonly string $connection;
+
+    /**
+     * По умолчанию — основное подключение приложения (на сервере mariadb).
+     */
+    public function __construct(?string $connection = null)
+    {
+        $this->connection = $connection ?? config('database.default');
+    }
 
     /**
      * Снять дамп и проверить его. Возвращает путь к файлу.

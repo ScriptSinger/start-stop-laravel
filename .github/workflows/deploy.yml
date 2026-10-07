@@ -1,0 +1,121 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, zip, gd, pdo, sqlite3, curl, openssl
+          tools: composer
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Frontend Assets
+        run: npm run build
+
+      - name: Run Tests
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
+
+      - name: Install Production Dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Create Release Archive
+        run: |
+          tar -czf release.tar.gz \
+            app \
+            bootstrap \
+            config \
+            database \
+            docker \
+            lang \
+            public \
+            resources \
+            routes \
+            storage \
+            vendor \
+            artisan \
+            composer.json \
+            composer.lock \
+            docker-compose.prod.yml
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release.tar.gz
+
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: .
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      # .env пишется здесь и копируется файлом: так спецсимволы в паролях
+      # ($, кавычки) доходят как есть, а не разбираются shell на сервере.
+      - name: Upload Release to Server
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          printf '%s\n' "$ENV_FILE" > production.env
+          scp -i ~/.ssh/id_ed25519 release.tar.gz production.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/
+
+      - name: Deploy on Server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            set -e
+
+            mkdir -p ~/start-stop
+            cd ~/start-stop
+
+            tar -xzf /tmp/release.tar.gz -C .
+            mv /tmp/production.env .env
+            rm /tmp/release.tar.gz
+
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            docker compose -f docker-compose.prod.yml exec -T php php artisan storage:link --force
+            docker compose -f docker-compose.prod.yml exec -T php php artisan optimize:clear
+            docker compose -f docker-compose.prod.yml exec -T php php artisan migrate --force
+            docker compose -f docker-compose.prod.yml exec -T php php artisan optimize
+            docker compose -f docker-compose.prod.yml exec -T php php artisan car-landings:refresh
+            docker compose -f docker-compose.prod.yml exec -T php php artisan sitemap:generate
+          EOF
