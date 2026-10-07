@@ -36,8 +36,10 @@ services:
       - ./:/var/www/html
       - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - internal
 
@@ -56,8 +58,10 @@ services:
       - ./:/var/www/html
       - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - internal
 
@@ -71,6 +75,13 @@ services:
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
+    # php и scheduler ждут готовности базы: иначе деплой после пустого тома
+    # доходит до migrate, пока MariaDB ещё инициализируется.
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
     networks:
       - internal
 
