@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'noindex' => NoIndex::class,
         ]);
+
+        // На сервере https принимает Traefik и передаёт запрос дальше по http
+        // с заголовками X-Forwarded-*. Без доверия к ним Laravel строит ссылки
+        // на стили и скрипты с http://, и браузер блокирует их на https-странице.
+        // Снаружи до nginx можно добраться только через Traefik.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
