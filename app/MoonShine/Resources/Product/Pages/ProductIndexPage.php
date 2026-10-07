@@ -13,6 +13,7 @@ use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
@@ -56,7 +57,18 @@ class ProductIndexPage extends IndexPage
                     Manufacturer::query()->select('name')->whereColumn('manufacturers.id', 'products.manufacturer_id'),
                     $direction,
                 )),
+            // Сортировка — по названию категории (у товара в нескольких — по первой
+            // по алфавиту), внутри категории — по названию товара.
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
+                ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query
+                    ->orderBy(
+                        DB::table('category_product')
+                            ->join('categories', 'categories.id', '=', 'category_product.category_id')
+                            ->whereColumn('category_product.product_id', 'products.id')
+                            ->selectRaw('min(categories.name)'),
+                        $direction,
+                    )
+                    ->orderBy('products.name'))
                 ->inLine(
                     separator: ' ',
                     badge: true,
@@ -89,8 +101,14 @@ class ProductIndexPage extends IndexPage
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
                 ->nullable()
                 ->searchable(),
-            BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
-                ->selectMode(),
+            // Поиск по названию, подписи с разделом; раздел находит и товары подразделов.
+            BelongsToMany::make('Категории', 'categories', fn (Category $category): string => $category->pathName(), CategoryResource::class)
+                ->selectMode()
+                ->searchable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => $query->whereHas('categories', fn (Builder $categories) => $categories->whereIn(
+                    'categories.id',
+                    Category::query()->whereKey(array_filter((array) $value))->get()->flatMap(fn (Category $category): array => $category->treeIds())->unique()->all(),
+                ))),
             $this->attributeValuesFilter(),
             Range::make('Цена', 'price')->nullable(),
             Range::make('Остаток у поставщика', 'supplier_quantity')->nullable(),

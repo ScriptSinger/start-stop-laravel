@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Order;
 
 use App\Models\Order;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Order\Pages\OrderDetailPage;
 use App\MoonShine\Resources\Order\Pages\OrderFormPage;
 use App\MoonShine\Resources\Order\Pages\OrderIndexPage;
@@ -18,6 +19,8 @@ use MoonShine\Support\ListOf;
  */
 class OrderResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Order::class;
 
     protected string $title = 'Заказы';

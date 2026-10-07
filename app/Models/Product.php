@@ -130,6 +130,15 @@ class Product extends Model
     }
 
     /**
+     * Товары категории вместе с её подкатегориями.
+     */
+    #[Scope]
+    protected function inCategoryTree(Builder $query, Category $category): void
+    {
+        $query->whereHas('categories', fn (Builder $categories) => $categories->whereIn('categories.id', $category->treeIds()));
+    }
+
+    /**
      * Аккумуляторы, которых подбор по машине не покажет никогда: не
      * заполнена полярность, ёмкость или габариты.
      */

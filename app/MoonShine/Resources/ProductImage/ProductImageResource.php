@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\ProductImage;
 
 use App\Models\ProductImage;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\ProductImage\Pages\ProductImageDetailPage;
 use App\MoonShine\Resources\ProductImage\Pages\ProductImageFormPage;
 use App\MoonShine\Resources\ProductImage\Pages\ProductImageIndexPage;
@@ -16,6 +17,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class ProductImageResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = ProductImage::class;
 
     protected string $title = 'Фото товаров';

@@ -120,6 +120,37 @@ class AdminNavigationFiltersTest extends TestCase
             ->assertDontSee('Архивный аккумулятор');
     }
 
+    public function test_category_filter_includes_subcategories_and_shows_paths(): void
+    {
+        $oils = Category::query()->create(['name' => 'Автомасла', 'slug' => 'avtomasla']);
+        $gear = Category::query()->create(['name' => 'Трансмиссионное масло', 'slug' => 'transmissionnoe', 'parent_id' => $oils->id]);
+        $this->makeProduct('Лукойл ТМ-5', [], [], $gear);
+
+        $this->productTable(['filter' => ['categories' => [$oils->id]]])
+            ->assertSee('Лукойл ТМ-5')
+            ->assertDontSee('TITAN 60Ah О.П.');
+
+        // Фильтр применили, листая длинный список: страница 112 — за пределами результата.
+        $this->productTable(['page' => 112, 'filter' => ['categories' => [$oils->id]]])
+            ->assertSee('Лукойл ТМ-5');
+
+        $this->get('/admin/resource/product-resource/product-index-page')
+            ->assertOk()
+            ->assertSee('Автомасла › Трансмиссионное масло');
+    }
+
+    public function test_products_sort_by_category_name(): void
+    {
+        $lamps = Category::query()->create(['name' => 'Лампы', 'slug' => 'lampy']);
+        $this->makeProduct('H7 Philips', [], [], $lamps);
+
+        // «Аккумуляторы» раньше «Ламп», внутри категории — по названию.
+        $this->productTable(['sort' => 'categories'])
+            ->assertSeeInOrder(['DELKOR 100Ah О.П.', 'TITAN 60Ah О.П.', 'H7 Philips']);
+        $this->productTable(['sort' => '-categories'])
+            ->assertSeeInOrder(['H7 Philips', 'DELKOR 100Ah О.П.']);
+    }
+
     public function test_product_list_shows_linked_categories(): void
     {
         $category = Category::query()->where('slug', 'akkumulyatori')->firstOrFail();

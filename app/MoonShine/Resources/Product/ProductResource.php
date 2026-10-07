@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Product;
 
 use App\Models\Product;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Product\Pages\ProductDetailPage;
 use App\MoonShine\Resources\Product\Pages\ProductFormPage;
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
@@ -16,6 +17,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class ProductResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Product::class;
 
     protected string $title = 'Товары';

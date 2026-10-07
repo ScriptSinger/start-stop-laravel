@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Manufacturer;
 
 use App\Models\Manufacturer;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Manufacturer\Pages\ManufacturerDetailPage;
 use App\MoonShine\Resources\Manufacturer\Pages\ManufacturerFormPage;
 use App\MoonShine\Resources\Manufacturer\Pages\ManufacturerIndexPage;
@@ -18,6 +19,8 @@ use MoonShine\Support\Enums\SortDirection;
  */
 class ManufacturerResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Manufacturer::class;
 
     protected string $title = 'Производители';

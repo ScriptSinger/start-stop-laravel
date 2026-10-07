@@ -8,6 +8,7 @@ use App\Models\AttributeValue;
 use App\MoonShine\Resources\AttributeValue\Pages\AttributeValueDetailPage;
 use App\MoonShine\Resources\AttributeValue\Pages\AttributeValueFormPage;
 use App\MoonShine\Resources\AttributeValue\Pages\AttributeValueIndexPage;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
 
@@ -16,6 +17,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class AttributeValueResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = AttributeValue::class;
 
     protected string $title = 'Значения характеристик';

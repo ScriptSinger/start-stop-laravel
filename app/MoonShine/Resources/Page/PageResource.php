@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Page;
 
 use App\Models\Page;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Page\Pages\PageDetailPage;
 use App\MoonShine\Resources\Page\Pages\PageFormPage;
 use App\MoonShine\Resources\Page\Pages\PageIndexPage;
@@ -17,6 +18,8 @@ use MoonShine\Support\Enums\SortDirection;
  */
 class PageResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Page::class;
 
     protected string $title = 'Страницы';

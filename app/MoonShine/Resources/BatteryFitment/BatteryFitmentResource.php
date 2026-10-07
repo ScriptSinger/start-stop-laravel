@@ -8,6 +8,7 @@ use App\Models\BatteryFitment;
 use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentDetailPage;
 use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentFormPage;
 use App\MoonShine\Resources\BatteryFitment\Pages\BatteryFitmentIndexPage;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
 
@@ -16,6 +17,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class BatteryFitmentResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = BatteryFitment::class;
 
     protected string $title = 'База АКБ по авто';

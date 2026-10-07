@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Customer;
 
 use App\Models\Customer;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Customer\Pages\CustomerDetailPage;
 use App\MoonShine\Resources\Customer\Pages\CustomerFormPage;
 use App\MoonShine\Resources\Customer\Pages\CustomerIndexPage;
@@ -17,6 +18,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class CustomerResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Customer::class;
 
     protected string $title = 'Клиенты';

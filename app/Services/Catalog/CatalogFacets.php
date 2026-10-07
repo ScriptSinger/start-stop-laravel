@@ -76,7 +76,7 @@ class CatalogFacets
     }
 
     /**
-     * Подзапрос id активных товаров категории.
+     * Подзапрос id активных товаров категории вместе с подкатегориями.
      *
      * @return Builder<Product>
      */
@@ -87,6 +87,6 @@ class CatalogFacets
             ->where('status', true)
             ->whereIn('products.id', DB::table('category_product')
                 ->select('product_id')
-                ->where('category_id', $category->id));
+                ->whereIn('category_id', $category->treeIds()));
     }
 }

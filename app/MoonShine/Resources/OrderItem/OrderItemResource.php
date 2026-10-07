@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\OrderItem;
 
 use App\Models\OrderItem;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\OrderItem\Pages\OrderItemDetailPage;
 use App\MoonShine\Resources\OrderItem\Pages\OrderItemFormPage;
 use App\MoonShine\Resources\OrderItem\Pages\OrderItemIndexPage;
@@ -18,6 +19,8 @@ use MoonShine\Support\ListOf;
  */
 class OrderItemResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = OrderItem::class;
 
     protected string $title = 'Позиции заказа';

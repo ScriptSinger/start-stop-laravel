@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\MoonShine\Resources\Category\Pages\CategoryDetailPage;
 use App\MoonShine\Resources\Category\Pages\CategoryFormPage;
 use App\MoonShine\Resources\Category\Pages\CategoryIndexPage;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
 
@@ -16,6 +17,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class CategoryResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Category::class;
 
     protected string $title = 'Категории';

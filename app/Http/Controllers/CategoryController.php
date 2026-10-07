@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CatalogFilterRequest;
 use App\Models\Category;
+use App\Models\Product;
 use App\Services\Catalog\CatalogFacets;
 use App\Services\Catalog\CatalogFilter;
 use App\Services\Catalog\CategoryMenu;
 use Artesaos\SEOTools\Facades\SEOMeta;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
@@ -82,10 +83,16 @@ class CategoryController extends Controller
         }
     }
 
-    private function filteredProducts(Category $category, CatalogFilter $filter): BelongsToMany
+    /**
+     * Товары раздела вместе с подразделами.
+     *
+     * @return Builder<Product>
+     */
+    private function filteredProducts(Category $category, CatalogFilter $filter): Builder
     {
-        return $category->products()
+        return Product::query()
             ->where('status', true)
+            ->inCategoryTree($category)
             ->catalogFilter($filter);
     }
 }

@@ -22,7 +22,7 @@ class SearchController extends Controller
         $products = Product::query()
             ->where('status', true)
             ->matchingSearch($search)
-            ->when($category, fn (Builder $query) => $query->whereHas('categories', fn (Builder $categories) => $categories->whereKey($category->id)))
+            ->when($category, fn (Builder $query) => $query->inCategoryTree($category))
             ->withCardData()
             ->sortedBy($request->sort())
             ->paginate($request->perPage())

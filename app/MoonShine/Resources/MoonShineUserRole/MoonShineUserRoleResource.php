@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\MoonShineUserRole;
 
-use MoonShine\Laravel\Models\MoonshineUserRole;
-use MoonShine\Laravel\Resources\ModelResource;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\MoonShineUserRole\Pages\MoonShineUserRoleFormPage;
 use App\MoonShine\Resources\MoonShineUserRole\Pages\MoonShineUserRoleIndexPage;
+use MoonShine\Laravel\Models\MoonshineUserRole;
+use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\MenuManager\Attributes\Group;
 use MoonShine\MenuManager\Attributes\Order;
 use MoonShine\Support\Attributes\Icon;
@@ -22,6 +23,8 @@ use MoonShine\Support\ListOf;
 #[Order(1)]
 class MoonShineUserRoleResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = MoonshineUserRole::class;
 
     protected string $column = 'name';

@@ -8,6 +8,7 @@ use App\Models\Attribute;
 use App\MoonShine\Resources\Attribute\Pages\AttributeDetailPage;
 use App\MoonShine\Resources\Attribute\Pages\AttributeFormPage;
 use App\MoonShine\Resources\Attribute\Pages\AttributeIndexPage;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Support\Enums\SortDirection;
@@ -17,6 +18,8 @@ use MoonShine\Support\Enums\SortDirection;
  */
 class AttributeResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = Attribute::class;
 
     protected string $title = 'Характеристики';

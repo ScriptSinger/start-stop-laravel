@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\CustomerRequest;
 
 use App\Models\CustomerRequest;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\CustomerRequest\Pages\CustomerRequestDetailPage;
 use App\MoonShine\Resources\CustomerRequest\Pages\CustomerRequestFormPage;
 use App\MoonShine\Resources\CustomerRequest\Pages\CustomerRequestIndexPage;
@@ -18,6 +19,8 @@ use MoonShine\Support\ListOf;
  */
 class CustomerRequestResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = CustomerRequest::class;
 
     protected string $title = 'Заявки';

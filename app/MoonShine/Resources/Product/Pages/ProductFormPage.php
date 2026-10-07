@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Product\Pages;
 
 use App\Enums\ProductSelection;
 use App\Models\Attribute;
+use App\Models\Category;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Fields\SeoFields;
@@ -60,7 +61,10 @@ class ProductFormPage extends FormPage
                         Text::make('Код товара', 'code')->nullable()->hint('Типоразмер, например 115D31L'),
                         Text::make('Артикул', 'sku')->nullable(),
                         BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)->nullable(),
-                        BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)->selectMode(),
+                        BelongsToMany::make('Категории', 'categories', fn (Category $category): string => $category->pathName(), CategoryResource::class)
+                            ->selectMode()
+                            ->searchable()
+                            ->hint('Выбирайте самый точный подраздел («Моторное масло»): в раздел («Автомасла») товар попадёт сам'),
                         Money::make('Цена', 'price'),
                         Money::make('Цена по акции', 'special_price')
                             ->nullable()

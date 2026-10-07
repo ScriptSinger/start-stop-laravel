@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\MenuItem;
 
 use App\Models\MenuItem;
+use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\MenuItem\Pages\MenuItemDetailPage;
 use App\MoonShine\Resources\MenuItem\Pages\MenuItemFormPage;
 use App\MoonShine\Resources\MenuItem\Pages\MenuItemIndexPage;
@@ -16,6 +17,8 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class MenuItemResource extends ModelResource
 {
+    use ResetsPageOutOfRange;
+
     protected string $model = MenuItem::class;
 
     protected string $title = 'Меню сайта';
