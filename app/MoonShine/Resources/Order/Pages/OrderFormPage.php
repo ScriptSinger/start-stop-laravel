@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Order\Pages;
 
-use App\Models\Order;
+use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Order\OrderResource;
@@ -21,6 +23,7 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\Email;
+use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Phone;
@@ -42,15 +45,15 @@ class OrderFormPage extends FormPage
         return [
             Box::make([
                 ID::make(),
-                Select::make('Статус', 'status')->options(Order::STATUSES),
+                Enum::make('Статус', 'status')->attach(OrderStatus::class),
                 BelongsTo::make('Клиент (аккаунт)', 'customer', resource: CustomerResource::class)
                     ->nullable()
                     ->searchable(),
                 Text::make('Имя', 'customer_name')->required(),
                 Phone::make('Телефон', 'customer_phone'),
                 Email::make('Email', 'customer_email'),
-                Text::make('Получение', 'delivery_method'),
-                Text::make('Оплата', 'payment_method'),
+                $this->labelSelect('Получение', 'delivery_method', array_map(fn (DeliveryMethod $method): string => $method->label(), DeliveryMethod::cases())),
+                $this->labelSelect('Оплата', 'payment_method', array_map(fn (PaymentMethod $method): string => $method->label(), PaymentMethod::cases())),
                 Textarea::make('Адрес доставки', 'shipping_address'),
                 Textarea::make('Комментарий покупателя', 'comment'),
                 Money::make('Сумма', 'total')->readonly(),
@@ -66,6 +69,24 @@ class OrderFormPage extends FormPage
                 ])
                 ->disableOutside(),
         ];
+    }
+
+    /**
+     * Выбор из подписей способов получения или оплаты. В заказ пишется сама
+     * подпись (снимок на момент заказа), поэтому у старого заказа его текст
+     * тоже остаётся среди вариантов.
+     *
+     * @param  list<string>  $labels
+     */
+    private function labelSelect(string $label, string $column, array $labels): Select
+    {
+        return Select::make($label, $column)
+            ->options(fn (Select $field): array => collect([...$labels, $field->getValue()])
+                ->filter()
+                ->unique()
+                ->mapWithKeys(fn (string $text): array => [$text => $text])
+                ->all())
+            ->nullable();
     }
 
     protected function buttons(): ListOf

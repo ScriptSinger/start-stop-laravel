@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Customer;
 use App\Models\Order;
@@ -31,7 +32,7 @@ class PlaceOrder
                 'customer_name' => $contact['name'],
                 'customer_phone' => $contact['phone'],
                 'customer_email' => $contact['email'],
-                'status' => 'new',
+                'status' => OrderStatus::New,
                 'payment_method' => $payment?->label(),
                 'delivery_method' => $delivery?->label(),
                 'shipping_address' => $delivery?->needsAddress() ? $contact['address'] : null,

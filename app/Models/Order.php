@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,25 +26,8 @@ class Order extends Model
         'comment',
     ];
 
-    /**
-     * Статусы заказа: ключ хранится в orders.status (для импортированных —
-     * название статуса из oc_order_status), значение — подпись в админке.
-     * "unknown" — order_status_id = 0 в OpenCart: оформление брошено на
-     * полпути, старая админка такие заказы вообще не показывала.
-     *
-     * @var array<string, string>
-     */
-    public const STATUSES = [
-        'new' => 'Новый',
-        'Ожидание' => 'Ожидание',
-        'В обработке' => 'В обработке',
-        'Обработано' => 'Обработано',
-        'Сделка завершена' => 'Сделка завершена',
-        'Отменено' => 'Отменено',
-        'unknown' => 'Не оформлен (брошен)',
-    ];
-
     protected $casts = [
+        'status' => OrderStatus::class,
         'total' => 'decimal:4',
     ];
 
@@ -56,12 +42,36 @@ class Order extends Model
     #[Scope]
     protected function visibleToCustomer(Builder $query): void
     {
-        $query->where('status', '!=', 'unknown');
+        $query->where('status', '!=', OrderStatus::Abandoned);
     }
 
-    public function statusLabel(): string
+    /**
+     * Заказы с этим способом получения. В заказе хранится текст подписи,
+     * а у старых заказов он свой («Бесплатная доставка» — это тоже доставка
+     * по городу), поэтому ищем по началу «Самовывоз».
+     */
+    #[Scope]
+    protected function withDelivery(Builder $query, DeliveryMethod $method): void
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        $method === DeliveryMethod::Pickup
+            ? $query->where('delivery_method', 'like', 'Самовывоз%')
+            : $query->where('delivery_method', 'not like', 'Самовывоз%');
+    }
+
+    /**
+     * Заказы с этим способом оплаты — по ключевому слову в подписи;
+     * «Оплата при доставке» со старого сайта считается наличными.
+     */
+    #[Scope]
+    protected function withPayment(Builder $query, PaymentMethod $method): void
+    {
+        match ($method) {
+            PaymentMethod::Cash => $query->where(fn (Builder $query): Builder => $query
+                ->where('payment_method', 'like', '%наличн%')
+                ->orWhere('payment_method', 'like', '%при доставке%')),
+            PaymentMethod::Transfer => $query->where('payment_method', 'like', '%перевод%'),
+            PaymentMethod::Card => $query->where('payment_method', 'like', '%картой%'),
+        };
     }
 
     public function items(): HasMany

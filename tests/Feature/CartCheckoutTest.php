@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -134,7 +135,7 @@ class CartCheckoutTest extends TestCase
 
         $order = Order::query()->with('items')->sole();
 
-        $this->assertSame('new', $order->status);
+        $this->assertSame(OrderStatus::New, $order->status);
         $this->assertSame('Иван', $order->customer_name);
         $this->assertSame('Доставка по городу', $order->delivery_method);
         $this->assertSame('Оплата переводом или по QR-коду', $order->payment_method);

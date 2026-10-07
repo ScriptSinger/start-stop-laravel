@@ -41,7 +41,7 @@
                                             <td class="text-right">#{{ $order->id }}</td>
                                             <td class="text-left">{{ $order->created_at?->format('d.m.Y') }}</td>
                                             <td class="text-right">{{ $order->items_count }}</td>
-                                            <td class="text-left">{{ $order->statusLabel() }}</td>
+                                            <td class="text-left">{{ $order->status->toString() }}</td>
                                             <td class="text-right order-summary__price">{{ number_format((float) $order->total, 0, '', '') }}р.</td>
                                             <td class="text-right"><a href="{{ route('account.order', $order->id) }}" class="btn btn-default btn-sm" title="Подробнее" aria-label="Подробнее о заказе #{{ $order->id }}"><i class="fa fa-eye"></i></a></td>
                                         </tr>

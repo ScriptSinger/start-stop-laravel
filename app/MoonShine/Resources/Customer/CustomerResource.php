@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Customer;
 
+use App\Enums\OrderStatus;
 use App\Models\Customer;
 use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Customer\Pages\CustomerDetailPage;
@@ -34,9 +35,17 @@ class CustomerResource extends ModelResource
         return ['id', 'name', 'email', 'phone'];
     }
 
+    /**
+     * «Купил на» — сумма состоявшихся заказов: брошенные и отменённые не считаем.
+     */
     protected function modifyQueryBuilder(Builder $builder): Builder
     {
-        return $builder->withCount('orders');
+        $placed = fn (Builder $orders): Builder => $orders->whereNotIn('status', [OrderStatus::Abandoned, OrderStatus::Cancelled]);
+
+        return $builder
+            ->withCount('orders')
+            ->withSum(['orders' => $placed], 'total')
+            ->withMax('orders', 'created_at');
     }
 
     /**

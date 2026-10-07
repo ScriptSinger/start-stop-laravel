@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
+use App\Enums\OrderStatus;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\MoonShine\Pages\Dashboard;
@@ -49,7 +50,7 @@ final class MoonShineLayout extends AppLayout
      */
     protected function menu(): array
     {
-        $newOrders = Order::query()->where('status', 'new')->count();
+        $newOrders = Order::query()->where('status', OrderStatus::New)->count();
         $newRequests = CustomerRequest::query()->where('is_processed', false)->count();
 
         return [

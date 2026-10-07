@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomerRequestType;
+use App\Enums\OrderStatus;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\Models\Product;
@@ -63,7 +64,7 @@ class CustomerRequestsTest extends TestCase
             ->assertJsonPath('message', fn (string $message): bool => str_contains($message, 'принят'));
 
         $order = Order::query()->with('items')->sole();
-        $this->assertSame('new', $order->status);
+        $this->assertSame(OrderStatus::New, $order->status);
         $this->assertNull($order->delivery_method);
         $this->assertNull($order->payment_method);
         $this->assertSame('Быстрый заказ. После 18:00', $order->comment);
@@ -99,5 +100,27 @@ class CustomerRequestsTest extends TestCase
 
         $this->get('/admin/resource/customer-request-resource/customer-request-index-page')->assertOk();
         $this->get('/admin/resource/customer-request-resource/customer-request-form-page')->assertForbidden();
+    }
+
+    public function test_admin_filters_and_sorts_requests(): void
+    {
+        CustomerRequest::query()->create(['type' => CustomerRequestType::Callback, 'name' => 'Анна Звонкова', 'phone' => '+7 (919) 152-50-00']);
+        CustomerRequest::query()->create(['type' => CustomerRequestType::Question, 'name' => 'Пётр Вопросов', 'phone' => '89870000001']);
+
+        $this->actingAs(MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'admin@example.com',
+            'name' => 'Admin',
+            'password' => bcrypt('secret'),
+        ]), 'moonshine');
+
+        $table = '/admin/component/customer-request-index-page/customer-request-resource?_component_name=index-table-customer-request-resource';
+
+        $this->get($table)->assertOk()->assertSee('badge-blue', false)->assertSee('badge-purple', false);
+        $this->get($table.'&filter[phone]=89191525000')->assertSee('Анна Звонкова')->assertDontSee('Пётр Вопросов');
+        $this->get($table.'&filter[phone]=152-50')->assertSee('Анна Звонкова')->assertDontSee('Пётр Вопросов');
+        $this->get($table.'&filter[name]=Вопрос')->assertSee('Пётр Вопросов')->assertDontSee('Анна Звонкова');
+        $this->get($table.'&sort=name')->assertSeeInOrder(['Анна Звонкова', 'Пётр Вопросов']);
+        $this->get($table.'&sort=-name')->assertSeeInOrder(['Пётр Вопросов', 'Анна Звонкова']);
     }
 }

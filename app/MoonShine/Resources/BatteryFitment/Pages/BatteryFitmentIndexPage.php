@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\BatteryFitment\Pages;
 
 use App\Models\BatteryFitment;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use App\MoonShine\Resources\Concerns\HasTextFilters;
 use Illuminate\Database\Eloquent\Builder;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
@@ -25,6 +26,8 @@ use Throwable;
  */
 class BatteryFitmentIndexPage extends IndexPage
 {
+    use HasTextFilters;
+
     protected bool $isLazy = true;
 
     /**
@@ -81,15 +84,6 @@ class BatteryFitmentIndexPage extends IndexPage
                     ? $query->where(fn (Builder $query) => $query->whereNull('capacity')->whereNull('dims')->where(fn (Builder $query) => $query->whereNull('polarity')->orWhere('polarity', 'Универсальная')))
                     : $query),
         ];
-    }
-
-    /**
-     * Текстовый фильтр «содержит»: «Vesta» найдёт и «Lada Vesta», «60» — «55 Ач, 60 Ач».
-     */
-    private function containsFilter(string $label, string $column): Text
-    {
-        return Text::make($label, $column)
-            ->onApply(fn (Builder $query, mixed $value): Builder => $query->where($column, 'like', '%'.addcslashes((string) $value, '%_\\').'%'));
     }
 
     /**

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Customer\Pages;
 
+use App\MoonShine\Fields\Money;
+use App\MoonShine\Resources\Concerns\HasTextFilters;
 use App\MoonShine\Resources\Customer\CustomerResource;
+use Illuminate\Database\Eloquent\Builder;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
@@ -13,10 +16,12 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
+use MoonShine\UI\Fields\DateRange;
 use MoonShine\UI\Fields\Email;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Phone;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -25,6 +30,8 @@ use Throwable;
  */
 class CustomerIndexPage extends IndexPage
 {
+    use HasTextFilters;
+
     protected bool $isLazy = true;
 
     /**
@@ -34,10 +41,12 @@ class CustomerIndexPage extends IndexPage
     {
         return [
             ID::make()->sortable(),
-            Text::make('Имя', 'name'),
-            Email::make('Email', 'email'),
-            Phone::make('Телефон', 'phone'),
+            Text::make('Имя', 'name')->sortable(),
+            Email::make('Email', 'email')->sortable(),
+            Phone::make('Телефон', 'phone')->sortable(),
             Number::make('Заказов', 'orders_count')->sortable(),
+            Money::make('Купил на', 'orders_sum_total')->sortable(),
+            Date::make('Последний заказ', 'orders_max_created_at')->format('d.m.Y')->sortable(),
             Date::make('Регистрация', 'created_at')->format('d.m.Y')->sortable(),
         ];
     }
@@ -56,9 +65,14 @@ class CustomerIndexPage extends IndexPage
     protected function filters(): iterable
     {
         return [
-            Text::make('Имя', 'name'),
-            Text::make('Телефон', 'phone'),
-            Text::make('Email', 'email'),
+            $this->containsFilter('Имя', 'name'),
+            $this->phoneFilter('Телефон', 'phone'),
+            $this->containsFilter('Email', 'email'),
+            Select::make('Заказы', 'has_orders')
+                ->options(['1' => 'Есть заказы', '0' => 'Без заказов'])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => $value === '1' ? $query->has('orders') : $query->doesntHave('orders')),
+            DateRange::make('Регистрация', 'created_at'),
         ];
     }
 

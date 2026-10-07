@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\PlaceOrder;
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Product;
 use App\Services\Cart\CartLine;
@@ -27,7 +28,7 @@ class PlaceOrderTest extends TestCase
             ['name' => 'Иван', 'phone' => '+79870000000', 'email' => null, 'address' => 'не нужен', 'comment' => null],
         );
 
-        $this->assertSame('new', $order->status);
+        $this->assertSame(OrderStatus::New, $order->status);
         $this->assertSame(DeliveryMethod::Pickup->label(), $order->delivery_method);
         $this->assertSame(PaymentMethod::Card->label(), $order->payment_method);
         $this->assertNull($order->shipping_address);

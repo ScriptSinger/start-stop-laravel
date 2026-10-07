@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Pages;
 
+use App\Enums\OrderStatus;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\Models\Product;
@@ -56,18 +57,18 @@ class Dashboard extends Page
     protected function components(): iterable
     {
         $sales = Order::query()
-            ->whereNotIn('status', ['unknown', 'Отменено'])
+            ->whereNotIn('status', [OrderStatus::Abandoned, OrderStatus::Cancelled])
             ->where('created_at', '>=', now()->subDays(30));
         $previousSum = (float) Order::query()
-            ->whereNotIn('status', ['unknown', 'Отменено'])
+            ->whereNotIn('status', [OrderStatus::Abandoned, OrderStatus::Cancelled])
             ->whereBetween('created_at', [now()->subDays(60), now()->subDays(30)])
             ->sum('total');
 
         return [
             Grid::make([
-                $this->metric('Новые заказы', Order::query()->where('status', 'new')->count(), 'shopping-cart'),
+                $this->metric('Новые заказы', Order::query()->where('status', OrderStatus::New)->count(), 'shopping-cart'),
                 $this->metric('Заявки — перезвонить', CustomerRequest::query()->where('is_processed', false)->count(), 'phone'),
-                $this->metric('Брошенные оформления, 30 дн.', Order::query()->where('status', 'unknown')->where('created_at', '>=', now()->subDays(30))->count(), 'exclamation-triangle'),
+                $this->metric('Брошенные оформления, 30 дн.', Order::query()->where('status', OrderStatus::Abandoned)->where('created_at', '>=', now()->subDays(30))->count(), 'exclamation-triangle'),
                 $this->metric('Продажи за 30 дн. (было '.$this->money($previousSum).')', $this->money((float) (clone $sales)->sum('total')), 'banknotes'),
             ]),
             $this->attention(),
@@ -82,11 +83,11 @@ class Dashboard extends Page
     {
         $active = fn () => Product::query()->where('status', true);
         $productsUrl = fn (string $filter): string => $this->pageUrl(ProductIndexPage::class, ProductResource::class, ['filter' => ['status' => '1', $filter => '1']]);
-        $abandoned = Order::query()->where('status', 'unknown')->where('created_at', '>=', now()->subDays(30))->count();
+        $abandoned = Order::query()->where('status', OrderStatus::Abandoned)->where('created_at', '>=', now()->subDays(30))->count();
         $topGap = app(AssortmentGaps::class)->summary()['sizes'][0] ?? null;
 
         $items = collect([
-            [$abandoned, $this->plural($abandoned, 'брошенное оформление|брошенных оформления|брошенных оформлений').' — оставили телефон, но не подтвердили заказ: перезвонить', $this->pageUrl(OrderIndexPage::class, OrderResource::class, ['filter' => ['status' => ['unknown']]])],
+            [$abandoned, $this->plural($abandoned, 'брошенное оформление|брошенных оформления|брошенных оформлений').' — оставили телефон, но не подтвердили заказ: перезвонить', $this->pageUrl(OrderIndexPage::class, OrderResource::class, ['filter' => ['status' => [OrderStatus::Abandoned->value]]])],
             [$count = $active()->missingFitmentData()->count(), $this->plural($count, 'аккумулятор невидим|аккумулятора невидимы|аккумуляторов невидимы').' для подбора — нет полярности, ёмкости или габаритов', $productsUrl('without_fitment_data')],
             [$count = $active()->whereNull('image')->count(), $this->plural($count, 'товар|товара|товаров').' без фото', $productsUrl('without_image')],
             [$count = $active()->whereNull('manufacturer_id')->count(), $this->plural($count, 'товар|товара|товаров').' без производителя', $productsUrl('without_manufacturer')],

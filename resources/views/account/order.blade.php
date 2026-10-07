@@ -22,7 +22,7 @@
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
                 <div class="uni-wrapper">
                     <table class="table table-bordered">
-                        <tr><td><b>Дата:</b> {{ $order->created_at?->format('d.m.Y H:i') }}</td><td><b>Статус:</b> {{ $order->statusLabel() }}</td></tr>
+                        <tr><td><b>Дата:</b> {{ $order->created_at?->format('d.m.Y H:i') }}</td><td><b>Статус:</b> {{ $order->status->toString() }}</td></tr>
                         <tr><td><b>Получение:</b> {{ $order->delivery_method ?: 'уточнит менеджер' }}@if ($order->shipping_address), {{ $order->shipping_address }}@endif</td><td><b>Оплата:</b> {{ $order->payment_method ?: 'уточнит менеджер' }}</td></tr>
                     </table>
                     <div class="table-responsive">

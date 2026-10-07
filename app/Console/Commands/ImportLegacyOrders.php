@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\DecodesLegacyText;
+use App\Enums\OrderStatus;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +84,7 @@ class ImportLegacyOrders extends LegacyImportCommand
                     'customer_name' => trim("{$row->firstname} {$row->lastname}"),
                     'customer_phone' => $row->telephone ?: null,
                     'customer_email' => $row->email ?: null,
-                    'status' => $statusNames[$row->order_status_id] ?? 'unknown',
+                    'status' => OrderStatus::fromLegacy($statusNames[$row->order_status_id] ?? null)->value,
                     'payment_method' => $this->methodLabel($row->payment_method),
                     'delivery_method' => $this->methodLabel($row->shipping_method),
                     'total' => $row->total,

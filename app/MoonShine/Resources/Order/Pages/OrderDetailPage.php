@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Order\Pages;
 
-use App\Models\Order;
+use App\Enums\OrderStatus;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Order\OrderResource;
@@ -19,10 +19,10 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Email;
+use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Phone;
-use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Textarea;
 use Throwable;
@@ -40,7 +40,7 @@ class OrderDetailPage extends DetailPage
         return [
             ID::make(),
             Date::make('Дата', 'created_at')->format('d.m.Y H:i'),
-            Select::make('Статус', 'status')->options(Order::STATUSES),
+            Enum::make('Статус', 'status')->attach(OrderStatus::class),
             BelongsTo::make('Клиент (аккаунт)', 'customer', resource: CustomerResource::class),
             Text::make('Имя', 'customer_name'),
             Phone::make('Телефон', 'customer_phone'),

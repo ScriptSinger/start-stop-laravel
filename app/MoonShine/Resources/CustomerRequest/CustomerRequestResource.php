@@ -40,7 +40,7 @@ class CustomerRequestResource extends ModelResource
      */
     protected function search(): array
     {
-        return ['id', 'name', 'phone', 'comment'];
+        return ['id', 'name', 'phone', 'email', 'comment', 'admin_comment'];
     }
 
     /**
