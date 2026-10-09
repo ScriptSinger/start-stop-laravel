@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Подбор АКБ по автомобилю: марка → модель → поколение → подходящие товары.
@@ -34,9 +35,10 @@ class BatterySelection
     ];
 
     /**
-     * Марки для первого шага подбора, с логотипами.
+     * Марки для первого шага подбора: популярные в порядке POPULAR_BRANDS
+     * (ВАЗ первым), остальные по алфавиту. image — null, если логотипа нет.
      *
-     * @return array{popular_brands: list<array{name: string, image: string}>, other_brands: list<array{name: string, image: string}>}
+     * @return array{popular_brands: list<array{name: string, image: string|null}>, other_brands: list<array{name: string, image: string|null}>}
      */
     public function brands(): array
     {
@@ -46,10 +48,13 @@ class BatterySelection
             ->distinct()
             ->orderBy('brand')
             ->pluck('brand')
-            ->map(fn (string $brand): array => ['name' => $brand, 'image' => $this->brandLogo($brand)])
+            ->map(fn (string $brand): array => ['name' => $brand, 'image' => ($path = $this->logoPath($brand)) ? Storage::disk('public')->url($path) : null])
             ->partition(fn (array $brand): bool => in_array($brand['name'], self::POPULAR_BRANDS, true));
 
-        return ['popular_brands' => $popular->values()->all(), 'other_brands' => $other->values()->all()];
+        return [
+            'popular_brands' => $popular->sortBy(fn (array $brand): int => array_search($brand['name'], self::POPULAR_BRANDS, true))->values()->all(),
+            'other_brands' => $other->values()->all(),
+        ];
     }
 
     /**
@@ -170,11 +175,18 @@ class BatterySelection
 
     public function brandLogo(string $brand): string
     {
-        $logoPath = 'catalog/carslogo/'.mb_strtolower($brand, 'UTF-8').'.png';
+        return Storage::disk('public')->url($this->logoPath($brand) ?? 'catalog/carslogo/no_image.png');
+    }
 
-        return Storage::disk('public')->url(
-            Storage::disk('public')->exists($logoPath) ? $logoPath : 'catalog/carslogo/no_image.png',
-        );
+    /**
+     * Файл логотипа: «bmw.png», а для марок из нескольких слов — через
+     * дефис: «alfa-romeo.png», «ВАЗ (Lada)» → «vaz-lada.png».
+     */
+    private function logoPath(string $brand): ?string
+    {
+        return collect([mb_strtolower($brand, 'UTF-8'), Str::slug($brand)])
+            ->map(fn (string $name): string => "catalog/carslogo/{$name}.png")
+            ->first(fn (string $path): bool => Storage::disk('public')->exists($path));
     }
 
     /**

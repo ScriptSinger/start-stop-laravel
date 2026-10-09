@@ -7,7 +7,9 @@ use App\Models\AttributeValue;
 use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\BatterySelection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class BatterySelectionTest extends TestCase
@@ -215,6 +217,24 @@ class BatterySelectionTest extends TestCase
             ->assertOk()
             ->assertSee('<title>Аккумуляторы для Kia Rio — Старт-Стоп</title>', false)
             ->assertSee('<link rel="canonical" href="'.e(route('battery-selection', ['brand' => 'Kia', 'model' => 'Kia Rio'])).'">', false);
+    }
+
+    public function test_brand_tiles_put_lada_first_and_find_hyphenated_logos(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('catalog/carslogo/vaz-lada.png', 'x');
+        Storage::disk('public')->put('catalog/carslogo/alfa-romeo.png', 'x');
+        Storage::disk('public')->put('catalog/carslogo/toyota.png', 'x');
+
+        foreach (['Toyota', 'ВАЗ (Lada)', 'Alfa Romeo', 'Zenvo'] as $brand) {
+            BatteryFitment::query()->create(['brand' => $brand, 'model' => 'X']);
+        }
+
+        $brands = app(BatterySelection::class)->brands();
+
+        $this->assertSame(['ВАЗ (Lada)', 'Toyota'], array_column($brands['popular_brands'], 'name'));
+        $this->assertStringEndsWith('carslogo/vaz-lada.png', $brands['popular_brands'][0]['image']);
+        $this->assertSame([['name' => 'Alfa Romeo', 'image' => Storage::disk('public')->url('catalog/carslogo/alfa-romeo.png')], ['name' => 'Zenvo', 'image' => null]], $brands['other_brands']);
     }
 
     public function test_selector_steps_return_models_and_generations(): void

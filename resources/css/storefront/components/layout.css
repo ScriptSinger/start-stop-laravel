@@ -25,3 +25,10 @@
 #column-right .list-group form button.list-group-item {width: 100%; text-align: left}
 .top-menu__logout {display: block; width: 100%; padding: 3px 20px; border: none; background: none; text-align: left; color: inherit; white-space: nowrap}
 .header-account {color: inherit}
+
+/* Кнопка «наверх»: у темы полупрозрачный чёрный фон, на чёрном подвале её не
+   видно — сплошной фирменный цвет с тенью. С чатом Jivo — выше его ярлыка
+   (на телефоне — круглой кнопки), чтобы не наезжать. */
+.fly-block__scrollup {background: var(--btn-primary-bg); box-shadow: 0 2px 8px rgba(0 0 0 / .3)}
+.fly-block__scrollup:hover {background: var(--btn-primary-bg-hover)}
+.fly-block--above-chat {bottom: 90px}

@@ -30,6 +30,15 @@ class HomePageTest extends TestCase
             ->assertDontSee('catalog/banners/old.png', false);
     }
 
+    public function test_jivo_chat_widget_is_configurable(): void
+    {
+        config(['shop.jivo_widget_id' => 'abc123']);
+        $this->get('/')->assertSee('<meta name="jivo-widget" content="abc123" />', false);
+
+        config(['shop.jivo_widget_id' => null]);
+        $this->get('/')->assertDontSee('jivo-widget');
+    }
+
     public function test_category_wall_links_subcategories_and_manufacturers(): void
     {
         $batteries = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori', 'home_wall_sort' => 0]);

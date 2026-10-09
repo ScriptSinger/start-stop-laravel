@@ -10,6 +10,8 @@
 .w-item {border: 1px solid #f0f0f0; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; transition: all 0.2s ease-in-out; background: #fff}
 .w-item:hover {border-color: #e31e24; box-shadow: 0 5px 12px rgba(227, 30, 36, 0.1); transform: translateY(-2px)}
 .brand-box img {max-width: 60px; height: 50px; object-fit: contain; display: block; margin: 0 auto 8px}
+/* Марка без логотипа: первая буква в круге той же высоты, что логотип. */
+.brand-box__letter {display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0 auto 8px; border-radius: 50%; background: #f4f4f4; color: #999; font-size: 22px; font-weight: 700}
 .gens img {width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px}
 .w-btn-more {margin-top: 20px; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 25px; border-radius: 20px; color: #555; cursor: pointer}
 .battery-wizard-container .mt-3 {margin-top: 15px}

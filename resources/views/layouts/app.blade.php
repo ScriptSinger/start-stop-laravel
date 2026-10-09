@@ -10,6 +10,9 @@
     {!! Artesaos\SEOTools\Facades\SEOTools::generate() !!}
     <meta name="theme-color" content="{{ config('shop.theme_color') }}" />
     <meta name="format-detection" content="telephone=no" />
+    @if (config('shop.jivo_widget_id'))
+        <meta name="jivo-widget" content="{{ config('shop.jivo_widget_id') }}" />
+    @endif
 
     {{-- Стили в порядке старого сайта: тема (base), стили блоков страницы
          (каждая страница добавляет свои в page-styles), общие стили и наши

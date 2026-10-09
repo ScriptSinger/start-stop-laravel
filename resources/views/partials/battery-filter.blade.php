@@ -4,19 +4,26 @@
      x-data="batteryWizard({modelsUrl: @js(route('battery-filter.models')), generationsUrl: @js(route('battery-filter.generations')), enginesUrl: @js(route('battery-filter.engines')), resultUrl: @js(route('battery-filter.result'))})">
     <div class="w-step" x-show="step === 1">
         <h3 class="w-title">Подбор аккумулятора по марке авто</h3>
+        {{-- Одна сетка: остальные марки продолжают ряд популярных. Их
+             логотипы грузятся только после «Показать все марки». --}}
         <div class="w-grid brands">
             @foreach ($popular_brands as $brand)
                 <div class="w-item brand-box" @click="loadModels(@js($brand['name']))">
-                    <img src="{{ $brand['image'] }}" alt="{{ $brand['name'] }}">
+                    @if ($brand['image'])
+                        <img src="{{ $brand['image'] }}" alt="{{ $brand['name'] }}">
+                    @else
+                        <span class="brand-box__letter">{{ mb_substr($brand['name'], 0, 1) }}</span>
+                    @endif
                     <span>{{ $brand['name'] }}</span>
                 </div>
             @endforeach
-        </div>
-
-        <div class="w-grid brands mt-3" x-show="allBrands" x-cloak>
             @foreach ($other_brands as $brand)
-                <div class="w-item brand-box" @click="loadModels(@js($brand['name']))">
-                    <img src="{{ $brand['image'] }}" alt="{{ $brand['name'] }}" loading="lazy">
+                <div class="w-item brand-box" x-show="allBrands" x-cloak @click="loadModels(@js($brand['name']))">
+                    @if ($brand['image'])
+                        <img :src="allBrands && @js($brand['image'])" alt="{{ $brand['name'] }}">
+                    @else
+                        <span class="brand-box__letter">{{ mb_substr($brand['name'], 0, 1) }}</span>
+                    @endif
                     <span>{{ $brand['name'] }}</span>
                 </div>
             @endforeach

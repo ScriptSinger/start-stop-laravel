@@ -37,3 +37,28 @@ export function initYandexMaps() {
         loadScript(container.dataset.yandexMap, container).catch(() => {});
     });
 }
+
+/**
+ * Онлайн-чат JivoSite (<meta name="jivo-widget">). Скрипт тяжёлый, поэтому,
+ * как на старом сайте, не мешает загрузке страницы: подключается через 5 секунд
+ * или раньше — при первом действии посетителя.
+ */
+export function initJivoChat() {
+    const widgetId = document.querySelector('meta[name="jivo-widget"]')?.content;
+
+    if (!widgetId) {
+        return;
+    }
+
+    const events = ['scroll', 'pointerdown', 'keydown', 'touchstart'];
+    let timer;
+
+    const load = () => {
+        clearTimeout(timer);
+        events.forEach((event) => window.removeEventListener(event, load));
+        loadScript(`https://code.jivo.ru/widget/${widgetId}`).catch(() => {});
+    };
+
+    timer = setTimeout(load, 5000);
+    events.forEach((event) => window.addEventListener(event, load, {once: true, passive: true}));
+}
