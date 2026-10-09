@@ -13,6 +13,8 @@ use App\MoonShine\Resources\Order\Pages\OrderIndexPage;
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\Services\Catalog\AssortmentGaps;
+use App\Services\Catalog\StockSummary;
+use Illuminate\Support\Facades\DB;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Laravel\Pages\Page;
 use MoonShine\MenuManager\Attributes\SkipMenu;
@@ -48,9 +50,10 @@ class Dashboard extends Page
     }
 
     /**
-     * Минимум: четыре числа и короткий список того, что требует внимания
-     * (только ненулевое). Таблицы заказов и заявок — в их разделах меню,
-     * новые там подсвечены счётчиком; склад — на странице «Остатки».
+     * Минимум: ряд чисел по заказам, ряд по товарам, что требует внимания
+     * (только ненулевое) и лидеры продаж. Таблицы заказов и заявок — в их
+     * разделах меню, новые там подсвечены счётчиком; склад подробно — на
+     * странице «Остатки».
      *
      * @return list<ComponentContract>
      */
@@ -71,8 +74,54 @@ class Dashboard extends Page
                 $this->metric('Брошенные оформления, 30 дн.', Order::query()->where('status', OrderStatus::Abandoned)->where('created_at', '>=', now()->subDays(30))->count(), 'exclamation-triangle'),
                 $this->metric('Продажи за 30 дн. (было '.$this->money($previousSum).')', $this->money((float) (clone $sales)->sum('total')), 'banknotes'),
             ]),
-            $this->attention(),
+            $this->catalogMetrics(),
+            Grid::make([
+                Column::make([$this->attention()], colSpan: 6, adaptiveColSpan: 12),
+                Column::make([$this->bestsellers()], colSpan: 6, adaptiveColSpan: 12),
+            ]),
         ];
+    }
+
+    /**
+     * Товары: сколько можно купить, что на складе, что под заказ и сколько
+     * готово к выгрузке на площадки.
+     */
+    private function catalogMetrics(): Grid
+    {
+        $stock = app(StockSummary::class)->overall();
+        $available = $stock['in_stock'] + $stock['on_order'];
+        $ready = Product::query()->readyForExport()->count();
+
+        return Grid::make([
+            $this->metric('В продаже (активных '.$stock['total'].')', $available, 'cube'),
+            $this->metric('На складе — '.$this->plural($stock['units'], 'штука|штуки|штук').' на сумму', $this->money($stock['stock_value']), 'archive-box'),
+            $this->metric('Под заказ у поставщика', $stock['on_order'], 'truck'),
+            $this->metric('Готовы к выгрузке', $ready.' из '.$available, 'arrow-up-tray'),
+        ]);
+    }
+
+    /**
+     * Пять самых продаваемых товаров за 30 дней (по штукам), без отменённых
+     * и брошенных заказов.
+     */
+    private function bestsellers(): Box
+    {
+        $rows = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereNotIn('orders.status', [OrderStatus::Abandoned->value, OrderStatus::Cancelled->value])
+            ->where('orders.created_at', '>=', now()->subDays(30))
+            ->groupBy('order_items.product_id', 'order_items.name')
+            ->selectRaw('order_items.name, sum(order_items.quantity) as units, sum(order_items.total) as revenue')
+            ->orderByDesc('units')
+            ->orderByDesc('revenue')
+            ->limit(5)
+            ->get();
+
+        return Box::make('Лидеры продаж, 30 дн.', $rows->isEmpty()
+            ? [Heading::make('Продаж пока нет', h: 6)]
+            : $rows->map(fn (object $row): Div => Div::make([
+                Heading::make($row->name.' — '.$this->plural((int) $row->units, 'штука|штуки|штук').', '.$this->money((float) $row->revenue), h: 6),
+            ])->class('py-1'))->all());
     }
 
     /**
@@ -92,6 +141,9 @@ class Dashboard extends Page
             [$count = $active()->whereNull('image')->count(), $this->plural($count, 'товар|товара|товаров').' без фото', $productsUrl('without_image')],
             [$count = $active()->whereNull('manufacturer_id')->count(), $this->plural($count, 'товар|товара|товаров').' без производителя', $productsUrl('without_manufacturer')],
             [$count = $active()->doesntHave('categories')->count(), $this->plural($count, 'товар|товара|товаров').' без категории', $productsUrl('without_categories')],
+            [$count = $active()->withPriceProblem()->count(), $this->plural($count, 'товар|товара|товаров').' с ошибкой в цене — нулевая цена или акция не ниже обычной', $productsUrl('price_problem')],
+            [$count = $active()->available()->where(fn ($query) => $query->whereNull('description')->orWhere('description', ''))->count(), $this->plural($count, 'товар|товара|товаров').' в продаже без описания — площадки и поисковики такие показывают хуже', $productsUrl('without_description')],
+            [$count = Product::query()->where('status', false)->where('quantity', '>', 0)->count(), $this->plural($count, 'товар лежит|товара лежат|товаров лежат').' на складе, но скрыты с сайта', $this->pageUrl(ProductIndexPage::class, ProductResource::class, ['filter' => ['status' => '0', 'stock' => 'in']])],
             [$topGap['cars'] ?? 0, $topGap ? "{$topGap['size']}, {$topGap['polarity']} — нужен ".$this->plural($topGap['cars'], 'машине|машинам|машинам').', в ассортименте нет' : '', $this->pageUrl(StockReport::class)],
         ])->filter(fn (array $item): bool => $item[0] > 0);
 

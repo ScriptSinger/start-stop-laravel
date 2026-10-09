@@ -266,6 +266,33 @@ class Product extends Model
             ->orWhere('supplier_quantity', '>=', config('shop.supplier_order_min_quantity')));
     }
 
+    /**
+     * Можно отдавать в выгрузку (прайс, Яндекс Маркет): продаётся, есть
+     * цена, фото, производитель и категория — без них площадки товар не примут.
+     */
+    #[Scope]
+    protected function readyForExport(Builder $query): void
+    {
+        $query->where('status', true)
+            ->available()
+            ->where('price', '>', 0)
+            ->whereNotNull('image')
+            ->whereNotNull('manufacturer_id')
+            ->has('categories');
+    }
+
+    /**
+     * Ошибка в цене: нулевая цена или «цена по акции» не ниже обычной
+     * (акция тогда не показывается, а в выгрузке будет странная скидка).
+     */
+    #[Scope]
+    protected function withPriceProblem(Builder $query): void
+    {
+        $query->where(fn (Builder $query) => $query
+            ->where('price', '<=', 0)
+            ->orWhere(fn (Builder $query) => $query->whereNotNull('special_price')->whereColumn('special_price', '>=', 'price')));
+    }
+
     public function hasTradeIn(): bool
     {
         return $this->trade_in_discount !== null && (float) $this->trade_in_discount > 0;

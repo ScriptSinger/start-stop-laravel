@@ -257,6 +257,9 @@ class ProductIndexPage extends IndexPage
             $this->missingFilter('Без категории', 'without_categories', fn (Builder $query) => $query->doesntHave('categories')),
             $this->missingFilter('Без фото', 'without_image', fn (Builder $query) => $query->whereNull('image')),
             $this->missingFilter('АКБ без данных для подбора', 'without_fitment_data', fn (Builder $query) => $query->missingFitmentData()),
+            $this->missingFilter('Без описания', 'without_description', fn (Builder $query) => $query->where(fn (Builder $query) => $query->whereNull('description')->orWhere('description', ''))),
+            $this->missingFilter('Ошибка в цене', 'price_problem', fn (Builder $query) => $query->withPriceProblem()),
+            $this->missingFilter('Готовы к выгрузке', 'ready_for_export', fn (Builder $query) => $query->readyForExport()),
         ];
     }
 
