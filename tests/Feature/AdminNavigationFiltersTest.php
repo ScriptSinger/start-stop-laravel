@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Attribute;
-use App\Models\BatteryFitment;
 use App\Models\AttributeValue;
+use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
@@ -246,11 +246,13 @@ class AdminNavigationFiltersTest extends TestCase
             ->assertDontSee('DELKOR');
     }
 
-    public function test_product_list_has_no_query_tag_buttons(): void
+    public function test_product_list_has_only_the_trashed_query_tag(): void
     {
-        $this->get('/admin/resource/product-resource/product-index-page')
-            ->assertOk()
-            ->assertDontSee('query-tag=', false);
+        $html = $this->get('/admin/resource/product-resource/product-index-page')->assertOk()->getContent();
+
+        preg_match_all('/query-tag=([\w-]+)/', $html, $matches);
+
+        $this->assertSame(['trashed'], array_values(array_unique($matches[1])));
     }
 
     /**

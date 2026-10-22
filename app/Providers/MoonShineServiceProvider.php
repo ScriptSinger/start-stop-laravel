@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\MoonShine\Pages\OneCImport;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\AttributeValue\AttributeValueResource;
@@ -54,6 +55,7 @@ class MoonShineServiceProvider extends ServiceProvider
             ->pages([
                 ...$core->getConfig()->getPages(),
                 StockReport::class,
+                OneCImport::class,
             ]);
     }
 }

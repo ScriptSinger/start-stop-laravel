@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\MoonShine\Pages\Dashboard;
+use App\MoonShine\Pages\OneCImport;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\Banner\BannerResource;
@@ -66,6 +67,7 @@ final class MoonShineLayout extends AppLayout
             MenuGroup::make('Каталог', [
                 MenuItem::make(ProductResource::class, 'Товары')->icon('cube'),
                 MenuItem::make(StockReport::class, 'Остатки')->icon('chart-bar'),
+                MenuItem::make(OneCImport::class, 'Загрузка из 1С')->icon('arrow-up-tray'),
                 MenuItem::make(CategoryResource::class, 'Категории')->icon('rectangle-stack'),
                 MenuItem::make(ManufacturerResource::class, 'Производители')->icon('building-storefront'),
                 MenuItem::make(AttributeResource::class, 'Характеристики')->icon('adjustments-horizontal'),

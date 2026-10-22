@@ -106,6 +106,7 @@ class GenerateSitemap extends Command
         $withProducts = DB::table('category_product')
             ->join('products', 'products.id', '=', 'category_product.product_id')
             ->where('products.status', true)
+            ->whereNull('products.deleted_at')
             ->distinct()
             ->pluck('category_product.category_id');
 

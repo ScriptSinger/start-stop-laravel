@@ -97,6 +97,7 @@ class CategoryMenu
             ->join('manufacturers', 'manufacturers.id', '=', 'products.manufacturer_id')
             ->whereIn('category_product.category_id', $categoryIds)
             ->where('products.status', true)
+            ->whereNull('products.deleted_at')
             ->distinct()
             ->orderBy('manufacturers.name')
             ->get(['category_product.category_id', 'manufacturers.id', 'manufacturers.name'])

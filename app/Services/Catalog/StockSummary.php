@@ -19,7 +19,7 @@ class StockSummary
     public function overall(): array
     {
         return $this->normalize(
-            $this->aggregate(DB::table('products'))->where('products.status', true)->first(),
+            $this->aggregate(DB::table('products'))->where('products.status', true)->whereNull('products.deleted_at')->first(),
         );
     }
 
@@ -32,6 +32,7 @@ class StockSummary
             DB::table('products')
                 ->leftJoin('manufacturers', 'manufacturers.id', '=', 'products.manufacturer_id')
                 ->where('products.status', true)
+                ->whereNull('products.deleted_at')
                 ->groupBy('products.manufacturer_id', 'manufacturers.name')
                 ->addSelect('products.manufacturer_id as id', 'manufacturers.name'),
         )->get();
@@ -51,6 +52,7 @@ class StockSummary
                 ->join('category_product', 'category_product.product_id', '=', 'products.id')
                 ->join('categories', 'categories.id', '=', 'category_product.category_id')
                 ->where('products.status', true)
+                ->whereNull('products.deleted_at')
                 ->groupBy('categories.id', 'categories.name')
                 ->addSelect('categories.id', 'categories.name'),
         )->get();

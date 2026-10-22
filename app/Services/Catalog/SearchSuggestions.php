@@ -39,7 +39,7 @@ class SearchSuggestions
 
         $brands = Manufacturer::query()
             ->whereLike('manufacturers.name', '%'.$search.'%')
-            ->join('products', fn ($join) => $join->on('products.manufacturer_id', '=', 'manufacturers.id')->where('products.status', true))
+            ->join('products', fn ($join) => $join->on('products.manufacturer_id', '=', 'manufacturers.id')->where('products.status', true)->whereNull('products.deleted_at'))
             ->join('category_product', 'category_product.product_id', '=', 'products.id')
             ->join('categories', fn ($join) => $join->on('categories.id', '=', 'category_product.category_id')
                 ->whereNull('categories.parent_id')

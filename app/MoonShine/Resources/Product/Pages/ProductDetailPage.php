@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Product\Pages;
 
+use App\Models\Product;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
@@ -15,6 +16,7 @@ use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Table\TableBuilder;
+use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
@@ -40,8 +42,11 @@ class ProductDetailPage extends DetailPage
             Text::make('Slug', 'slug'),
             Text::make('Код товара', 'code'),
             Text::make('Артикул', 'sku'),
+            Text::make('Код 1С', 'external_id'),
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class),
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class),
+            // Значения из справочников «Характеристики» (pivot attribute_value_product).
+            Text::make('Характеристики', 'id', fn (Product $product): string => $this->specifications($product))->unescape(),
             Money::make('Цена', 'price'),
             Money::make('Цена по акции', 'special_price'),
             Number::make('Остаток', 'quantity'),
@@ -51,7 +56,20 @@ class ProductDetailPage extends DetailPage
             Switcher::make('Только самовывоз', 'is_pickup_only'),
             Textarea::make('Описание', 'description'),
             Switcher::make('Активен', 'status'),
+            Date::make('Удалён', 'deleted_at')->format('d.m.Y H:i')->canSee(fn (Date $field): bool => $field->toValue() !== null),
         ];
+    }
+
+    /**
+     * «Полярность: Обратная», по строке на характеристику, в порядке карточки товара.
+     */
+    private function specifications(Product $product): string
+    {
+        $product->loadMissing('attributeValues.attribute');
+
+        $lines = $product->specifications()->map(fn (string $value, string $name): string => '<div><strong>'.e($name).':</strong> '.e($value).'</div>');
+
+        return $lines->isEmpty() ? '—' : $lines->implode('');
     }
 
     protected function buttons(): ListOf

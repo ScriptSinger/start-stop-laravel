@@ -12,11 +12,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 class Product extends Model
 {
     use HasHtmlDescription;
+    use SoftDeletes;
 
     protected $fillable = [
         'manufacturer_id',
@@ -26,6 +28,7 @@ class Product extends Model
         'meta_description',
         'slug',
         'sku',
+        'external_id',
         'code',
         'description',
         'price',

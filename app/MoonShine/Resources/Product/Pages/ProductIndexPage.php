@@ -8,6 +8,7 @@ use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
+use App\Models\Product;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
@@ -32,6 +33,7 @@ use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Checkbox;
+use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
@@ -59,6 +61,7 @@ class ProductIndexPage extends IndexPage
             Text::make('Название', 'name')->sortable(),
             Text::make('Код товара', 'code')->sortable(),
             Text::make('Артикул', 'sku')->sortable(),
+            Text::make('Код 1С', 'external_id')->sortable(),
             // По названию производителя, а не по его id.
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
                 ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query->orderBy(
@@ -82,10 +85,13 @@ class ProductIndexPage extends IndexPage
                     badge: true,
                     link: fn (Category $category, mixed $value, BelongsToMany $field): string => $field->getResource()->getFormPageUrl($category->getKey()),
                 ),
+            // Сколько значений характеристик у товара; сами они — в просмотре товара.
+            Number::make('Хар-ки', 'attribute_values_count')->sortable(),
             Money::make('Цена', 'price')->sortable(),
             Number::make('Остаток', 'quantity')->sortable(),
             Number::make('У поставщика', 'supplier_quantity')->sortable(),
             Switcher::make('Активен', 'status')->sortable(),
+            Date::make('Удалён', 'deleted_at')->format('d.m.Y H:i')->sortable()->canSee(fn (): bool => $this->isTrashedView()),
         ];
     }
 
@@ -94,7 +100,20 @@ class ProductIndexPage extends IndexPage
      */
     protected function buttons(): ListOf
     {
+        $resource = $this->getResource();
+
         return parent::buttons()->add(
+            ActionButton::make('Восстановить')
+                ->method('restore', events: [$resource->getListEventName()])
+                ->icon('arrow-uturn-left')
+                ->canSee(fn (mixed $item): bool => $item instanceof Product && $item->trashed())
+                ->showInLine(),
+            ActionButton::make('Восстановить')
+                ->bulk($resource->getListComponentName())
+                ->method('restore', events: [$resource->getListEventName()])
+                ->icon('arrow-uturn-left')
+                ->canSee(fn (): bool => $this->isTrashedView())
+                ->showInLine(),
             $this->bulkButton('Присвоить характеристику', 'tag', 'assignAttribute', [
                 Select::make('Значение (поиск: «емкость 60», «полярность»)', 'attribute_value_id')
                     ->options($this->attributeValueOptions())
@@ -111,6 +130,29 @@ class ProductIndexPage extends IndexPage
                     ->required(),
             ], 'У отмеченных товаров будут удалены все значения этой характеристики.'),
         );
+    }
+
+    /**
+     * Восстановить удалённые товары: отмеченные в списке или один (кнопка в строке).
+     */
+    #[AsyncMethod]
+    public function restore(Request $request): MoonShineJsonResponse
+    {
+        $productIds = $this->selectedIds($request) ?: [$request->integer('resourceItem')];
+
+        $restored = Product::onlyTrashed()->whereKey($productIds)->get()->each->restore()->count();
+
+        return MoonShineJsonResponse::make()
+            ->toast($restored > 0 ? "Восстановлено товаров: {$restored}" : 'Нечего восстанавливать', $restored > 0 ? ToastType::SUCCESS : ToastType::ERROR)
+            ->events([$this->getResource()->getListEventName()]);
+    }
+
+    /**
+     * Открыта вкладка «Удалённые».
+     */
+    private function isTrashedView(): bool
+    {
+        return $this->getCore()->getRequest()->getScalar('query-tag') === 'trashed';
     }
 
     /**
@@ -224,6 +266,9 @@ class ProductIndexPage extends IndexPage
                 })),
             Text::make('Код товара', 'code'),
             Text::make('Артикул', 'sku'),
+            Text::make('Код 1С', 'external_id')
+                ->hint('Несколько кодов через запятую: РТ-00000805, 1252')
+                ->onApply(fn (Builder $query, mixed $value): Builder => $query->whereIn('products.external_id', array_filter(array_map('trim', explode(',', (string) $value))))),
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
                 ->nullable()
                 ->searchable(),
@@ -253,6 +298,7 @@ class ProductIndexPage extends IndexPage
                         ->where('supplier_quantity', '<', config('shop.supplier_order_min_quantity')),
                     default => $query,
                 }),
+            $this->missingFilter('Без кода 1С', 'without_external_id', fn (Builder $query) => $query->whereNull('external_id')),
             $this->missingFilter('Без производителя', 'without_manufacturer', fn (Builder $query) => $query->whereNull('manufacturer_id')),
             $this->missingFilter('Без категории', 'without_categories', fn (Builder $query) => $query->doesntHave('categories')),
             $this->missingFilter('Без фото', 'without_image', fn (Builder $query) => $query->whereNull('image')),
@@ -320,7 +366,12 @@ class ProductIndexPage extends IndexPage
      */
     protected function queryTags(): array
     {
-        return [];
+        return [
+            // Мягко удалённые товары: просмотр и восстановление.
+            QueryTag::make('Удалённые', fn (Builder $query): Builder => $query->onlyTrashed())
+                ->alias('trashed')
+                ->icon('trash'),
+        ];
     }
 
     /**

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
@@ -60,6 +61,7 @@ class ProductFormPage extends FormPage
                         Slug::make('Slug', 'slug')->from('name')->unique(),
                         Text::make('Код товара', 'code')->nullable()->hint('Типоразмер, например 115D31L'),
                         Text::make('Артикул', 'sku')->nullable(),
+                        Text::make('Код 1С', 'external_id')->nullable()->hint('Код номенклатуры из 1С: по нему загружаются цены и остатки. Должен быть уникальным'),
                         BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)->nullable(),
                         BelongsToMany::make('Категории', 'categories', fn (Category $category): string => $category->pathName(), CategoryResource::class)
                             ->selectMode()
@@ -230,7 +232,10 @@ class ProductFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return SeoFields::rules();
+        return [
+            ...SeoFields::rules(),
+            'external_id' => ['nullable', 'string', 'max:255', Rule::unique(Product::class, 'external_id')->ignore($item->getKey())],
+        ];
     }
 
     /**

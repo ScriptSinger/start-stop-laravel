@@ -9,6 +9,7 @@ use App\MoonShine\Resources\Attribute\Pages\AttributeDetailPage;
 use App\MoonShine\Resources\Attribute\Pages\AttributeFormPage;
 use App\MoonShine\Resources\Attribute\Pages\AttributeIndexPage;
 use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Support\Enums\SortDirection;
@@ -31,6 +32,17 @@ class AttributeResource extends ModelResource
     protected string $sortColumn = 'sort_order';
 
     protected SortDirection $sortDirection = SortDirection::ASC;
+
+    /**
+     * Число значений в колонке списка — одним запросом.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Attribute>  $builder
+     * @return \Illuminate\Database\Eloquent\Builder<Attribute>
+     */
+    protected function modifyQueryBuilder(Builder $builder): Builder
+    {
+        return $builder->withCount('values');
+    }
 
     /**
      * @return string[]

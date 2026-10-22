@@ -12,6 +12,7 @@ use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Product\Pages\ProductDetailPage;
 use App\MoonShine\Resources\Product\Pages\ProductFormPage;
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Crud\Handlers\Handler;
@@ -19,6 +20,7 @@ use MoonShine\ImportExport\Contracts\HasImportExportContract;
 use MoonShine\ImportExport\ExportHandler;
 use MoonShine\ImportExport\Traits\ImportExportConcern;
 use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\Support\Enums\Ability;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Switcher;
@@ -42,11 +44,48 @@ class ProductResource extends ModelResource implements HasImportExportContract
     protected array $with = ['manufacturer', 'categories'];
 
     /**
+     * Удалённые товары открываются по ссылке из списка (вкладка «Удалённые»).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Product>  $builder
+     * @return \Illuminate\Database\Eloquent\Builder<Product>
+     */
+    protected function modifyItemQueryBuilder(Builder $builder): Builder
+    {
+        return $builder->withTrashed();
+    }
+
+    /**
+     * Число характеристик в колонке списка («Хар-ки») — одним запросом.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Product>  $builder
+     * @return \Illuminate\Database\Eloquent\Builder<Product>
+     */
+    protected function modifyQueryBuilder(Builder $builder): Builder
+    {
+        return $builder->withCount('attributeValues');
+    }
+
+    /**
+     * У удалённого товара можно только смотреть и восстанавливать: правка и
+     * повторное удаление скрыты.
+     */
+    protected function isCan(Ability $ability): bool
+    {
+        $item = $this->getItem();
+
+        if ($item instanceof Product && $item->trashed() && in_array($ability, [Ability::UPDATE, Ability::DELETE], true)) {
+            return false;
+        }
+
+        return parent::isCan($ability);
+    }
+
+    /**
      * @return string[]
      */
     protected function search(): array
     {
-        return ['id', 'name', 'code', 'sku'];
+        return ['id', 'name', 'code', 'sku', 'external_id'];
     }
 
     /**
@@ -73,6 +112,9 @@ class ProductResource extends ModelResource implements HasImportExportContract
             Text::make('Название', 'name'),
             Text::make('Код товара', 'code'),
             Text::make('Артикул', 'sku'),
+            // Только для сверки: при загрузке обратно колонка игнорируется,
+            // код 1С правится в карточке товара.
+            Text::make('Код 1С', 'external_id'),
             // Название по id из справочника, загруженного один раз: выгрузка идёт
             // курсором, без загрузки связей.
             Text::make('Производитель', 'manufacturer_id')
