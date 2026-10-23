@@ -25,6 +25,9 @@ use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\Supplier\SupplierResource;
+use Illuminate\Support\Facades\Vite;
+use MoonShine\AssetManager\Css;
+use MoonShine\AssetManager\Js;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
@@ -44,6 +47,8 @@ final class MoonShineLayout extends AppLayout
     {
         return [
             ...parent::assets(),
+            Css::make(Vite::asset('resources/css/admin/tables.css')),
+            Js::make(Vite::asset('resources/js/admin/tables.js'))->customAttributes(['type' => 'module']),
         ];
     }
 

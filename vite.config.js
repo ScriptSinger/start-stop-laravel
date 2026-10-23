@@ -15,6 +15,8 @@ export default defineConfig({
                 'resources/css/storefront/pages/compare.css',
                 'resources/css/storefront/pages/account.css',
                 'resources/js/storefront/app.js',
+                'resources/css/admin/tables.css',
+                'resources/js/admin/tables.js',
             ],
             refresh: true,
         }),

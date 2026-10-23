@@ -62,7 +62,8 @@ class SupplierAdminTest extends TestCase
         $this->get("/admin/page/supplier-import?import={$id}")
             ->assertOk()
             ->assertSee('Применить к базе')
-            ->assertSee('Не применено');
+            ->assertSee('Не применено')
+            ->assertSee('data-resizable', false);
 
         $this->assertNull($this->product->fresh()->supplier_id);
         $this->assertNotNull(app(SupplierImportFiles::class)->path($id));

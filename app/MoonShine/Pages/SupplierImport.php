@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Pages;
 
+use App\Enums\SupplierPriceFormat;
 use App\Models\Supplier;
 use App\MoonShine\Resources\Supplier\SupplierResource;
 use App\Services\Backup\DatabaseBackup;
@@ -112,10 +113,10 @@ class SupplierImport extends Page
             return MoonShineJsonResponse::make()->toast($exception->getMessage(), ToastType::ERROR);
         }
 
-        $files->markApplied($id, ['created' => $report->created, 'on_order' => $report->productsOnOrder, 'cleared' => $report->productsCleared]);
+        $files->markApplied($id, ['created' => $report->created, 'added' => $report->productsAdded, 'repriced' => $report->productsRepriced, 'cleared' => $report->productsCleared]);
 
         return MoonShineJsonResponse::make()
-            ->toast("Применено: товаров под заказ — {$report->productsOnOrder}. Копия базы снята перед записью.", ToastType::SUCCESS)
+            ->toast("Применено: стало под заказ — {$report->productsAdded}, изменилась цена — {$report->productsRepriced}, снято — {$report->productsCleared}. Копия базы снята перед записью.", ToastType::SUCCESS)
             ->redirect($this->getRoute(['import' => $id]));
     }
 
@@ -175,7 +176,9 @@ class SupplierImport extends Page
                 $this->metric('Новых позиций', $report->created),
                 $this->metric('Изменилась закупка', $report->costChanged),
                 $this->metric('Пропало из прайса', $report->vanished),
-                $this->metric('Под заказ станет', $report->productsOnOrder),
+                $this->metric('Станет под заказ', $report->productsAdded),
+                $this->metric('Изменится цена под заказ', $report->productsRepriced),
+                $this->metric('Перестанет быть под заказ', $report->productsCleared),
                 $this->metric('Без товара на сайте', $report->unlinked->count()),
             ]),
 
@@ -196,7 +199,7 @@ class SupplierImport extends Page
             Box::make("Изменилась закупка ({$report->costChanges->count()})", [$this->costChangesTable($report)]),
             Box::make("Без товара на сайте ({$report->unlinked->count()})", [
                 Heading::make('Позиции прайса, для которых нет товара на сайте. Они сохраняются как предложения и ждут привязки или создания товара. Показаны первые '.self::MAX_ROWS_SHOWN.'.', h: 6),
-                $this->unlinkedTable($report),
+                $this->unlinkedTable($report, $supplier),
             ]),
         ];
     }
@@ -210,7 +213,7 @@ class SupplierImport extends Page
             return 'Применено '.date('d.m.Y H:i', (int) strtotime($meta['applied_at'])).'. Если нажать «Применить» снова, изменятся только позиции, которые с тех пор разошлись с файлом.';
         }
 
-        return 'Не применено: данные на сайте пока не изменены. После применения под заказ: '.$report->productsOnOrder.', снимется с «под заказ»: '.$report->productsCleared.'.';
+        return 'Не применено: данные на сайте пока не изменены. После применения: станет под заказ — '.$report->productsAdded.', изменится цена — '.$report->productsRepriced.', снимется — '.$report->productsCleared.'.';
     }
 
     private function costChangesTable(SupplierImportReport $report): TableBuilder
@@ -223,21 +226,26 @@ class SupplierImport extends Page
                 Text::make('Позиция', 'name'),
                 Text::make('Закупка', 'cost'),
             ])
+            ->customAttributes(['data-resizable' => '', 'data-widths' => '75,25'])
             ->withNotFound();
     }
 
-    private function unlinkedTable(SupplierImportReport $report): TableBuilder
+    private function unlinkedTable(SupplierImportReport $report, Supplier $supplier): TableBuilder
     {
+        // Только у АКБ АВТО в прайсе есть настоящий код; у остальных «код» — это само название.
+        $hasCodes = $supplier->format === SupplierPriceFormat::AkbAuto;
+
         return TableBuilder::make(items: $report->unlinked->take(self::MAX_ROWS_SHOWN)->map(fn (array $row): array => [
             'code' => $row['code'],
             'name' => $row['name'],
             'cost' => $this->money($row['cost']),
         ])->all())
             ->fields([
-                Text::make('Код', 'code'),
+                ...($hasCodes ? [Text::make('Код', 'code')] : []),
                 Text::make('Название в прайсе', 'name'),
                 Text::make('Закупка', 'cost'),
             ])
+            ->customAttributes(['data-resizable' => '', 'data-widths' => $hasCodes ? '20,60,20' : '80,20'])
             ->withNotFound();
     }
 

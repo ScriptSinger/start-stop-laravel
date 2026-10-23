@@ -23,7 +23,8 @@ final readonly class SupplierImportReport
         public int $linkedByName,
         public Collection $unlinked,
         public Collection $costChanges,
-        public int $productsOnOrder,
+        public int $productsAdded,
+        public int $productsRepriced,
         public int $productsCleared,
     ) {}
 }

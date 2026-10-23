@@ -106,7 +106,8 @@ class SupplierPriceImporter
             linkedByName: $linkedByName,
             unlinked: $unlinked,
             costChanges: $costChanges,
-            productsOnOrder: $synced['on_order'],
+            productsAdded: $synced['added'],
+            productsRepriced: $synced['repriced'],
             productsCleared: $synced['cleared'],
         );
     }

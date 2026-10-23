@@ -1,0 +1,49 @@
+/*
+ * Админка. Таблицы с отметкой data-resizable: текст не переносится и
+ * обрезается многоточием, ширину колонок меняют перетаскиванием границы
+ * в шапке, полный текст показывается подсказкой при наведении.
+ */
+.table[data-resizable] {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table[data-resizable] th,
+.table[data-resizable] td {
+    position: relative;
+    overflow: hidden;
+}
+
+.table[data-resizable] td > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table[data-resizable] .col-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    user-select: none;
+    touch-action: none;
+}
+
+.table[data-resizable] .col-resizer::after {
+    content: '';
+    position: absolute;
+    top: 25%;
+    right: 3px;
+    bottom: 25%;
+    width: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    opacity: 0.15;
+}
+
+.table[data-resizable] .col-resizer:hover::after,
+.table[data-resizable] .col-resizer.is-active::after {
+    opacity: 0.6;
+}

@@ -22,7 +22,10 @@ use Illuminate\Support\Collection;
 class SupplierStockSync
 {
     /**
-     * @return array{on_order: int, cleared: int}
+     * on_order — сколько товаров под заказ после пересчёта (всего); added, repriced и
+     * cleared — что изменилось по сравнению с текущим состоянием сайта.
+     *
+     * @return array{on_order: int, added: int, repriced: int, cleared: int}
      */
     public function sync(): array
     {
@@ -43,16 +46,28 @@ class SupplierStockSync
                 ])
                 ->first());
 
-        $onOrder = 0;
+        $before = Product::query()->whereIn('id', $best->keys())->get(['id', 'supplier_id', 'supplier_price'])->keyBy('id');
+        $added = $repriced = 0;
 
         foreach ($best as $productId => $offer) {
-            $updated = Product::query()->whereKey($productId)->update([
+            $retail = $this->retail($offer);
+            $previous = $before->get($productId);
+
+            if ($previous === null) {
+                continue;
+            }
+
+            if ($previous->supplier_id === null) {
+                $added++;
+            } elseif ($previous->supplier_id !== $offer->supplier_id || (float) $previous->supplier_price !== $retail) {
+                $repriced++;
+            }
+
+            Product::query()->whereKey($productId)->update([
                 'supplier_quantity' => max((int) $offer->quantity, $minimum),
-                'supplier_price' => $this->retail($offer),
+                'supplier_price' => $retail,
                 'supplier_id' => $offer->supplier_id,
             ]);
-
-            $onOrder += $updated;
         }
 
         $cleared = Product::query()
@@ -60,7 +75,7 @@ class SupplierStockSync
             ->whereNotIn('id', $best->keys())
             ->update(['supplier_quantity' => 0, 'supplier_price' => null, 'supplier_id' => null]);
 
-        return ['on_order' => $onOrder, 'cleared' => $cleared];
+        return ['on_order' => $before->count(), 'added' => $added, 'repriced' => $repriced, 'cleared' => $cleared];
     }
 
     private function qualifies(SupplierOffer $offer): bool

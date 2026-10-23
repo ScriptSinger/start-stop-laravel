@@ -50,9 +50,26 @@ class SupplierPriceImportTest extends TestCase
         $report = $this->import($supplier, $this->akbAutoCsv('УТ-1', 'BOLK Asia 6ст-50 Ач', '3700', '9'), false);
 
         $this->assertSame(1, $report->created);
-        $this->assertSame(1, $report->productsOnOrder);
+        $this->assertSame(1, $report->productsAdded);
+        $this->assertSame(0, $report->productsRepriced);
         $this->assertSame(0, SupplierOffer::query()->count());
         $this->assertNull($product->refresh()->supplier_id);
+    }
+
+    public function test_report_counts_only_what_changes_on_the_site(): void
+    {
+        $supplier = Supplier::factory()->create(['markup_percent' => 10]);
+        $this->product('BOLK Asia 6ст-50 Ач');
+
+        $first = $this->import($supplier, $this->akbAutoCsv('УТ-1', 'BOLK Asia 6ст-50 Ач', '3700', '9'), true);
+        $same = $this->import($supplier, $this->akbAutoCsv('УТ-1', 'BOLK Asia 6ст-50 Ач', '3700', '9'), true);
+        $dearer = $this->import($supplier, $this->akbAutoCsv('УТ-1', 'BOLK Asia 6ст-50 Ач', '4200', '9'), true);
+        $gone = $this->import($supplier, $this->akbAutoCsv('УТ-2', 'Другой товар', '100', '9'), true);
+
+        $this->assertSame([1, 0, 0], [$first->productsAdded, $first->productsRepriced, $first->productsCleared]);
+        $this->assertSame([0, 0, 0], [$same->productsAdded, $same->productsRepriced, $same->productsCleared]);
+        $this->assertSame([0, 1, 0], [$dearer->productsAdded, $dearer->productsRepriced, $dearer->productsCleared]);
+        $this->assertSame([0, 0, 1], [$gone->productsAdded, $gone->productsRepriced, $gone->productsCleared]);
     }
 
     public function test_cheapest_supplier_wins_and_vanished_offer_is_cleared(): void

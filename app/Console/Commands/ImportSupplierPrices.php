@@ -39,8 +39,9 @@ class ImportSupplierPrices extends Command
             ['Изменилась закупка', $report->costChanged],
             ['Пропало из прайса', $report->vanished],
             ['Без товара на сайте', $report->unlinked->count()],
-            ['Товаров «под заказ» стало', $report->productsOnOrder],
-            ['Товаров сброшено с «под заказ»', $report->productsCleared],
+            ['Станет под заказ (новых)', $report->productsAdded],
+            ['Изменится цена или поставщик под заказ', $report->productsRepriced],
+            ['Перестанет быть под заказ', $report->productsCleared],
         ]);
 
         $this->line($this->option('force') ? 'Записано.' : 'Пробный прогон: в базу ничего не записано. Для записи добавьте --force.');
