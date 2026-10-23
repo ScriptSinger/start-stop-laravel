@@ -8,7 +8,7 @@ use XMLReader;
 use ZipArchive;
 
 /**
- * Чтение первого листа .xlsx без сторонних пакетов: xlsx — это zip с XML.
+ * Чтение листа .xlsx (по умолчанию первого) без сторонних пакетов: xlsx — это zip с XML.
  * Строки отдаются по одной (лист читается потоком), ячейки — по букве
  * колонки: ['A' => '…', 'B' => '…']. Формулы не вычисляются — берётся
  * сохранённое значение.
@@ -18,7 +18,7 @@ class XlsxReader
     /**
      * @return Generator<int, array<string, string>>
      */
-    public function rows(string $path): Generator
+    public function rows(string $path, int $sheetNumber = 1): Generator
     {
         $zip = new ZipArchive;
 
@@ -27,11 +27,11 @@ class XlsxReader
         }
 
         $sharedStrings = $this->sharedStrings($zip);
-        $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $sheet = $zip->getFromName("xl/worksheets/sheet{$sheetNumber}.xml");
         $zip->close();
 
         if ($sheet === false) {
-            throw new RuntimeException('В файле нет первого листа.');
+            throw new RuntimeException("В файле нет листа {$sheetNumber}.");
         }
 
         $reader = XMLReader::XML($sheet, null, LIBXML_NONET | LIBXML_COMPACT);

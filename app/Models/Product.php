@@ -6,6 +6,8 @@ use App\Enums\CatalogSort;
 use App\Enums\ProductSelection;
 use App\Models\Concerns\HasHtmlDescription;
 use App\Services\Catalog\CatalogFilter;
+use App\Services\Supplier\SupplierDelivery;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +38,7 @@ class Product extends Model
         'quantity',
         'supplier_quantity',
         'supplier_price',
+        'supplier_id',
         'trade_in_discount',
         'is_pickup_only',
         'image',
@@ -335,6 +338,29 @@ class Product extends Model
     public function manufacturer(): BelongsTo
     {
         return $this->belongsTo(Manufacturer::class);
+    }
+
+    /**
+     * Поставщик, у которого товар берём под заказ (см. SupplierStockSync).
+     *
+     * @return BelongsTo<Supplier, $this>
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * Когда ждать товар под заказ: рабочие дни поставщика от сегодняшнего
+     * дня, без выходных. null — не под заказ или поставщик не указан.
+     */
+    public function onOrderDate(): ?CarbonImmutable
+    {
+        if (! $this->isAvailableOnOrder() || $this->supplier === null) {
+            return null;
+        }
+
+        return SupplierDelivery::expectedDate(CarbonImmutable::now(), $this->supplier->lead_working_days);
     }
 
     public function categories(): BelongsToMany

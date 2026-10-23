@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\MoonShine\Pages\OneCImport;
 use App\MoonShine\Pages\StockReport;
+use App\MoonShine\Pages\SupplierImport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\AttributeValue\AttributeValueResource;
 use App\MoonShine\Resources\Banner\BannerResource;
@@ -22,6 +23,7 @@ use App\MoonShine\Resources\OrderItem\OrderItemResource;
 use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\ProductImage\ProductImageResource;
+use App\MoonShine\Resources\Supplier\SupplierResource;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Laravel\DependencyInjection\MoonShineConfigurator;
@@ -41,6 +43,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 CategoryResource::class,
                 BatteryFitmentResource::class,
                 ManufacturerResource::class,
+                SupplierResource::class,
                 AttributeResource::class,
                 AttributeValueResource::class,
                 OrderResource::class,
@@ -56,6 +59,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 ...$core->getConfig()->getPages(),
                 StockReport::class,
                 OneCImport::class,
+                SupplierImport::class,
             ]);
     }
 }

@@ -10,7 +10,7 @@
 @php($heading = $product->heading ?: $product->name)
 @php([$availabilityText, $availabilityClass] = match (true) {
     $product->quantity > 0 => ['В наличии', 't-5'],
-    $product->isAvailableOnOrder() => ['Под заказ', 't-2'],
+    $product->isAvailableOnOrder() => [($onOrderDate = $product->onOrderDate()) ? 'Под заказ, ожидаем '.\App\Services\Supplier\SupplierDelivery::format($onOrderDate) : 'Под заказ', 't-2'],
     default => ['Нет в наличии — уточним срок по телефону', 't-1'],
 })
 

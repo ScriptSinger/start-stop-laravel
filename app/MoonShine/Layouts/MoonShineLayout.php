@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\MoonShine\Pages\Dashboard;
 use App\MoonShine\Pages\OneCImport;
 use App\MoonShine\Pages\StockReport;
+use App\MoonShine\Pages\SupplierImport;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
@@ -23,6 +24,7 @@ use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
+use App\MoonShine\Resources\Supplier\SupplierResource;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
@@ -68,6 +70,8 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(ProductResource::class, 'Товары')->icon('cube'),
                 MenuItem::make(StockReport::class, 'Остатки')->icon('chart-bar'),
                 MenuItem::make(OneCImport::class, 'Загрузка из 1С')->icon('arrow-up-tray'),
+                MenuItem::make(SupplierResource::class, 'Поставщики')->icon('truck'),
+                MenuItem::make(SupplierImport::class, 'Прайсы поставщиков')->icon('arrow-up-tray'),
                 MenuItem::make(CategoryResource::class, 'Категории')->icon('rectangle-stack'),
                 MenuItem::make(ManufacturerResource::class, 'Производители')->icon('building-storefront'),
                 MenuItem::make(AttributeResource::class, 'Характеристики')->icon('adjustments-horizontal'),
