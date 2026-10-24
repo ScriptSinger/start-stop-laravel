@@ -11,7 +11,9 @@ use App\MoonShine\Pages\Dashboard;
 use App\MoonShine\Pages\OneCImport;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Pages\SupplierImport;
+use App\MoonShine\Resources\AccessLog\AccessLogResource;
 use App\MoonShine\Resources\Attribute\AttributeResource;
+use App\MoonShine\Resources\AuthLog\AuthLogResource;
 use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
@@ -90,6 +92,8 @@ final class MoonShineLayout extends AppLayout
             MenuGroup::make('Система', [
                 MenuItem::make(MoonShineUserResource::class, 'Администраторы')->icon('user-group'),
                 MenuItem::make(MoonShineUserRoleResource::class, 'Роли')->icon('key'),
+                MenuItem::make(AccessLogResource::class, 'Логи запросов')->icon('globe-alt'),
+                MenuItem::make(AuthLogResource::class, 'Логи входов')->icon('shield-check'),
             ])->icon('cog-6-tooth'),
         ];
     }

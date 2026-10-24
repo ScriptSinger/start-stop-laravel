@@ -7,8 +7,10 @@ namespace App\Providers;
 use App\MoonShine\Pages\OneCImport;
 use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Pages\SupplierImport;
+use App\MoonShine\Resources\AccessLog\AccessLogResource;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\AttributeValue\AttributeValueResource;
+use App\MoonShine\Resources\AuthLog\AuthLogResource;
 use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
@@ -54,6 +56,8 @@ class MoonShineServiceProvider extends ServiceProvider
                 MenuItemResource::class,
                 CustomerRequestResource::class,
                 BannerResource::class,
+                AccessLogResource::class,
+                AuthLogResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\AccessLogMiddleware;
 use App\Http\Middleware\NoIndex;
+use App\Http\Middleware\RequestIdMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // на стили и скрипты с http://, и браузер блокирует их на https-странице.
         // Снаружи до nginx можно добраться только через Traefik.
         $middleware->trustProxies(at: '*');
+
+        $middleware->web(append: [
+            RequestIdMiddleware::class,
+            AccessLogMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
