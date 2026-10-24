@@ -39,8 +39,11 @@ class LogAdminAuthEvent
             return;
         }
 
+        $username = config('moonshine.user_fields.username', 'email');
+
         Log::channel('auth')->info($event instanceof Login ? 'login' : 'logout', $context + [
             'user_id' => $event->user?->getAuthIdentifier(),
+            'login' => $event->user?->{$username},
         ]);
     }
 }
