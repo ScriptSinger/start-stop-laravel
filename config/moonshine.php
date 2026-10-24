@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\AccessLogMiddleware;
+use App\Http\Middleware\RequestIdMiddleware;
 use App\MoonShine\Layouts\MoonShineLayout;
 use App\MoonShine\Pages\Dashboard;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -54,6 +56,8 @@ return [
 
     // Middleware
     'middleware' => [
+        RequestIdMiddleware::class,
+        AccessLogMiddleware::class,
         ConvertEmptyStringsToNull::class,
         EncryptCookies::class,
         AddQueuedCookiesToResponse::class,

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\AccessLogMiddleware;
+use App\Http\Middleware\RequestIdMiddleware;
 use App\Support\AccessLogReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use MoonShine\Laravel\Models\MoonshineUser;
@@ -104,6 +106,16 @@ class AccessLogResourceTest extends TestCase
             ->assertSee('data-column-selection="is_bot"', false)
             ->assertSee('data-column-selection="is_suspicious"', false)
             ->assertSee('data-widths="9,5,16,5,4,4,4,6,8,12,22,5"', false);
+    }
+
+    // MoonShine routes do not use the `web` group, so the admin is only
+    // logged if the middleware is listed in the panel's own config.
+    public function test_admin_panel_requests_go_through_the_access_log(): void
+    {
+        $middleware = config('moonshine.middleware');
+
+        $this->assertContains(RequestIdMiddleware::class, $middleware);
+        $this->assertContains(AccessLogMiddleware::class, $middleware);
     }
 
     public function test_status_tab_narrows_the_rows(): void
