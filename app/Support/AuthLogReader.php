@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use Illuminate\Support\Arr;
+use MoonShine\Laravel\Models\MoonshineUser;
 
 /**
  * Reads the `auth` channel (storage/logs/auth-*.log), see
@@ -28,6 +29,14 @@ class AuthLogReader extends JsonLogReader
             ->count();
     }
 
+    /**
+     * Login for entries written before the login was logged on sign-in and
+     * sign-out: resolved from the stored user id.
+     *
+     * @var array<int|string, string>
+     */
+    private array $loginsByUserId = [];
+
     protected function prefix(): string
     {
         return 'auth';
@@ -46,7 +55,7 @@ class AuthLogReader extends JsonLogReader
             'time' => $time?->format('d.m.Y H:i:s'),
             'time_sort' => $time?->getTimestamp() ?? 0,
             'event' => (string) Arr::get($decoded, 'message'),
-            'login' => (string) Arr::get($context, 'login'),
+            'login' => (string) (Arr::get($context, 'login') ?: $this->loginForUserId(Arr::get($context, 'user_id'))),
             'user_id' => Arr::get($context, 'user_id'),
             'user_exists' => Arr::get($context, 'user_exists'),
             'request_id' => (string) Arr::get($context, 'request_id'),
@@ -59,5 +68,16 @@ class AuthLogReader extends JsonLogReader
     {
         return $this->contains($row, 'login', $filters)
             && $this->contains($row, 'user_agent', $filters);
+    }
+
+    private function loginForUserId(mixed $userId): string
+    {
+        if (! is_int($userId) && ! is_string($userId)) {
+            return '';
+        }
+
+        return $this->loginsByUserId[$userId] ??= (string) MoonshineUser::query()
+            ->whereKey($userId)
+            ->value(config('moonshine.user_fields.username', 'email'));
     }
 }
