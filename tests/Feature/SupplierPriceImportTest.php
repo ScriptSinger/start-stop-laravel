@@ -115,6 +115,28 @@ class SupplierPriceImportTest extends TestCase
             ->assertDontSee('9 шт');
     }
 
+    public function test_changing_markup_reprices_products_immediately(): void
+    {
+        $supplier = Supplier::factory()->create(['markup_percent' => 20, 'ignore_quantity' => true]);
+        $product = $this->product('Аккумулятор TOPLA Energy 6СТ 60 0(R+)');
+        SupplierOffer::factory()->create([
+            'supplier_id' => $supplier->id,
+            'product_id' => $product->id,
+            'cost' => 1000,
+            'quantity' => 10,
+            'in_price' => true,
+        ]);
+
+        $supplier->update(['markup_percent' => 30]);
+        $this->assertSame(1300.0, (float) $product->refresh()->supplier_price);
+
+        $supplier->update(['markup_percent' => 50]);
+        $this->assertSame(1500.0, (float) $product->refresh()->supplier_price);
+
+        $supplier->update(['is_active' => false]);
+        $this->assertNull($product->refresh()->supplier_id);
+    }
+
     private function import(Supplier $supplier, string $csv, bool $apply): SupplierImportReport
     {
         $path = tempnam(sys_get_temp_dir(), 'sup').'.csv';

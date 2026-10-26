@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SupplierPriceFormat;
+use App\Services\Supplier\SupplierStockSync;
 use Database\Factories\SupplierFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,19 @@ class Supplier extends Model
         'ignore_quantity' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Условия поставщика влияют на цену и наличие «под заказ», поэтому после их
+     * изменения предложения пересчитываются сразу, а не при следующей загрузке прайса.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Supplier $supplier): void {
+            if ($supplier->wasChanged(['markup_percent', 'lead_working_days', 'min_quantity', 'ignore_quantity', 'is_active'])) {
+                app(SupplierStockSync::class)->sync();
+            }
+        });
+    }
 
     /**
      * @return HasMany<SupplierOffer, $this>
