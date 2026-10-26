@@ -194,8 +194,8 @@ class BatteryNameFormatter
             preg_match('/(?<![\p{L}\d])(?:оп\/пп|пп\/оп)(?![\p{L}\d])/iu', $both) === 1 => $this->noted(null, 'в прайсе обе полярности (оп/пп)', $notes),
             preg_match('/(?<![\p{L}\d])о\.?\s*п\.?(?![\p{L}\d])|(?<![\p{L}\d])обр(?![\p{L}\d])/iu', $both) === 1 => 'о.п.',
             preg_match('/(?<![\p{L}\d])п\.\s*п\.?|(?<![\p{L}\d])пр(?![\p{L}\d])/iu', $both) === 1 => 'п.п.',
-            preg_match('/\((?:L)\+\)/i', $both) === 1 => $this->noted('о.п.', '(L+) записано как о.п.', $notes),
-            preg_match('/\((?:R)\+\)/i', $both) === 1 => $this->noted('п.п.', '(R+) записано как п.п.', $notes),
+            preg_match('/\((?:L)\+\)/i', $both) === 1 => $this->noted('п.п.', '(L+) записано как п.п.', $notes),
+            preg_match('/\((?:R)\+\)/i', $both) === 1 => $this->noted('о.п.', '(R+) записано как о.п.', $notes),
             default => null,
         };
     }
