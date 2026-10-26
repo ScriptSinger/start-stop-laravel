@@ -63,6 +63,12 @@ return [
     // чат не подключается (JIVO_WIDGET_ID= в .env).
     'jivo_widget_id' => env('JIVO_WIDGET_ID', 'mtH7h7GTez'),
 
+    // Счётчик Яндекс.Метрики. Вне production не подключается, чтобы локальные
+    // и тестовые заходы не попадали в статистику (METRIKA_COUNTER_ID= отключает).
+    'metrika_counter_id' => env('APP_ENV') === 'production'
+        ? env('METRIKA_COUNTER_ID', '113811800')
+        : env('METRIKA_COUNTER_ID'),
+
     // Импорт из старого проекта (import:legacy*) перезаписывает данные,
     // отредактированные в админке. На production он выключен, пока явно не
     // включить на время разового импорта при запуске сайта.

@@ -13,6 +13,9 @@
     @if (config('shop.jivo_widget_id'))
         <meta name="jivo-widget" content="{{ config('shop.jivo_widget_id') }}" />
     @endif
+    @if (config('shop.metrika_counter_id'))
+        <meta name="metrika-counter" content="{{ config('shop.metrika_counter_id') }}" />
+    @endif
 
     {{-- Стили в порядке старого сайта: тема (base), стили блоков страницы
          (каждая страница добавляет свои в page-styles), общие стили и наши

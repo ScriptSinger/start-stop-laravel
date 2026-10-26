@@ -38,6 +38,34 @@ export function initYandexMaps() {
     });
 }
 
+/** Счётчик Яндекс.Метрики (<meta name="metrika-counter">): вебвизор, карта кликов, электронная коммерция. */
+export function initMetrika() {
+    const counterId = Number(document.querySelector('meta[name="metrika-counter"]')?.content);
+
+    if (!counterId) {
+        return;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    window.ym = window.ym || function () {
+        (window.ym.a = window.ym.a || []).push(arguments);
+    };
+    window.ym.l = Date.now();
+
+    loadScript(`https://mc.yandex.ru/metrika/tag.js?id=${counterId}`, document.head).catch(() => {});
+
+    window.ym(counterId, 'init', {
+        ssr: true,
+        webvisor: true,
+        clickmap: true,
+        ecommerce: 'dataLayer',
+        referrer: document.referrer,
+        url: location.href,
+        accurateTrackBounce: true,
+        trackLinks: true,
+    });
+}
+
 /**
  * Онлайн-чат JivoSite (<meta name="jivo-widget">). Скрипт тяжёлый, поэтому,
  * как на старом сайте, не мешает загрузке страницы: подключается через 5 секунд

@@ -39,6 +39,15 @@ class HomePageTest extends TestCase
         $this->get('/')->assertDontSee('jivo-widget');
     }
 
+    public function test_metrika_counter_is_configurable(): void
+    {
+        config(['shop.metrika_counter_id' => '113811800']);
+        $this->get('/')->assertSee('<meta name="metrika-counter" content="113811800" />', false);
+
+        config(['shop.metrika_counter_id' => null]);
+        $this->get('/')->assertDontSee('metrika-counter');
+    }
+
     public function test_category_wall_links_subcategories_and_manufacturers(): void
     {
         $batteries = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori', 'home_wall_sort' => 0]);

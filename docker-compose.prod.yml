@@ -16,12 +16,20 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      # APP_DOMAIN — пока IP сервера (самоподписанный сертификат), потом
-      # start-stop.su — и Let's Encrypt выдаст настоящий.
+      # APP_DOMAIN — основной домен (Let's Encrypt выдаёт сертификат сам),
+      # www.APP_DOMAIN постоянно редиректит на него.
       - traefik.http.routers.start-stop.rule=Host(`${APP_DOMAIN}`)
       - traefik.http.routers.start-stop.entrypoints=websecure
       - traefik.http.routers.start-stop.tls=true
       - traefik.http.routers.start-stop.tls.certresolver=le
+      - traefik.http.routers.start-stop-www.rule=Host(`www.${APP_DOMAIN}`)
+      - traefik.http.routers.start-stop-www.entrypoints=websecure
+      - traefik.http.routers.start-stop-www.tls=true
+      - traefik.http.routers.start-stop-www.tls.certresolver=le
+      - traefik.http.routers.start-stop-www.middlewares=start-stop-www-redirect
+      - traefik.http.middlewares.start-stop-www-redirect.redirectregex.regex=^https://www\.(.*)
+      - traefik.http.middlewares.start-stop-www-redirect.redirectregex.replacement=https://$${1}
+      - traefik.http.middlewares.start-stop-www-redirect.redirectregex.permanent=true
 
   php:
     build:
