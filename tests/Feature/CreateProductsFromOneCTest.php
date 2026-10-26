@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Services\Import\OneCNewProducts;
 use App\Services\Import\OneCProductSpecs;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -40,7 +41,11 @@ class CreateProductsFromOneCTest extends TestCase
             'низкий' => ['Аккумулятор ABSEL 68Ah о.п. 630A LB3L низкий 278x175x175', 'ABSEL 68Ah О.П. низкий', 'LB3L', 'Аккумуляторы', ['voltage' => '12V', 'capacity' => '68 Ah', 'polarity' => 'Обратная', 'cca' => '630A', 'dimensions' => '278x175x175']],
             'прямая полярность, ёмкость в «Ач»' => ['Аккумулятор ДРАЙВ 60 Ач п.п. 540А L2R 242x175x190', 'ДРАЙВ 60Ah П.П.', 'L2R', 'Аккумуляторы', ['voltage' => '12V', 'capacity' => '60 Ah', 'polarity' => 'Прямая', 'cca' => '540A', 'dimensions' => '242x175x190']],
             'грузовой' => ['Аккумулятор VARTA Black Promotive 220 Ah о.п. 1150A ГРУЗ C 513x185x215', 'VARTA Black Promotive 220Ah О.П.', null, 'Грузовые аккумуляторы', ['voltage' => '12V', 'capacity' => '220 Ah', 'polarity' => 'Обратная', 'cca' => '1150A', 'dimensions' => '513x185x215']],
-            'мото' => ['Аккумулятор XTREME moto 7 Ah о.п. UTZ7S(YTZ7S) iGEL 114х70х106', 'XTREME moto 7Ah О.П. (UTZ7S) iGEL', 'UTZ7S', 'Мото аккумуляторы', ['voltage' => '12V', 'capacity' => '7 Ah', 'polarity' => 'Обратная', 'dimensions' => '114x70x106']],
+            'мото' => ['Аккумулятор XTREME moto 7 Ah о.п. UTZ7S(YTZ7S) iGEL 114х70х106', 'XTREME moto 7Ah О.П. UTZ7S iGEL', 'UTZ7S', 'Мото аккумуляторы', ['voltage' => '12V', 'capacity' => '7 Ah', 'polarity' => 'Обратная', 'dimensions' => '114x70x106']],
+            'мото: «Мото» и бренд раздельно' => ['Аккумулятор Мото BUSHIDO HCZ20H-i 22Ah п.п. 310A YT20-4 177x88x155', 'BUSHIDO moto 22Ah П.П. HCZ20H-i', 'YT20-4', 'Мото аккумуляторы', ['voltage' => '12V', 'capacity' => '22 Ah', 'polarity' => 'Прямая', 'cca' => '310A', 'dimensions' => '177x88x155']],
+            'мото без слова «Мото»' => ['Аккумулятор VOLAT 21Ah о.п. 250A YTX21L-BS 205x90x159', 'VOLAT 21Ah О.П. YTX21L-BS', 'YTX21L-BS', 'Мото аккумуляторы', ['voltage' => '12V', 'capacity' => '21 Ah', 'polarity' => 'Обратная', 'cca' => '250A', 'dimensions' => '205x90x159']],
+            'Asia без типоразмера — слово Asia' => ['Аккумулятор MUTLU 55Ah о.п. 450A АЗИЯ 238x129x227', 'MUTLU 55Ah Asia О.П.', null, 'Аккумуляторы', ['voltage' => '12V', 'capacity' => '55 Ah', 'polarity' => 'Обратная', 'cca' => '450A', 'dimensions' => '238x129x227']],
+            'Asia с длинным типоразмером' => ['Аккумулятор FORGO 36Ah п.п. 480A АЗИЯ 42B19RMF 195x127x200', 'FORGO 36Ah П.П. 42B19RMF', '42B19RMF', 'Аккумуляторы', ['voltage' => '12V', 'capacity' => '36 Ah', 'polarity' => 'Прямая', 'cca' => '480A', 'dimensions' => '195x127x200']],
             'две ёмкости' => ['Аккумулятор DELKOR (JP) 68(70)Ah о.п. 600A АЗИЯ 80D23L 229x172x203', 'DELKOR JP 68Ah О.П. 80D23L', '80D23L', 'Аккумуляторы', ['voltage' => '12V', 'capacity' => '68 Ah', 'polarity' => 'Обратная', 'cca' => '600A', 'dimensions' => '229x172x203']],
         ];
     }
@@ -58,6 +63,42 @@ class CreateProductsFromOneCTest extends TestCase
         $this->assertSame($category, $spec['category']);
         $this->assertSame($attributes, $spec['attributes']);
         $this->assertTrue($spec['is_battery']);
+    }
+
+    public function test_name_without_brand_gives_no_manufacturer(): void
+    {
+        $specs = new OneCProductSpecs;
+
+        $noBrand = $specs->build(['external_id' => '1', 'name' => 'Аккумулятор 65Ah о.п. 580A АЗИЯ 230x172x221', 'price' => null, 'quantity' => null]);
+        $this->assertSame('65Ah Asia О.П.', $noBrand['name']);
+        $this->assertNull($noBrand['brand']);
+        $this->assertContains('в названии 1С нет бренда', $noBrand['warnings']);
+
+        $soviet = $specs->build(['external_id' => '2', 'name' => 'Аккумулятор 3 МТ-8 8Ah о.п. 83x77x141', 'price' => null, 'quantity' => null]);
+        $this->assertSame('3 МТ-8 8Ah О.П.', $soviet['name']);
+        $this->assertNull($soviet['brand']);
+    }
+
+    public function test_same_model_with_different_terminals_gets_distinct_names(): void
+    {
+        $plan = app(OneCNewProducts::class)->plan(collect([
+            ['external_id' => 'А-1', 'name' => 'Аккумулятор FireBall 190Ah п.п. 1200A ruB.4 болт 524x240x243', 'article' => '', 'price' => null, 'quantity' => null],
+            ['external_id' => 'А-2', 'name' => 'Аккумулятор FireBall 190Ah п.п. 1200A ruB.4 конус 524x240x242', 'article' => '', 'price' => null, 'quantity' => null],
+        ]));
+
+        $this->assertSame(['FireBall 190Ah П.П.', 'FireBall 190Ah П.П. конус'], $plan->pluck('name')->all());
+    }
+
+    public function test_moto_brand_and_unbranded_lines_do_not_create_odd_manufacturers(): void
+    {
+        $plan = app(OneCNewProducts::class)->plan(collect([
+            ['external_id' => 'А-1', 'name' => 'Аккумулятор Мото BUSHIDO HCZ20H-i 22Ah п.п. 310A YT20-4 177x88x155', 'article' => '', 'price' => null, 'quantity' => null],
+            ['external_id' => 'А-2', 'name' => 'Аккумулятор Premium 61Ah о.п. 540A 242x175x175', 'article' => '', 'price' => null, 'quantity' => null],
+            ['external_id' => 'А-3', 'name' => 'Аккумулятор Тюменский медведь 145Ah п.п. 1150A Груз A конус 513x189x236', 'article' => '', 'price' => null, 'quantity' => null],
+        ]));
+
+        $this->assertSame('BUSHIDO', $plan[0]['manufacturer']['name']);
+        $this->assertNull($plan[1]['manufacturer']);
     }
 
     public function test_other_goods_keep_the_name_and_get_category_by_keywords(): void

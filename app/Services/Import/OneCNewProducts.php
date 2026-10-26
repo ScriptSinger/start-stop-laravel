@@ -41,7 +41,18 @@ class OneCNewProducts
      */
     private const MANUFACTURER_ALIASES = [
         'медведь' => 'тюмень',
+        'тюменский' => 'тюмень',
+        'tyumen' => 'тюмень',
+        'аком' => 'akom',
     ];
+
+    /**
+     * Слово, с которого начинаются названия без бренда («Premium 61Ah …»): это линейка,
+     * а не производитель, новый производитель по нему не создаётся.
+     *
+     * @var list<string>
+     */
+    private const NOT_A_MANUFACTURER = ['premium'];
 
     public function __construct(
         private readonly OneCProductSpecs $specs,
@@ -218,6 +229,10 @@ class OneCNewProducts
         $words = preg_split('/\s+/u', (string) ($spec['is_battery'] ? $spec['brand'] : $spec['source_name']), -1, PREG_SPLIT_NO_EMPTY);
 
         if ($spec['is_battery']) {
+            if ($words === [] || in_array(mb_strtolower($words[0]), self::NOT_A_MANUFACTURER, true)) {
+                return null;
+            }
+
             // «FireBall» и «FIRE BALL» — один бренд: сравниваем без пробелов.
             $compact = $manufacturers->mapWithKeys(fn (array $manufacturer, string $key): array => [str_replace(' ', '', $key) => $manufacturer]);
 
@@ -255,7 +270,7 @@ class OneCNewProducts
             return $spec['name'];
         }
 
-        foreach ([$spec['attributes']['cca'] ?? null, $spec['code'], $spec['attributes']['dimensions'] ?? null] as $difference) {
+        foreach ([$spec['terminal'] ?? null, $spec['attributes']['cca'] ?? null, $spec['code'], $spec['attributes']['dimensions'] ?? null] as $difference) {
             if ($difference !== null && ! str_contains($spec['name'], $difference) && ! isset($taken[$this->normalize("{$spec['name']} {$difference}")])) {
                 return "{$spec['name']} {$difference}";
             }

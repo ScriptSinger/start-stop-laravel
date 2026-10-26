@@ -140,8 +140,11 @@ class OneCProductSpecs
     private function battery(array $spec): array
     {
         $title = (string) preg_replace('/^аккумулятор\s+/iu', '', $spec['source_name']);
+        // «Мото BUSHIDO HCZ20H-i 22Ah …»: слово «Мото» — тип, бренд идёт следом.
+        $motoPrefix = preg_match('/^мото\s+/iu', $title) === 1;
+        $title = (string) preg_replace('/^мото\s+/iu', '', $title);
 
-        if (preg_match('/^(?<head>.+?)\s*(?<cap>\d+(?:[.,]\d+)?)(?<alt>\(\d+\))?\s*(?:Ah|Ач)\b(?<tail>.*)$/iu', $title, $found) !== 1) {
+        if (preg_match('/^(?<head>.*?)\s*(?<cap>\d+(?:[.,]\d+)?)(?<alt>\(\d+\))?\s*(?:Ah|Ач)\b(?<tail>.*)$/iu', $title, $found) !== 1) {
             $spec['warnings'][] = 'не удалось разобрать ёмкость: название оставлено как в 1С';
 
             return $spec;
@@ -163,12 +166,12 @@ class OneCProductSpecs
         };
 
         $isTruck = preg_match('/груз/iu', $tail) === 1;
-        $isMoto = ! $isTruck && (preg_match('/moto|мото/iu', $title) === 1 || preg_match('/\b(?:iGEL|[YU]T[XZ]\w*|HCX\w*)\b/u', $tail) === 1);
+        $isMoto = ! $isTruck && ($motoPrefix || preg_match('/moto|мото/iu', $title) === 1 || preg_match('/\b(?:iGEL|[YU]T[XZ]\w*|HCX\w*)\b/u', $tail) === 1);
         $isVrla = preg_match('/vrla/iu', $found['head']) === 1;
 
         preg_match('/(\d{2,3})\s*[xх×]\s*(\d{2,3})\s*[xх×]\s*(\d{2,3})/u', $tail, $dims);
         preg_match('/(\d{3,4})\s*[AА]\b/u', $tail, $cca);
-        preg_match('/\b(\d{2,3}[A-H]\d{2}[LR]?S?)\b/u', $tail, $asia);
+        preg_match('/\b(\d{2,3}[A-H]\d{2}[LR]?[A-Z]{0,3}(?:\.\d)?)\b/u', $tail, $asia);
         preg_match('/\b(L[BN]?\d(?:\.?[LR]){0,2}|[BD]\d{2}[LR]?)\b/u', $tail, $type);
         preg_match('/\(?\b([A-Z]{1,3}\d{1,3}[A-Z]{0,3}(?:-[A-Z0-9]{1,4})+|[YU]T[XZ]\w+)\b\)?/u', $tail, $motoModel);
 
@@ -177,8 +180,23 @@ class OneCProductSpecs
             || (! $isMoto && ! $isTruck && ! $isVrla && isset($dims[3]) && (int) $dims[1] >= 200 && (int) $dims[3] <= 178);
 
         $head = $this->batteryHead($found['head']);
+        $model = null;
 
-        $parts = [$head, $capacityLabel.'Ah'];
+        if ($motoPrefix && $head !== '') {
+            [$head, $model] = array_pad(explode(' ', $head, 2), 2, null);
+        }
+
+        // Название без бренда («65Ah о.п. …») или с цифрой вместо бренда («3 МТ-8») производителя не даёт.
+        $hasBrand = $head !== '' && preg_match('/^\d/u', $head) !== 1;
+
+        if (! $hasBrand) {
+            $spec['warnings'][] = 'в названии 1С нет бренда';
+        }
+
+        $isAsiaWord = preg_match('/азия|asia|jis/iu', $tail) === 1 && preg_match('/asia|азия/iu', $head) !== 1;
+        $showAsiaWord = $isAsiaWord && ! $isMoto && ! $isTruck && ! $isVrla && ! isset($asia[1]);
+
+        $parts = [$head, $motoPrefix ? 'moto' : null, $capacityLabel.'Ah', $showAsiaWord ? 'Asia' : null];
 
         if ($polarity[0] !== null) {
             $parts[] = $polarity[0];
@@ -192,17 +210,18 @@ class OneCProductSpecs
             $parts[] = $asia[1];
         }
 
-        if ($isMoto && isset($motoModel[1])) {
-            $parts[] = '('.$motoModel[1].')';
+        if ($isMoto && ($model !== null || isset($motoModel[1]))) {
+            $parts[] = $model ?? $motoModel[1];
         }
 
-        if ($isMoto && preg_match('/\biGEL\b/u', $tail) === 1) {
+        if ($isMoto && preg_match('/\biGEL\b/u', $tail) === 1 && preg_match('/\biGEL\b/u', (string) $model) !== 1) {
             $parts[] = 'iGEL';
         }
 
         $spec['name'] = implode(' ', array_filter($parts));
         $spec['is_battery'] = true;
-        $spec['brand'] = $head;
+        $spec['brand'] = $hasBrand ? $head : null;
+        $spec['terminal'] = preg_match('/конус|болт|резьба/iu', $tail, $terminal) === 1 ? mb_strtolower($terminal[0]) : null;
         $spec['code'] = $asia[1] ?? ($type[1] ?? ($isMoto ? ($motoModel[1] ?? null) : null));
         $spec['category'] = match (true) {
             $isTruck => 'Грузовые аккумуляторы',
