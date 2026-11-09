@@ -1,5 +1,5 @@
 # Продакшен (сервер, папка ~/start-stop). Выкладывает .github/workflows/deploy.yml:
-#   docker compose -f docker-compose.prod.yml up -d --build
+# На сервере этот файл называется docker-compose.yml: docker compose up -d --build
 # Наружу смотрит только Traefik (общая сеть proxy): у сервисов нет ports.
 services:
   nginx:
@@ -43,6 +43,7 @@ services:
     volumes:
       - ./:/var/www/html
       - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
+      - ./docker/php/php-production.ini:/usr/local/etc/php/conf.d/zz-production.ini:ro
     depends_on:
       db:
         condition: service_healthy
@@ -65,6 +66,7 @@ services:
     volumes:
       - ./:/var/www/html
       - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
+      - ./docker/php/php-production.ini:/usr/local/etc/php/conf.d/zz-production.ini:ro
     depends_on:
       db:
         condition: service_healthy
