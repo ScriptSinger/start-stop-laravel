@@ -110,6 +110,8 @@ jobs:
             mv /tmp/production.env .env
             rm /tmp/release.tar.gz
 
+            # The shared reverse-proxy network must exist before Compose starts.
+            docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker compose -f docker-compose.prod.yml exec -T php php artisan storage:link --force
             docker compose -f docker-compose.prod.yml exec -T php php artisan optimize:clear
