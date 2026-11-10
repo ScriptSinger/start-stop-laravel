@@ -39,7 +39,7 @@ class CustomerFormPage extends FormPage
             Box::make([
                 ID::make(),
                 Text::make('Имя', 'name')->required(),
-                Email::make('Email', 'email')->required(),
+                Email::make('Email', 'email')->nullable(),
                 Phone::make('Телефон', 'phone'),
             ]),
             HasMany::make('Заказы', 'orders', resource: OrderResource::class)

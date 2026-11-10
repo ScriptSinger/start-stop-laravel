@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,6 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::table('customers')->whereNull('email')->exists()) {
+            throw new RuntimeException('Нельзя откатить миграцию, пока существуют аккаунты Яндекс ID без основного email.');
+        }
+
         Schema::table('customers', function (Blueprint $table) {
             $table->dropColumn('yandex_email');
             $table->string('email')->nullable(false)->change();

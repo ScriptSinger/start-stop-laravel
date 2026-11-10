@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -88,17 +90,83 @@ class YandexAuthTest extends TestCase
         $this->assertSame(1, Customer::count());
     }
 
-    public function test_existing_email_is_not_automatically_linked(): void
+    public function test_existing_email_signs_in_to_separate_account_without_exposing_old_orders(): void
     {
         $customer = Customer::factory()->create(['email' => 'user@example.com']);
+        $oldOrder = Order::query()->create(['customer_id' => $customer->id, 'customer_name' => 'Старый покупатель', 'status' => 'new', 'total' => 100]);
         $this->fakeYandex();
         $this->get(route('auth.yandex'));
 
-        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))->assertSessionHasErrors('yandex');
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))->assertRedirect(route('account'));
 
-        $this->assertGuest();
+        $yandexCustomer = auth()->user();
+        $this->assertNotSame($customer->id, $yandexCustomer->id);
+        $this->assertNull($yandexCustomer->email);
+        $this->assertSame('user@example.com', $yandexCustomer->yandex_email);
         $this->assertNull($customer->fresh()->yandex_id);
-        $this->assertSame(1, Customer::count());
+        $this->assertSame(2, Customer::count());
+        $this->get(route('account.orders'))->assertDontSee('#'.$oldOrder->id);
+        $this->get(route('account.order', $oldOrder->id))->assertNotFound();
+        $this->get(route('account'))->assertSee('Показать прежние заказы');
+    }
+
+    public function test_old_password_merges_orders_and_keeps_yandex_login_on_original_account(): void
+    {
+        $original = Customer::factory()->legacyPassword('old-pass')->create(['email' => 'user@example.com']);
+        $oldOrder = Order::query()->create(['customer_id' => $original->id, 'customer_name' => 'Старый покупатель', 'status' => 'new', 'total' => 100]);
+        $this->fakeYandex();
+        $this->get(route('auth.yandex'));
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']));
+        $yandexCustomer = auth()->user();
+        $newOrder = Order::query()->create(['customer_id' => $yandexCustomer->id, 'customer_name' => 'Новый покупатель', 'status' => 'new', 'total' => 200]);
+
+        $this->post(route('auth.yandex.merge'), ['password' => 'old-pass'])
+            ->assertRedirect(route('account'))->assertSessionHas('status');
+
+        $this->assertAuthenticatedAs($original);
+        $this->assertSame('12345', $original->fresh()->yandex_id);
+        $this->assertTrue(Hash::check('old-pass', $original->fresh()->password));
+        $this->assertNull($original->fresh()->legacy_password_hash);
+        $this->assertNull(Customer::query()->find($yandexCustomer->id));
+        $this->assertSame($original->id, $oldOrder->fresh()->customer_id);
+        $this->assertSame($original->id, $newOrder->fresh()->customer_id);
+        $this->get(route('account.orders'))->assertSee('#'.$oldOrder->id)->assertSee('#'.$newOrder->id);
+
+        $this->post(route('logout'));
+        $this->fakeYandex(['id' => '12345', 'client_id' => 'test-client']);
+        $this->get(route('auth.yandex'));
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))->assertRedirect(route('account'));
+        $this->assertAuthenticatedAs($original);
+    }
+
+    public function test_wrong_old_password_does_not_expose_orders_or_link_accounts(): void
+    {
+        $original = Customer::factory()->create(['email' => 'user@example.com']);
+        $this->fakeYandex();
+        $this->get(route('auth.yandex'));
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']));
+        $yandexCustomer = auth()->user();
+
+        $this->post(route('auth.yandex.merge'), ['password' => 'wrong'])->assertSessionHasErrors('password');
+
+        $this->assertAuthenticatedAs($yandexCustomer);
+        $this->assertNull($original->fresh()->yandex_id);
+        $this->assertSame(2, Customer::count());
+    }
+
+    public function test_merge_cannot_take_over_account_linked_to_another_yandex_id(): void
+    {
+        $original = Customer::factory()->create(['email' => 'user@example.com']);
+        $original->forceFill(['yandex_id' => 'other-id'])->save();
+        $this->fakeYandex();
+        $this->get(route('auth.yandex'));
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']));
+        $yandexCustomer = auth()->user();
+
+        $this->post(route('auth.yandex.merge'), ['password' => 'password'])->assertSessionHasErrors('password');
+
+        $this->assertAuthenticatedAs($yandexCustomer);
+        $this->assertSame('other-id', $original->fresh()->yandex_id);
     }
 
     public function test_authenticated_customer_can_link_yandex(): void
@@ -218,6 +286,11 @@ class YandexAuthTest extends TestCase
     public function test_link_requires_authentication(): void
     {
         $this->post(route('auth.yandex.link'))->assertRedirect(route('login'));
+    }
+
+    public function test_merge_requires_authentication(): void
+    {
+        $this->post(route('auth.yandex.merge'), ['password' => 'password'])->assertRedirect(route('login'));
     }
 
     /**

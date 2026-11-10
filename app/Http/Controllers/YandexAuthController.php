@@ -157,32 +157,30 @@ class YandexAuthController extends Controller
             return redirect()->route('account')->withErrors(['yandex' => 'Объединение аккаунтов недоступно.']);
         }
 
-        $target = Customer::query()->where('email', $customer->yandex_email)->first();
         $password = (string) $request->input('password');
 
-        if (! $target || ! (($target->password && Hash::check($password, $target->password)) || $target->upgradeLegacyPassword($password))) {
-            return redirect()->route('account')->withErrors(['password' => 'Неверный пароль от прежнего аккаунта.']);
-        }
-
-        $mergedCustomer = DB::transaction(function () use ($customer, $target): ?Customer {
+        $mergedCustomer = DB::transaction(function () use ($customer, $password): ?Customer {
             $source = Customer::query()->lockForUpdate()->find($customer->id);
-            $destination = Customer::query()->lockForUpdate()->find($target->id);
+            $destination = $source?->yandex_email === null
+                ? null
+                : Customer::query()->where('email', $source->yandex_email)->lockForUpdate()->first();
 
             if (! $source || ! $destination || $source->email !== null || $source->yandex_id === null
-                || $source->yandex_email !== $destination->email || $destination->yandex_id !== null) {
+                || $destination->yandex_id !== null
+                || ! (($destination->password && Hash::check($password, $destination->password)) || $destination->upgradeLegacyPassword($password))) {
                 return null;
             }
 
             $yandexId = $source->yandex_id;
+            DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
             $source->delete();
             $destination->forceFill(['yandex_id' => $yandexId, 'yandex_email' => $source->yandex_email])->save();
-            DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
 
             return $destination;
         });
 
         if (! $mergedCustomer) {
-            return redirect()->route('account')->withErrors(['yandex' => 'Не удалось объединить аккаунты. Попробуйте ещё раз.']);
+            return redirect()->route('account')->withErrors(['password' => 'Не удалось подтвердить прежний аккаунт. Проверьте пароль.']);
         }
 
         Auth::guard('web')->login($mergedCustomer);
