@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -71,6 +72,23 @@ class DatabaseBackup
         return Process::env(['BACKUP_FILE' => $file])
             ->run(['bash', '-c', 'set -o pipefail; gzip -t "$BACKUP_FILE" && gzip -dc "$BACKUP_FILE" | tail -n 1 | grep -q "Dump completed"'])
             ->successful();
+    }
+
+    public function upload(string $file, string $disk): void
+    {
+        $stream = fopen($file, 'rb');
+
+        if ($stream === false) {
+            throw new RuntimeException('Не удалось открыть файл резервной копии.');
+        }
+
+        try {
+            if (! Storage::disk($disk)->put('database/'.basename($file), $stream)) {
+                throw new RuntimeException('Не удалось записать резервную копию в удалённое хранилище.');
+            }
+        } finally {
+            fclose($stream);
+        }
     }
 
     /**

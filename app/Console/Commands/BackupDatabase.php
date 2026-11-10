@@ -7,6 +7,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use RuntimeException;
+use Throwable;
 
 #[Signature('db:backup {--label= : Пометка в имени файла, например before-manufacturers}')]
 #[Description('Снять резервную копию базы магазина, проверить её и удалить устаревшие копии')]
@@ -27,6 +28,19 @@ class BackupDatabase extends Command
         }
 
         $this->info('Копия сохранена и проверена: '.$file.' ('.$this->megabytes(filesize($file)).')');
+
+        if ($disk = config('backup.remote_disk')) {
+            try {
+                $backup->upload($file, $disk);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->error('Не удалось отправить копию в удалённое хранилище. Локальная копия сохранена: '.$file);
+
+                return self::FAILURE;
+            }
+
+            $this->info('Копия отправлена в удалённое хранилище.');
+        }
 
         foreach ($backup->prune(config('backup.keep_days')) as $deleted) {
             $this->line('Удалена устаревшая копия: '.basename($deleted));

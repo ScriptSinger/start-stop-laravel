@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\TestCase;
 
 class DatabaseBackupTest extends TestCase
@@ -21,6 +24,7 @@ class DatabaseBackupTest extends TestCase
         config([
             'backup.path' => $this->directory,
             'backup.keep_days' => 14,
+            'backup.remote_disk' => null,
             'database.default' => 'mysql',
             'database.connections.mysql' => [
                 'driver' => 'mysql',
@@ -71,6 +75,39 @@ class DatabaseBackupTest extends TestCase
             ->assertFailed();
 
         $this->assertSame([], File::glob($this->directory.'/*.sql.gz'));
+    }
+
+    public function test_verified_backup_is_uploaded_to_remote_storage(): void
+    {
+        Storage::fake('backups');
+        config(['backup.remote_disk' => 'backups']);
+        Process::fake(fn (PendingProcess $process) => $this->writeDumpFile($process));
+        $this->travelTo('2026-10-06 02:30:00');
+
+        $this->artisan('db:backup')
+            ->expectsOutputToContain('Копия отправлена в удалённое хранилище')
+            ->assertSuccessful();
+
+        Storage::disk('backups')->assertExists('database/shop-2026-10-06_023000.sql.gz', 'dump');
+        $this->assertFileExists($this->directory.'/shop-2026-10-06_023000.sql.gz');
+    }
+
+    public function test_failed_upload_reports_failure_and_keeps_local_backups(): void
+    {
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldReceive('put')->once()->andReturnFalse();
+        Storage::set('backups', $disk);
+        config(['backup.remote_disk' => 'backups']);
+        Process::fake(fn (PendingProcess $process) => $this->writeDumpFile($process));
+        File::ensureDirectoryExists($this->directory);
+        touch($old = $this->directory.'/shop-old.sql.gz', now()->subDays(20)->getTimestamp());
+
+        $this->artisan('db:backup')
+            ->expectsOutputToContain('Не удалось отправить копию')
+            ->assertFailed();
+
+        $this->assertFileExists($old);
+        $this->assertCount(2, File::glob($this->directory.'/*.sql.gz'));
     }
 
     public function test_incomplete_dump_is_rejected(): void
