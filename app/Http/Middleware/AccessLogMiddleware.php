@@ -37,7 +37,7 @@ class AccessLogMiddleware
             $payload = [
                 'request_id' => $requestId !== '' ? $requestId : null,
                 'method' => $request->getMethod(),
-                'path' => $request->getPathInfo(),
+                'path' => $this->safePath($request->getPathInfo()),
                 'query' => $this->query($request),
                 'status' => $status,
                 'duration_ms' => $durationMs,
@@ -46,7 +46,7 @@ class AccessLogMiddleware
                 'is_suspicious' => $this->isSuspiciousPath($request->getPathInfo()),
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-                'referer' => $request->headers->get('referer'),
+                'referer' => $this->refererOrigin($request->headers->get('referer')),
                 'is_bot' => $this->isBot($request->userAgent()),
                 'admin_user_id' => $this->adminUserId($request),
             ];
@@ -80,13 +80,56 @@ class AccessLogMiddleware
      */
     private function query(Request $request): ?string
     {
-        if ($request->is('auth/yandex/callback', 'auth/vkid/callback')) {
+        if ($request->is('auth/yandex/callback', 'auth/vkid/callback')
+            || $this->safePath($request->getPathInfo()) !== $request->getPathInfo()) {
             return null;
         }
 
         $query = $request->getQueryString();
 
-        return $query === null || $query === '' ? null : Str::limit($query, 500, '…');
+        if ($query === null || $query === '') {
+            return null;
+        }
+
+        $parts = array_map(static function (string $part): string {
+            $key = explode('=', $part, 2)[0];
+
+            if (preg_match('/token|password|secret|email|authorization|signature|code|state|api.?key/i', urldecode($key))) {
+                return $key.'=[REDACTED]';
+            }
+
+            return $part;
+        }, explode('&', $query));
+
+        return Str::limit(implode('&', $parts), 500, '…');
+    }
+
+    private function safePath(string $path): string
+    {
+        $decoded = rawurldecode($path);
+
+        if (preg_match('~(^|/)reset-password(?:/|$)~i', $decoded)) {
+            return '/reset-password/[REDACTED]';
+        }
+
+        return $path;
+    }
+
+    /** Only the referring origin is needed for traffic attribution. */
+    private function refererOrigin(?string $referer): ?string
+    {
+        if ($referer === null) {
+            return null;
+        }
+
+        $parts = parse_url($referer);
+
+        if ($parts === false || ! in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+            || empty($parts['host'])) {
+            return null;
+        }
+
+        return $parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '');
     }
 
     private function shouldSkip(string $path): bool
