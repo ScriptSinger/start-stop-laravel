@@ -1,2 +1,14 @@
-/* Формы в окнах: заказ звонка, быстрый заказ, вопрос о товаре. */
+/* Формы в окнах: авторизация, заказ звонка, быстрый заказ, вопрос о товаре. */
 .quick-order__quantity {max-width: 100px}
+
+.auth-social {margin:24px 0 0}
+.auth-social__title {display:flex;align-items:center;gap:12px;margin:0 0 16px;color:#777;font-size:.9em;white-space:nowrap}
+.auth-social__title::before, .auth-social__title::after {content:'';height:1px;flex:1;background:#ddd}
+.auth-social__providers {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.auth-social__provider {display:flex;min-height:44px;align-items:center;justify-content:center;gap:10px;padding:8px 14px;border:1px solid #d7d7d7;border-radius:4px;background:#fff;color:#333;font-weight:500;text-align:center;transition:border-color .15s,background-color .15s}
+.auth-social__provider:hover, .auth-social__provider:focus {border-color:#aaa;background:#f7f7f7;color:#333;text-decoration:none}
+.auth-social__provider:focus-visible {outline:2px solid #333;outline-offset:2px}
+.auth-social__provider-icon {color:#e60000;font-family:Arial,sans-serif;font-size:24px;font-weight:700;line-height:1}
+.auth-social__note {margin:12px 0 0;color:#777;font-size:.85em;line-height:1.5}
+.auth-social__note a {text-decoration:underline}
+.auth-social--registration .auth-social__providers, .auth-social--registration .auth-social__note {max-width:460px;margin-left:auto;margin-right:auto}

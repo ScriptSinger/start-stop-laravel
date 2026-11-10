@@ -3,6 +3,11 @@
 
 # Laravel Boost Guidelines
 
+## Environment File Privacy
+
+- Agents must not open, read, search, inspect, copy, or output the contents of `.env` or `.env.*` files, including examples and backups, locally or on remote servers. Do not extract or inspect their values indirectly through commands, scripts, application configuration, logs, or environment dumps.
+- Normal application, Artisan, Docker, and test commands may load environment files as part of their operation, but agents must not use those commands to inspect or expose environment-file contents or secret values.
+
 ## Foundational Context
 
 This application is a Laravel application running on PHP 8.5. Always use the APIs that match the installed major version of each package — do not assume a version.

@@ -51,6 +51,7 @@
                                 </div>
                             </div>
                         </form>
+                        @include('auth.partials.social-login', ['registration' => true])
                     </div>
                 </div>
             </div>

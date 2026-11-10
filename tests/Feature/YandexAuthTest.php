@@ -194,8 +194,25 @@ class YandexAuthTest extends TestCase
     {
         config(['services.yandex.client_id' => null]);
 
-        $this->get(route('login'))->assertDontSee('Войти с Яндекс ID');
+        $this->get(route('login'))->assertDontSee('auth-social__provider', false);
+        $this->get(route('register'))->assertDontSee('auth-social__provider', false);
         $this->get(route('auth.yandex'))->assertNotFound();
+    }
+
+    public function test_registration_offers_yandex_login_when_configured(): void
+    {
+        $this->get(route('register'))
+            ->assertSeeInOrder(['id="register-name"', 'Или зарегистрироваться через', 'Яндекс ID'], false)
+            ->assertSee('href="'.route('auth.yandex').'"', false);
+    }
+
+    public function test_login_offers_yandex_below_password_form_when_configured(): void
+    {
+        $this->get(route('login'))
+            ->assertSeeInOrder(['id="login-email-page"', 'Или войти через', 'Яндекс ID'], false);
+
+        $this->get(route('login'), ['X-Requested-With' => 'XMLHttpRequest'])
+            ->assertSeeInOrder(['id="login-email-modal"', 'Или войти через', 'Яндекс ID'], false);
     }
 
     public function test_link_requires_authentication(): void
