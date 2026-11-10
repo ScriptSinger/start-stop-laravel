@@ -3,6 +3,7 @@
 use App\Http\Middleware\AccessLogMiddleware;
 use App\Http\Middleware\NoIndex;
 use App\Http\Middleware\RequestIdMiddleware;
+use App\Http\Middleware\TrackCustomerActivity;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             RequestIdMiddleware::class,
             AccessLogMiddleware::class,
+            TrackCustomerActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

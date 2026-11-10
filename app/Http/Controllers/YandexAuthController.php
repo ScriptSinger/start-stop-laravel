@@ -166,7 +166,7 @@ class YandexAuthController extends Controller
                 : Customer::query()->where('email', $source->yandex_email)->lockForUpdate()->first();
 
             if (! $source || ! $destination || $source->email !== null || $source->yandex_id === null
-                || $destination->yandex_id !== null
+                || $destination->yandex_id !== null || ($source->vk_id !== null && $destination->vk_id !== null)
                 || ! (($destination->password && Hash::check($password, $destination->password)) || $destination->upgradeLegacyPassword($password))) {
                 return null;
             }
@@ -174,7 +174,11 @@ class YandexAuthController extends Controller
             $yandexId = $source->yandex_id;
             DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
             $source->delete();
-            $destination->forceFill(['yandex_id' => $yandexId, 'yandex_email' => $source->yandex_email])->save();
+            $destination->forceFill([
+                'yandex_id' => $yandexId,
+                'yandex_email' => $source->yandex_email,
+                ...($source->vk_id === null ? [] : ['vk_id' => $source->vk_id, 'vk_email' => $source->vk_email]),
+            ])->save();
 
             return $destination;
         });

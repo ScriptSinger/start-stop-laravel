@@ -15,6 +15,8 @@ use Illuminate\Notifications\Notifiable;
  */
 class Customer extends Authenticatable
 {
+    public const ONLINE_MINUTES = 5;
+
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
 
@@ -38,7 +40,13 @@ class Customer extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'last_seen_at' => 'datetime',
         ];
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at?->greaterThanOrEqualTo(now()->subMinutes(self::ONLINE_MINUTES)) ?? false;
     }
 
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void

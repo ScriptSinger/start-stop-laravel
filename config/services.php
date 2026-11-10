@@ -28,6 +28,11 @@ return [
         'redirect' => env('YANDEX_REDIRECT_URI'),
     ],
 
+    'vkid' => [
+        'client_id' => env('VKID_CLIENT_ID'),
+        'redirect' => env('VKID_REDIRECT_URI', rtrim((string) env('APP_URL', ''), '/').'/auth/vkid/callback'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

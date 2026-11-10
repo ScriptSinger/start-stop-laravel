@@ -118,6 +118,7 @@ class YandexAuthTest extends TestCase
         $this->get(route('auth.yandex'));
         $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']));
         $yandexCustomer = auth()->user();
+        $yandexCustomer->forceFill(['vk_id' => 'linked-vk'])->save();
         $newOrder = Order::query()->create(['customer_id' => $yandexCustomer->id, 'customer_name' => 'Новый покупатель', 'status' => 'new', 'total' => 200]);
 
         $this->post(route('auth.yandex.merge'), ['password' => 'old-pass'])
@@ -125,6 +126,7 @@ class YandexAuthTest extends TestCase
 
         $this->assertAuthenticatedAs($original);
         $this->assertSame('12345', $original->fresh()->yandex_id);
+        $this->assertSame('linked-vk', $original->fresh()->vk_id);
         $this->assertTrue(Hash::check('old-pass', $original->fresh()->password));
         $this->assertNull($original->fresh()->legacy_password_hash);
         $this->assertNull(Customer::query()->find($yandexCustomer->id));
@@ -262,8 +264,8 @@ class YandexAuthTest extends TestCase
     {
         config(['services.yandex.client_id' => null]);
 
-        $this->get(route('login'))->assertDontSee('auth-social__provider', false);
-        $this->get(route('register'))->assertDontSee('auth-social__provider', false);
+        $this->get(route('login'))->assertDontSee('Яндекс ID');
+        $this->get(route('register'))->assertDontSee('Яндекс ID');
         $this->get(route('auth.yandex'))->assertNotFound();
     }
 

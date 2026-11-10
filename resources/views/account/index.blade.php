@@ -19,11 +19,14 @@
         <div class="row">
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
                 <div class="uni-wrapper">
-                    <p>Здравствуйте, {{ $customer->name }}! @if ($customer->email ?? $customer->yandex_email) Вы вошли как {{ $customer->email ?? $customer->yandex_email }}. @endif</p>
+                    <p>Здравствуйте, {{ $customer->name }}! @if ($customer->email ?? $customer->yandex_email ?? $customer->vk_email) Вы вошли как {{ $customer->email ?? $customer->yandex_email ?? $customer->vk_email }}. @endif</p>
                     @if (session('status'))
                         <div class="alert alert-success">{{ session('status') }}</div>
                     @endif
                     @error('yandex')
+                        <div class="alert alert-danger">{{ $message }}</div>
+                    @enderror
+                    @error('vkid')
                         <div class="alert alert-danger">{{ $message }}</div>
                     @enderror
                     @if (filled(config('services.yandex.client_id')) && filled(config('services.yandex.client_secret')) && filled(config('services.yandex.redirect')))
@@ -36,11 +39,21 @@
                             </form>
                         @endif
                     @endif
-                    @if ($customer->yandex_id && $customer->email === null && $customer->yandex_email)
+                    @if (filled(config('services.vkid.client_id')) && filled(config('services.vkid.redirect')))
+                        @if ($customer->vk_id)
+                            <p class="account-index__connection-status"><i class="fas fa-check-circle" aria-hidden="true"></i> VK ID привязан</p>
+                        @else
+                            <form method="post" action="{{ route('auth.vkid.link') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-default">Привязать VK ID</button>
+                            </form>
+                        @endif
+                    @endif
+                    @if ($customer->email === null && (($customer->yandex_id && $customer->yandex_email) || ($customer->vk_id && $customer->vk_email)))
                         <section class="account-index__merge uni-form" aria-labelledby="legacy-orders-title">
                             <h2 id="legacy-orders-title" class="account-index__merge-title">Прежние заказы</h2>
                             <p>У вас уже был аккаунт магазина? Укажите его пароль, чтобы увидеть прежние заказы. Покупать можно и без этого шага.</p>
-                            <form method="post" action="{{ route('auth.yandex.merge') }}" class="account-index__merge-form">
+                            <form method="post" action="{{ $customer->yandex_id && $customer->yandex_email ? route('auth.yandex.merge') : route('auth.vkid.merge') }}" class="account-index__merge-form">
                                 @csrf
                                 <div @class(['form-group', 'has-error' => $errors->has('password')])>
                                     <label for="legacy-account-password">Пароль от прежнего аккаунта</label>

@@ -15,6 +15,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductQuestionController;
 use App\Http\Controllers\QuickOrderController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\VkAuthController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\YandexAuthController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,10 @@ Route::get('/auth/yandex', [YandexAuthController::class, 'redirect'])->middlewar
 Route::get('/auth/yandex/callback', [YandexAuthController::class, 'callback'])->middleware(['throttle:10,1', 'noindex'])->name('auth.yandex.callback');
 Route::post('/auth/yandex/link', [YandexAuthController::class, 'link'])->middleware(['auth', 'throttle:10,1', 'noindex'])->name('auth.yandex.link');
 Route::post('/auth/yandex/merge', [YandexAuthController::class, 'merge'])->middleware(['auth', 'throttle:5,1', 'noindex'])->name('auth.yandex.merge');
+Route::get('/auth/vkid', [VkAuthController::class, 'redirect'])->middleware(['guest', 'throttle:10,1', 'noindex'])->name('auth.vkid');
+Route::get('/auth/vkid/callback', [VkAuthController::class, 'callback'])->middleware(['throttle:10,1', 'noindex'])->name('auth.vkid.callback');
+Route::post('/auth/vkid/link', [VkAuthController::class, 'link'])->middleware(['auth', 'throttle:10,1', 'noindex'])->name('auth.vkid.link');
+Route::post('/auth/vkid/merge', [VkAuthController::class, 'merge'])->middleware(['auth', 'throttle:5,1', 'noindex'])->name('auth.vkid.merge');
 
 // Личный кабинет покупателя (вход, регистрация, восстановление пароля — Fortify).
 // Адреса как на старом сайте.

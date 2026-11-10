@@ -80,7 +80,7 @@ class AccessLogMiddleware
      */
     private function query(Request $request): ?string
     {
-        if ($request->is('auth/yandex/callback')) {
+        if ($request->is('auth/yandex/callback', 'auth/vkid/callback')) {
             return null;
         }
 

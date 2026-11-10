@@ -10,6 +10,7 @@
 .auth-social__provider:hover, .auth-social__provider:focus {border-color:#aaa;background:#f7f7f7;color:#333;text-decoration:none}
 .auth-social__provider:focus-visible {outline:2px solid #333;outline-offset:2px}
 .auth-social__provider-icon {color:#e60000;font-family:Arial,sans-serif;font-size:24px;font-weight:700;line-height:1}
+.auth-social__provider-icon--vk {color:#07f}
 .auth-social__note {margin:12px 0 0;color:#777;font-size:.85em;line-height:1.5}
 .auth-social__note a {text-decoration:underline}
 .auth-social--registration .auth-social__providers, .auth-social--registration .auth-social__note {max-width:460px;margin-left:auto;margin-right:auto}

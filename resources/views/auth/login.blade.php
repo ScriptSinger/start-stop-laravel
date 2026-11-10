@@ -25,6 +25,9 @@
                     @error('yandex')
                         <div class="alert alert-danger">{{ $message }}</div>
                     @enderror
+                    @error('vkid')
+                        <div class="alert alert-danger">{{ $message }}</div>
+                    @enderror
                     <div class="row row-flex">
                         <div class="col-xs-12 col-sm-6">
                             <div class="account-login__wrapper uni-form">
