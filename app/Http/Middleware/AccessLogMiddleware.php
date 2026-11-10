@@ -80,6 +80,10 @@ class AccessLogMiddleware
      */
     private function query(Request $request): ?string
     {
+        if ($request->is('auth/yandex/callback')) {
+            return null;
+        }
+
         $query = $request->getQueryString();
 
         return $query === null || $query === '' ? null : Str::limit($query, 500, '…');

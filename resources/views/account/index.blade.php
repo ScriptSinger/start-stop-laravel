@@ -20,6 +20,22 @@
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
                 <div class="uni-wrapper">
                     <p>Здравствуйте, {{ $customer->name }}! Вы вошли как {{ $customer->email }}.</p>
+                    @if (session('status'))
+                        <div class="alert alert-success">{{ session('status') }}</div>
+                    @endif
+                    @error('yandex')
+                        <div class="alert alert-danger">{{ $message }}</div>
+                    @enderror
+                    @if (filled(config('services.yandex.client_id')) && filled(config('services.yandex.client_secret')) && filled(config('services.yandex.redirect')))
+                        @if ($customer->yandex_id)
+                            <p>Яндекс ID привязан.</p>
+                        @else
+                            <form method="post" action="{{ route('auth.yandex.link') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-default">Привязать Яндекс ID</button>
+                            </form>
+                        @endif
+                    @endif
                     <div class="row row-flex">
                         <div class="col-xs-6 col-sm-4 col-md-3">
                             <a href="{{ route('account.orders') }}" class="account-index__item uni-item-bg"><i class="account-index__icon fas fa-clipboard-list"></i><span>История заказов</span></a>

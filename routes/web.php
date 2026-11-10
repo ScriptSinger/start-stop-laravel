@@ -16,6 +16,7 @@ use App\Http\Controllers\ProductQuestionController;
 use App\Http\Controllers\QuickOrderController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\YandexAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -27,6 +28,10 @@ Route::get('/category/{category:slug}/count', [CategoryController::class, 'count
 // Адрес как на старом сайте (OpenCart information/contact).
 Route::get('/contact-us', ContactController::class)->name('contact');
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.show');
+
+Route::get('/auth/yandex', [YandexAuthController::class, 'redirect'])->middleware(['guest', 'throttle:10,1', 'noindex'])->name('auth.yandex');
+Route::get('/auth/yandex/callback', [YandexAuthController::class, 'callback'])->middleware(['throttle:10,1', 'noindex'])->name('auth.yandex.callback');
+Route::post('/auth/yandex/link', [YandexAuthController::class, 'link'])->middleware(['auth', 'throttle:10,1', 'noindex'])->name('auth.yandex.link');
 
 // Личный кабинет покупателя (вход, регистрация, восстановление пароля — Fortify).
 // Адреса как на старом сайте.

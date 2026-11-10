@@ -18,3 +18,7 @@
         <a href="{{ route('register') }}" class="modal-login__link">Регистрация</a>
     </div>
 </form>
+@if (filled(config('services.yandex.client_id')) && filled(config('services.yandex.client_secret')) && filled(config('services.yandex.redirect')))
+    <p><a href="{{ route('auth.yandex') }}" class="btn btn-default">Войти с Яндекс ID</a></p>
+    <p>Входя через Яндекс ID, вы соглашаетесь с <a href="{{ route('page.show', config('shop.checkout_agreement_page')) }}" target="_blank" rel="noopener">политикой безопасности</a>.</p>
+@endif
