@@ -19,13 +19,23 @@
         <div class="row">
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
                 <div class="uni-wrapper">
-                    <p>Здравствуйте, {{ $customer->name }}! Вы вошли как {{ $customer->email }}.</p>
+                    <p>Здравствуйте, {{ $customer->name }}! @if ($customer->email ?? $customer->yandex_email) Вы вошли как {{ $customer->email ?? $customer->yandex_email }}. @endif</p>
                     @if (session('status'))
                         <div class="alert alert-success">{{ session('status') }}</div>
                     @endif
                     @error('yandex')
                         <div class="alert alert-danger">{{ $message }}</div>
                     @enderror
+                    @if ($customer->yandex_id && $customer->email === null && $customer->yandex_email)
+                        <p>У вас уже был аккаунт магазина? Укажите его пароль, чтобы увидеть прежние заказы. Покупать можно и без этого шага.</p>
+                        <form method="post" action="{{ route('auth.yandex.merge') }}">
+                            @csrf
+                            <label for="legacy-account-password">Пароль от прежнего аккаунта</label>
+                            <input id="legacy-account-password" type="password" name="password" autocomplete="current-password" required class="form-control" />
+                            @error('password')<div class="alert alert-danger">{{ $message }}</div>@enderror
+                            <button type="submit" class="btn btn-default">Показать прежние заказы</button>
+                        </form>
+                    @endif
                     @if (filled(config('services.yandex.client_id')) && filled(config('services.yandex.client_secret')) && filled(config('services.yandex.redirect')))
                         @if ($customer->yandex_id)
                             <p>Яндекс ID привязан.</p>

@@ -32,6 +32,7 @@ Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.sho
 Route::get('/auth/yandex', [YandexAuthController::class, 'redirect'])->middleware(['guest', 'throttle:10,1', 'noindex'])->name('auth.yandex');
 Route::get('/auth/yandex/callback', [YandexAuthController::class, 'callback'])->middleware(['throttle:10,1', 'noindex'])->name('auth.yandex.callback');
 Route::post('/auth/yandex/link', [YandexAuthController::class, 'link'])->middleware(['auth', 'throttle:10,1', 'noindex'])->name('auth.yandex.link');
+Route::post('/auth/yandex/merge', [YandexAuthController::class, 'merge'])->middleware(['auth', 'throttle:5,1', 'noindex'])->name('auth.yandex.merge');
 
 // Личный кабинет покупателя (вход, регистрация, восстановление пароля — Fortify).
 // Адреса как на старом сайте.

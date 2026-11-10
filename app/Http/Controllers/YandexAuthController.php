@@ -9,6 +9,8 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -118,16 +120,15 @@ class YandexAuthController extends Controller
             }
 
             $email = mb_strtolower($email);
-            if (Customer::query()->where('email', $email)->exists()) {
-                return redirect()->route('login')->withErrors(['yandex' => 'Этот e-mail уже зарегистрирован. Войдите с паролем и привяжите Яндекс ID в личном кабинете.']);
-            }
+            $emailIsTaken = Customer::query()->where('email', $email)->exists();
 
             $name = $profile['real_name'] ?? $profile['display_name'] ?? $profile['login'] ?? '';
             $name = is_string($name) && trim($name) !== '' ? Str::limit(trim($name), 255, '') : 'Покупатель';
 
             try {
-                $linkedCustomer = new Customer(['name' => $name, 'email' => $email]);
+                $linkedCustomer = new Customer(['name' => $name, 'email' => $emailIsTaken ? null : $email]);
                 $linkedCustomer->yandex_id = $yandexId;
+                $linkedCustomer->yandex_email = $email;
                 $linkedCustomer->save();
             } catch (UniqueConstraintViolationException $exception) {
                 return redirect()->route('login')->withErrors(['yandex' => 'Не удалось создать аккаунт. Войдите с паролем или попробуйте ещё раз.']);
@@ -138,5 +139,55 @@ class YandexAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(route('account'));
+    }
+
+    /**
+     * Подтверждение связи с прежним аккаунтом его паролем. Заказы, уже
+     * оформленные через Яндекс, остаются у покупателя после объединения.
+     */
+    public function merge(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        $customer = $request->user();
+
+        if ($customer->yandex_id === null || $customer->email !== null || $customer->yandex_email === null) {
+            return redirect()->route('account')->withErrors(['yandex' => 'Объединение аккаунтов недоступно.']);
+        }
+
+        $target = Customer::query()->where('email', $customer->yandex_email)->first();
+        $password = (string) $request->input('password');
+
+        if (! $target || ! (($target->password && Hash::check($password, $target->password)) || $target->upgradeLegacyPassword($password))) {
+            return redirect()->route('account')->withErrors(['password' => 'Неверный пароль от прежнего аккаунта.']);
+        }
+
+        $mergedCustomer = DB::transaction(function () use ($customer, $target): ?Customer {
+            $source = Customer::query()->lockForUpdate()->find($customer->id);
+            $destination = Customer::query()->lockForUpdate()->find($target->id);
+
+            if (! $source || ! $destination || $source->email !== null || $source->yandex_id === null
+                || $source->yandex_email !== $destination->email || $destination->yandex_id !== null) {
+                return null;
+            }
+
+            $yandexId = $source->yandex_id;
+            $source->delete();
+            $destination->forceFill(['yandex_id' => $yandexId, 'yandex_email' => $source->yandex_email])->save();
+            DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
+
+            return $destination;
+        });
+
+        if (! $mergedCustomer) {
+            return redirect()->route('account')->withErrors(['yandex' => 'Не удалось объединить аккаунты. Попробуйте ещё раз.']);
+        }
+
+        Auth::guard('web')->login($mergedCustomer);
+        $request->session()->regenerate();
+
+        return redirect()->route('account')->with('status', 'Яндекс ID привязан. История заказов доступна в личном кабинете.');
     }
 }
