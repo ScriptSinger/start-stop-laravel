@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build Release
@@ -13,6 +17,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check Deployment Script
+        run: |
+          bash -n docker/deploy.sh
+          python3 tests/deploy_test.py
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -103,24 +112,9 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             set -e
-
-            mkdir -p ~/start-stop
             cd ~/start-stop
-
-            tar -xzf /tmp/release.tar.gz -C .
-            mv docker-compose.prod.yml docker-compose.yml
-            mv /tmp/production.env .env
-            rm /tmp/release.tar.gz
-
-            # The shared reverse-proxy network must exist before Compose starts.
-            docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
-            docker compose up -d --build --remove-orphans
-            docker compose exec -T php php artisan storage:link --force
-            docker compose exec -T php php artisan optimize:clear
-            docker compose exec -T php php artisan migrate --force
-            docker compose exec -T php php artisan optimize
-            docker compose exec -T php php artisan queue:restart
-            docker compose exec -T php php artisan car-landings:refresh
-            docker compose exec -T php php artisan sitemap:generate
-            docker compose exec -T php php artisan telegram:check-webhook https://edge.ufamasters.ru:8443/start-stop/api/telegram/webhook --no-interaction
+            # Run the deployment script shipped with the tested artifact.
+            script=$(mktemp /tmp/start-stop-deploy-XXXXXXXX.sh)
+            tar -xOf /tmp/release.tar.gz docker/deploy.sh > "$script"
+            bash "$script" /tmp/release.tar.gz /tmp/production.env
           EOF
