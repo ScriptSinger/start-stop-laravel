@@ -1,6 +1,7 @@
 /* Формы в окнах: авторизация, заказ звонка, быстрый заказ, вопрос о товаре. */
 .quick-order__quantity {max-width: 100px}
 
+.account-login__wrapper > .modal-login__form, .account-login__wrapper > .auth-social {width:100%}
 .auth-social {margin:24px 0 0}
 .auth-social__title {display:flex;align-items:center;gap:12px;margin:0 0 16px;color:#777;font-size:.9em;white-space:nowrap}
 .auth-social__title::before, .auth-social__title::after {content:'';height:1px;flex:1;background:#ddd}
