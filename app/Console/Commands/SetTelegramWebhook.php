@@ -17,7 +17,7 @@ class SetTelegramWebhook extends Command
         $url = $this->argument('url');
 
         if (! is_string($url) || ! str_starts_with($url, 'https://')
-            || parse_url($url, PHP_URL_PATH) !== '/api/telegram/webhook'
+            || ! in_array(parse_url($url, PHP_URL_PATH), ['/api/telegram/webhook', '/start-stop/api/telegram/webhook'], true)
             || parse_url($url, PHP_URL_QUERY) !== null
             || blank(config('services.telegram.bot_token')) || blank(config('services.telegram.chat_id'))
             || ! preg_match('/^-?[0-9]+$/D', (string) config('services.telegram.chat_id'))

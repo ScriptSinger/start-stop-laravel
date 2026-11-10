@@ -338,6 +338,16 @@ class TelegramCustomerRequestTest extends TestCase
             && $request['allowed_updates'] === ['callback_query']);
     }
 
+    public function test_webhook_command_accepts_the_start_stop_relay_path(): void
+    {
+        Http::fake(['https://api.telegram.org/bottest-token/setWebhook' => Http::response(['ok' => true, 'result' => true])]);
+
+        $this->artisan('telegram:set-webhook', ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook'])
+            ->assertSuccessful();
+
+        Http::assertSent(fn ($request): bool => $request['url'] === 'https://relay.example:8443/start-stop/api/telegram/webhook');
+    }
+
     public function test_webhook_command_rejects_insecure_url(): void
     {
         Http::fake();
