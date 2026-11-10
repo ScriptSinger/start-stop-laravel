@@ -40,3 +40,16 @@ with tempfile.TemporaryDirectory() as tmp:
  assert (target/'public').stat().st_mode & 0o777 == 0o755
  assert (target/'public'/'index.php').stat().st_mode & 0o777 == 0o644
  print('PASS real archive permissions with restrictive umask')
+
+# A second process must stop before it touches the release or application.
+import fcntl
+with tempfile.TemporaryDirectory() as tmp:
+ lock = pathlib.Path(tmp) / '.deploy.lock'
+ with lock.open('w') as handle:
+  fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+  result = subprocess.run(['bash', script, 'unused-archive', 'unused-config'],
+                          env=dict(os.environ, DEPLOY_ROOT=tmp), capture_output=True, text=True)
+  assert result.returncode != 0
+  assert 'Another deployment is running' in result.stderr
+  assert sorted(p.name for p in pathlib.Path(tmp).iterdir()) == ['.deploy.lock']
+ print('PASS concurrent deployment is rejected before modifying files')

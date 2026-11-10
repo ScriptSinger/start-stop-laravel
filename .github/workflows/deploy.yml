@@ -105,16 +105,22 @@ jobs:
         run: |
           umask 077
           printf '%s\n' "$ENV_FILE" > production.env
-          scp -i ~/.ssh/id_ed25519 release.tar.gz production.env \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/
+          scp -i ~/.ssh/id_ed25519 release.tar.gz \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/start-stop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          scp -i ~/.ssh/id_ed25519 production.env \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/start-stop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.config"
 
       - name: Deploy on Server
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} bash -s -- "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" << 'EOF'
             set -e
+            case "$1:$2" in *[!0-9:]*|:*) exit 1 ;; esac
             cd ~/start-stop
+            archive="/tmp/start-stop-$1-$2.tar.gz"
+            configuration="/tmp/start-stop-$1-$2.config"
             # Run the deployment script shipped with the tested artifact.
             script=$(mktemp /tmp/start-stop-deploy-XXXXXXXX.sh)
-            tar -xOf /tmp/release.tar.gz docker/deploy.sh > "$script"
-            bash "$script" /tmp/release.tar.gz /tmp/production.env
+            trap 'rm -f "$script" "$archive" "$configuration"' EXIT
+            tar -xOf "$archive" docker/deploy.sh > "$script"
+            bash "$script" "$archive" "$configuration"
           EOF
