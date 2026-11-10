@@ -431,6 +431,43 @@ class TelegramCustomerRequestTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_terminal_failure_is_visible_and_success_clears_error(): void
+    {
+        $item = CustomerRequest::query()->create(['type' => CustomerRequestType::Callback, 'name' => 'Анна', 'phone' => '89870000000']);
+        $job = new SendCustomerRequestToTelegram($item->id);
+        $job->failed(new \RuntimeException('secret detail'));
+        $this->assertNotNull($item->fresh()->telegram_delivery_error);
+        $this->assertStringNotContainsString('secret detail', $item->fresh()->telegram_delivery_error);
+        Http::fake(['https://api.telegram.org/bottest-token/sendMessage' => Http::response(['ok' => true, 'result' => ['message_id' => 77]])]);
+        Http::preventStrayRequests();
+        $job->handle(app(TelegramBot::class));
+        $this->assertNull($item->fresh()->telegram_delivery_error);
+        $this->assertSame(77, $item->fresh()->telegram_message_id);
+    }
+
+    public function test_admin_can_retry_unsent_request_but_not_delivered_request(): void
+    {
+        Queue::fake([SendCustomerRequestToTelegram::class]);
+        $item = CustomerRequest::query()->create(['type' => CustomerRequestType::Callback, 'name' => 'Анна', 'phone' => '89870000000']);
+        $admin = MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'retry@example.com', 'name' => 'Admin', 'password' => bcrypt('secret'),
+        ]);
+        $url = '/admin/method/customer-request-index-page/customer-request-resource?method=retryTelegram&resourceItem='.$item->id;
+        $this->actingAs($admin, 'moonshine')->postJson($url)->assertOk();
+        Queue::assertPushed(SendCustomerRequestToTelegram::class, 1);
+        $item->forceFill(['telegram_message_id' => 77])->save();
+        $this->postJson($url)->assertOk();
+        Queue::assertPushed(SendCustomerRequestToTelegram::class, 1);
+    }
+
+    public function test_guest_cannot_retry_telegram_delivery(): void
+    {
+        Queue::fake();
+        $this->postJson('/admin/method/customer-request-index-page/customer-request-resource?method=retryTelegram&resourceItem=1')->assertUnauthorized();
+        Queue::assertNothingPushed();
+    }
+
     private function customerRequest(): CustomerRequest
     {
         $customerRequest = CustomerRequest::query()->create([

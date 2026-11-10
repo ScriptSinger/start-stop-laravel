@@ -29,6 +29,12 @@ class SendCustomerRequestToTelegram implements ShouldBeUnique, ShouldQueue
         return (string) $this->customerRequestId;
     }
 
+    public function failed(?\Throwable $exception): void
+    {
+        CustomerRequest::query()->whereKey($this->customerRequestId)->whereNull('telegram_message_id')
+            ->update(['telegram_delivery_error' => 'Не удалось отправить после повторных попыток. Проверьте настройки бота и повторите отправку.']);
+    }
+
     public function handle(TelegramBot $telegram): void
     {
         $customerRequest = CustomerRequest::query()->with('product')->find($this->customerRequestId);
@@ -39,6 +45,6 @@ class SendCustomerRequestToTelegram implements ShouldBeUnique, ShouldQueue
         }
 
         $messageId = $telegram->sendRequest($customerRequest);
-        $customerRequest->forceFill(['telegram_message_id' => $messageId])->save();
+        $customerRequest->forceFill(['telegram_message_id' => $messageId, 'telegram_delivery_error' => null])->save();
     }
 }
