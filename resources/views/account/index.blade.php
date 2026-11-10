@@ -26,19 +26,9 @@
                     @error('yandex')
                         <div class="alert alert-danger">{{ $message }}</div>
                     @enderror
-                    @if ($customer->yandex_id && $customer->email === null && $customer->yandex_email)
-                        <p>У вас уже был аккаунт магазина? Укажите его пароль, чтобы увидеть прежние заказы. Покупать можно и без этого шага.</p>
-                        <form method="post" action="{{ route('auth.yandex.merge') }}">
-                            @csrf
-                            <label for="legacy-account-password">Пароль от прежнего аккаунта</label>
-                            <input id="legacy-account-password" type="password" name="password" autocomplete="current-password" required class="form-control" />
-                            @error('password')<div class="alert alert-danger">{{ $message }}</div>@enderror
-                            <button type="submit" class="btn btn-default">Показать прежние заказы</button>
-                        </form>
-                    @endif
                     @if (filled(config('services.yandex.client_id')) && filled(config('services.yandex.client_secret')) && filled(config('services.yandex.redirect')))
                         @if ($customer->yandex_id)
-                            <p>Яндекс ID привязан.</p>
+                            <p class="account-index__connection-status"><i class="fas fa-check-circle" aria-hidden="true"></i> Яндекс ID привязан</p>
                         @else
                             <form method="post" action="{{ route('auth.yandex.link') }}">
                                 @csrf
@@ -46,14 +36,29 @@
                             </form>
                         @endif
                     @endif
+                    @if ($customer->yandex_id && $customer->email === null && $customer->yandex_email)
+                        <section class="account-index__merge uni-form" aria-labelledby="legacy-orders-title">
+                            <h2 id="legacy-orders-title" class="account-index__merge-title">Прежние заказы</h2>
+                            <p>У вас уже был аккаунт магазина? Укажите его пароль, чтобы увидеть прежние заказы. Покупать можно и без этого шага.</p>
+                            <form method="post" action="{{ route('auth.yandex.merge') }}" class="account-index__merge-form">
+                                @csrf
+                                <div @class(['form-group', 'has-error' => $errors->has('password')])>
+                                    <label for="legacy-account-password">Пароль от прежнего аккаунта</label>
+                                    <input id="legacy-account-password" type="password" name="password" autocomplete="current-password" required class="form-control" />
+                                    @error('password')<span class="help-block">{{ $message }}</span>@enderror
+                                </div>
+                                <button type="submit" class="btn btn-primary">Показать прежние заказы</button>
+                            </form>
+                        </section>
+                    @endif
                     <div class="row row-flex">
-                        <div class="col-xs-6 col-sm-4 col-md-3">
+                        <div class="col-xs-12 col-sm-4">
                             <a href="{{ route('account.orders') }}" class="account-index__item uni-item-bg"><i class="account-index__icon fas fa-clipboard-list"></i><span>История заказов</span></a>
                         </div>
-                        <div class="col-xs-6 col-sm-4 col-md-3">
+                        <div class="col-xs-12 col-sm-4">
                             <a href="{{ route('wishlist.index') }}" class="account-index__item uni-item-bg"><i class="account-index__icon far fa-heart"></i><span>Закладки</span></a>
                         </div>
-                        <div class="col-xs-6 col-sm-4 col-md-3">
+                        <div class="col-xs-12 col-sm-4">
                             <form method="post" action="{{ route('logout') }}" class="account-index__item uni-item-bg">
                                 @csrf
                                 <button type="submit" class="account-index__logout"><i class="account-index__icon fas fa-sign-out-alt"></i><span>Выход</span></button>

@@ -1,2 +1,9 @@
 /* Стили блоков страницы из темы UniShop2 — как старый сайт подключал их на этой странице. */
 @import '../../../theme/stylesheet/account.css';
+
+.account-index__connection-status {margin:0 0 16px;color:#3c763d}
+.account-index__merge {max-width:680px;margin-bottom:24px}
+.account-index__merge-title {margin:0 0 12px;font-size:1.25em;font-weight:600}
+.account-index__merge p {margin-bottom:16px}
+.account-index__merge-form {max-width:420px}
+.account-index__merge-form .form-control {margin-top:8px}
