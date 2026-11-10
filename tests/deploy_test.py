@@ -10,7 +10,7 @@ if [[ -n "$FAIL" && " $* " == *" $FAIL "* ]]; then exit 1; fi
 exit 0
 '''
   tar='''#!/bin/bash
-if [[ "$*" == *"-xzf"* ]]; then
+if [[ "$*" == *"-xpzf"* ]]; then
  last="${!#}"
  mkdir -p "$last/database/migrations"
  touch "$last/artisan" "$last/docker-compose.prod.yml"
@@ -27,3 +27,16 @@ fi
   if pending==1: assert ' artisan down ' not in calls
   if fail=='migrate': assert ' artisan up ' not in calls
   print('PASS',pending,fail or 'normal')
+
+# Real archive extraction must preserve public permissions despite private umask.
+with tempfile.TemporaryDirectory() as tmp:
+ root=pathlib.Path(tmp); source=root/'source'; target=root/'target'
+ (source/'public').mkdir(parents=True); target.mkdir()
+ (source/'public'/'index.php').write_text('fixture')
+ (source/'public').chmod(0o755); (source/'public'/'index.php').chmod(0o644)
+ archive=root/'release.tar.gz'
+ subprocess.run(['tar','-czf',str(archive),'-C',str(source),'public'],check=True)
+ subprocess.run(['bash','-c','umask 077; tar -xpzf "$1" -C "$2"','bash',str(archive),str(target)],check=True)
+ assert (target/'public').stat().st_mode & 0o777 == 0o755
+ assert (target/'public'/'index.php').stat().st_mode & 0o777 == 0o644
+ print('PASS real archive permissions with restrictive umask')

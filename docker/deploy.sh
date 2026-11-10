@@ -29,7 +29,7 @@ failure() {
         exit 1
     fi
     if (( replaced )); then
-        tar -xzf "$previous/code.tar.gz" -C .
+        tar -xpzf "$previous/code.tar.gz" -C .
         if test -f "$previous/configuration"; then
             mv "$previous/configuration" .env
         fi
@@ -46,7 +46,7 @@ failure() {
 trap failure ERR
 
 # Extract to an isolated directory; no running application files change yet.
-tar -xzf "$archive" -C "$stage"
+tar -xpzf "$archive" -C "$stage"
 test -f "$stage/artisan"
 test -f "$stage/docker-compose.prod.yml"
 test -d "$stage/database/migrations"
@@ -73,7 +73,7 @@ replaced=1
 mv .env "$previous/configuration"
 mv "$configuration" .env
 # Never overwrite runtime storage, including the maintenance response and uploads.
-tar -xzf "$archive" --exclude=storage --exclude=public/storage -C .
+tar -xpzf "$archive" --exclude=storage --exclude=public/storage -C .
 mv docker-compose.prod.yml docker-compose.yml
 compose build php worker scheduler
 compose up -d --no-deps --force-recreate php nginx
