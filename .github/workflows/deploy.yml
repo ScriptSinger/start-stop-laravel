@@ -119,6 +119,7 @@ jobs:
             docker compose exec -T php php artisan optimize:clear
             docker compose exec -T php php artisan migrate --force
             docker compose exec -T php php artisan optimize
+            docker compose exec -T php php artisan queue:restart
             docker compose exec -T php php artisan car-landings:refresh
             docker compose exec -T php php artisan sitemap:generate
           EOF

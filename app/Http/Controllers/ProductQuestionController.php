@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\CustomerRequestType;
 use App\Http\Requests\ProductQuestionRequest;
+use App\Jobs\SendCustomerRequestToTelegram;
 use App\Models\CustomerRequest;
 use App\Models\Product;
 use Artesaos\SEOTools\Facades\SEOTools;
@@ -31,11 +32,15 @@ class ProductQuestionController extends Controller
     {
         abort_unless($product->status, 404);
 
-        CustomerRequest::query()->create([
+        $customerRequest = CustomerRequest::query()->create([
             'type' => CustomerRequestType::ProductQuestion,
             'product_id' => $product->id,
             ...$request->validated(),
         ]);
+
+        if (filled(config('services.telegram.bot_token')) && filled(config('services.telegram.chat_id'))) {
+            SendCustomerRequestToTelegram::dispatch($customerRequest->id)->afterCommit();
+        }
 
         $message = 'Спасибо за вопрос! Мы перезвоним и ответим.';
 

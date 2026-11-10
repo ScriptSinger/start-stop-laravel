@@ -33,6 +33,14 @@ return [
         'redirect' => env('VKID_REDIRECT_URI', rtrim((string) env('APP_URL', ''), '/').'/auth/vkid/callback'),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+        'topic_id' => env('TELEGRAM_TOPIC_ID'),
+        'proxy' => env('TELEGRAM_PROXY'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

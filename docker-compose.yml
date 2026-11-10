@@ -49,6 +49,41 @@ services:
     networks:
       - laravel
 
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/php.dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    user: "${UID:-1000}:${GID:-1000}"
+    command: php artisan queue:work database --sleep=3 --tries=3 --timeout=30 --no-interaction
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
+    depends_on:
+      - db
+      - redis
+    networks:
+      - laravel
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    profiles:
+      - tunnel
+    command: http nginx:80 --traffic-policy-file /etc/ngrok/webhook-only.yml --inspect=false
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    volumes:
+      - ./docker/ngrok/webhook-only.yml:/etc/ngrok/webhook-only.yml:ro
+    ports:
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      - nginx
+    networks:
+      - laravel
+
   # Кеш Laravel (CACHE_STORE=redis, REDIS_HOST=redis) — как в fridge-service:
   # посадочные страницы подбора считаются раз в сутки и берутся отсюда.
   redis:

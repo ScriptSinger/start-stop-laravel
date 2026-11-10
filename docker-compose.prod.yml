@@ -75,6 +75,28 @@ services:
     networks:
       - internal
 
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/php.dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    user: "${UID:-1000}:${GID:-1000}"
+    command: php artisan queue:work database --sleep=3 --tries=3 --timeout=30 --no-interaction
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php-overrides.ini:/usr/local/etc/php/conf.d/php-overrides.ini
+      - ./docker/php/php-production.ini:/usr/local/etc/php/conf.d/zz-production.ini:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - internal
+
   db:
     image: mariadb:11.4
     restart: unless-stopped

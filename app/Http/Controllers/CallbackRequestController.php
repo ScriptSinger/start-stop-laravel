@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\CustomerRequestType;
 use App\Http\Requests\CallbackRequestRequest;
+use App\Jobs\SendCustomerRequestToTelegram;
 use App\Models\CustomerRequest;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Http\JsonResponse;
@@ -25,10 +26,14 @@ class CallbackRequestController extends Controller
 
     public function store(CallbackRequestRequest $request): JsonResponse|RedirectResponse
     {
-        CustomerRequest::query()->create([
+        $customerRequest = CustomerRequest::query()->create([
             'type' => CustomerRequestType::Callback,
             ...$request->validated(),
         ]);
+
+        if (filled(config('services.telegram.bot_token')) && filled(config('services.telegram.chat_id'))) {
+            SendCustomerRequestToTelegram::dispatch($customerRequest->id)->afterCommit();
+        }
 
         $message = 'Спасибо! Мы перезвоним вам в рабочее время.';
 
