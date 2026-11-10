@@ -327,25 +327,98 @@ class TelegramCustomerRequestTest extends TestCase
 
     public function test_webhook_command_registers_callback_updates_and_secret(): void
     {
-        Http::fake(['https://api.telegram.org/bottest-token/setWebhook' => Http::response(['ok' => true, 'result' => true])]);
+        Http::fake([
+            'https://api.telegram.org/bottest-token/getMe' => Http::response(['ok' => true, 'result' => ['username' => 'local_test_bot']]),
+            'https://api.telegram.org/bottest-token/setWebhook' => Http::response(['ok' => true, 'result' => true]),
+        ]);
         Http::preventStrayRequests();
 
         $this->artisan('telegram:set-webhook', ['url' => 'https://example.ngrok-free.app/api/telegram/webhook'])
             ->assertSuccessful();
 
-        Http::assertSent(fn ($request): bool => $request['url'] === 'https://example.ngrok-free.app/api/telegram/webhook'
+        Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/setWebhook') && $request['url'] === 'https://example.ngrok-free.app/api/telegram/webhook'
             && $request['secret_token'] === 'test-webhook-secret'
             && $request['allowed_updates'] === ['callback_query']);
     }
 
     public function test_webhook_command_accepts_the_start_stop_relay_path(): void
     {
-        Http::fake(['https://api.telegram.org/bottest-token/setWebhook' => Http::response(['ok' => true, 'result' => true])]);
+        Http::fake([
+            'https://api.telegram.org/bottest-token/getMe' => Http::response(['ok' => true, 'result' => ['username' => 'local_test_bot']]),
+            'https://api.telegram.org/bottest-token/setWebhook' => Http::response(['ok' => true, 'result' => true]),
+        ]);
 
         $this->artisan('telegram:set-webhook', ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook'])
             ->assertSuccessful();
 
-        Http::assertSent(fn ($request): bool => $request['url'] === 'https://relay.example:8443/start-stop/api/telegram/webhook');
+        Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/setWebhook') && $request['url'] === 'https://relay.example:8443/start-stop/api/telegram/webhook');
+    }
+
+    public function test_local_webhook_command_cannot_change_production_bot(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bottest-token/getMe' => Http::response(['ok' => true, 'result' => ['username' => 'start_stop_akb_bot']]),
+        ]);
+        Http::preventStrayRequests();
+
+        $this->artisan('telegram:set-webhook', ['url' => 'https://example.ngrok-free.app/api/telegram/webhook'])
+            ->assertFailed();
+
+        Http::assertSentCount(1);
+        Http::assertNotSent(fn ($request): bool => str_ends_with($request->url(), '/setWebhook'));
+    }
+
+    public function test_production_webhook_check_is_read_only_and_detects_mismatch(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bottest-token/getMe' => Http::response(['ok' => true, 'result' => ['username' => 'start_stop_akb_bot']]),
+            'https://api.telegram.org/bottest-token/getWebhookInfo' => Http::response(['ok' => true, 'result' => ['url' => 'https://other.example/api/telegram/webhook']]),
+        ]);
+        Http::preventStrayRequests();
+
+        $this->artisan('telegram:check-webhook', ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook'])
+            ->assertFailed();
+
+        Http::assertSentCount(2);
+        Http::assertNotSent(fn ($request): bool => str_ends_with($request->url(), '/setWebhook'));
+    }
+
+    public function test_production_webhook_check_accepts_expected_bot_and_url(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bottest-token/getMe' => Http::response(['ok' => true, 'result' => ['username' => 'start_stop_akb_bot']]),
+            'https://api.telegram.org/bottest-token/getWebhookInfo' => Http::response(['ok' => true, 'result' => ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook']]),
+        ]);
+        Http::preventStrayRequests();
+
+        $this->artisan('telegram:check-webhook', ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook'])
+            ->assertSuccessful();
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_production_webhook_check_rejects_a_different_bot(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bottest-token/getMe' => Http::response(['ok' => true, 'result' => ['username' => 'local_test_bot']]),
+        ]);
+        Http::preventStrayRequests();
+
+        $this->artisan('telegram:check-webhook', ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook'])
+            ->assertFailed();
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_production_webhook_check_fails_when_telegram_is_unreachable(): void
+    {
+        Http::fake(['https://api.telegram.org/bottest-token/getMe' => Http::failedConnection()]);
+        Http::preventStrayRequests();
+
+        $this->artisan('telegram:check-webhook', ['url' => 'https://relay.example:8443/start-stop/api/telegram/webhook'])
+            ->assertFailed();
+
+        Http::assertSentCount(1);
     }
 
     public function test_webhook_command_rejects_insecure_url(): void

@@ -28,6 +28,14 @@ class SetTelegramWebhook extends Command
         }
 
         try {
+            $isProductionBot = strcasecmp($telegram->username(), (string) config('services.telegram.production_bot_username')) === 0;
+
+            if ($isProductionBot !== app()->isProduction()) {
+                $this->error('Бот не соответствует окружению: используйте отдельного бота для локальной разработки.');
+
+                return self::FAILURE;
+            }
+
             $telegram->registerWebhook($url);
         } catch (RuntimeException) {
             $this->error('Telegram не принял webhook. Проверьте адрес и настройки бота.');

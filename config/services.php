@@ -39,6 +39,7 @@ return [
         'topic_id' => env('TELEGRAM_TOPIC_ID'),
         'proxy' => env('TELEGRAM_PROXY'),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+        'production_bot_username' => 'start_stop_akb_bot',
     ],
 
     'ses' => [

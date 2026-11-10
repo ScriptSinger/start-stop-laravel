@@ -77,6 +77,28 @@ class TelegramBot
         ]);
     }
 
+    public function username(): string
+    {
+        $username = $this->call('getMe', [])['username'] ?? null;
+
+        if (! is_string($username) || $username === '') {
+            throw new RuntimeException('Telegram did not return a bot username.');
+        }
+
+        return $username;
+    }
+
+    public function webhookUrl(): string
+    {
+        $url = $this->call('getWebhookInfo', [])['url'] ?? null;
+
+        if (! is_string($url)) {
+            throw new RuntimeException('Telegram did not return a webhook URL.');
+        }
+
+        return $url;
+    }
+
     private function message(CustomerRequest $customerRequest): string
     {
         $lines = [

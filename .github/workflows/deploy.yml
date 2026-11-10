@@ -122,4 +122,5 @@ jobs:
             docker compose exec -T php php artisan queue:restart
             docker compose exec -T php php artisan car-landings:refresh
             docker compose exec -T php php artisan sitemap:generate
+            docker compose exec -T php php artisan telegram:check-webhook https://edge.ufamasters.ru:8443/start-stop/api/telegram/webhook --no-interaction
           EOF
