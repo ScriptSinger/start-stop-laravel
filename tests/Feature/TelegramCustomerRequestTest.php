@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomerRequestType;
+use App\Jobs\DeleteCustomerRequestTelegramMessage;
 use App\Jobs\SendCustomerRequestToTelegram;
 use App\Jobs\UpdateCustomerRequestTelegramMessage;
 use App\Models\CustomerRequest;
@@ -466,6 +467,22 @@ class TelegramCustomerRequestTest extends TestCase
         Queue::fake();
         $this->postJson('/admin/method/customer-request-index-page/customer-request-resource?method=retryTelegram&resourceItem=1')->assertUnauthorized();
         Queue::assertNothingPushed();
+    }
+
+    public function test_deleting_request_queues_removal_of_telegram_message(): void
+    {
+        Queue::fake([DeleteCustomerRequestTelegramMessage::class]);
+        $item = $this->customerRequest();
+        $item->delete();
+        Queue::assertPushed(DeleteCustomerRequestTelegramMessage::class, fn ($job): bool => $job->messageId === 77 && $job->afterCommit === true);
+    }
+
+    public function test_removal_job_deletes_the_group_message(): void
+    {
+        Http::fake(['https://api.telegram.org/bottest-token/deleteMessage' => Http::response(['ok' => true, 'result' => true])]);
+        Http::preventStrayRequests();
+        (new DeleteCustomerRequestTelegramMessage(77))->handle(app(TelegramBot::class));
+        Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/deleteMessage') && $request['message_id'] === 77 && $request['chat_id'] === '-1001234');
     }
 
     private function customerRequest(): CustomerRequest

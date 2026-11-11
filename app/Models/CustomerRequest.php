@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CustomerRequestType;
+use App\Jobs\DeleteCustomerRequestTelegramMessage;
 use App\Jobs\UpdateCustomerRequestTelegramMessage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,12 @@ class CustomerRequest extends Model
 {
     protected static function booted(): void
     {
+        static::deleted(function (CustomerRequest $customerRequest): void {
+            if ($customerRequest->telegram_message_id !== null) {
+                DeleteCustomerRequestTelegramMessage::dispatch($customerRequest->telegram_message_id)->afterCommit();
+            }
+        });
+
         static::updated(function (CustomerRequest $customerRequest): void {
             if ($customerRequest->wasChanged('is_processed') && $customerRequest->telegram_message_id !== null) {
                 UpdateCustomerRequestTelegramMessage::dispatch($customerRequest->id)->afterCommit();

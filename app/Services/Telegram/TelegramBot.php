@@ -68,6 +68,14 @@ class TelegramBot
         ], allowNotModified: true);
     }
 
+    public function deleteMessage(int $messageId): void
+    {
+        $this->call('deleteMessage', [
+            'chat_id' => config('services.telegram.chat_id'),
+            'message_id' => $messageId,
+        ]);
+    }
+
     public function registerWebhook(string $url): void
     {
         $this->call('setWebhook', [
