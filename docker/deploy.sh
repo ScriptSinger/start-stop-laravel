@@ -16,6 +16,13 @@ replaced=0
 
 compose() { docker compose "$@"; }
 artisan() { compose exec -T php php artisan "$@" --no-interaction; }
+timed() {
+    local label=$1
+    shift
+    local started=$SECONDS
+    "$@"
+    printf 'TIMING: %s: %s seconds\n' "$label" "$((SECONDS - started))"
+}
 
 failure() {
     trap - ERR
@@ -45,8 +52,8 @@ failure() {
 }
 trap failure ERR
 
-# Extract to an isolated directory; no running application files change yet.
-tar -xpzf "$archive" -C "$stage"
+# Only the migrations and release markers are needed before the switch.
+timed 'prepare migration files' tar -xpzf "$archive" -C "$stage" artisan docker-compose.prod.yml database/migrations
 test -f "$stage/artisan"
 test -f "$stage/docker-compose.prod.yml"
 test -d "$stage/database/migrations"
@@ -61,32 +68,32 @@ case "$pending" in
 esac
 
 # Preserve code only. Runtime storage and uploaded files remain in place.
-tar --exclude=bootstrap/cache --exclude=public/storage -czf "$previous/code.tar.gz" app bootstrap config database docker lang public resources routes vendor artisan composer.json composer.lock docker-compose.yml
+timed 'save previous code' tar --exclude=bootstrap/cache --exclude=public/storage -czf "$previous/code.tar.gz" app bootstrap config database docker lang public resources routes vendor artisan composer.json composer.lock docker-compose.yml
 maintenance=1
 artisan down --render=errors::503 --retry=60
 compose stop -t 60 worker scheduler
 if (( pending == 2 )); then
-    artisan db:backup --label=before-deploy
+    timed 'database backup' artisan db:backup --label=before-deploy
 fi
 
 replaced=1
 mv .env "$previous/configuration"
 mv "$configuration" .env
 # Never overwrite runtime storage, including the maintenance response and uploads.
-tar -xpzf "$archive" --exclude=storage --exclude=public/storage -C .
+timed 'extract release' tar -xpzf "$archive" --exclude=storage --exclude=public/storage -C .
 mv docker-compose.prod.yml docker-compose.yml
-compose build php worker scheduler
-compose up -d --no-deps --force-recreate php nginx
+timed 'build containers' compose build php worker scheduler
+timed 'restart web containers' compose up -d --no-deps --force-recreate php nginx
 artisan optimize:clear
 if (( pending == 2 )); then
     migration_started=1
-    artisan migrate --force
+    timed 'migrations' artisan migrate --force
 fi
 artisan storage:link --force
 artisan optimize
-artisan car-landings:refresh
-artisan sitemap:generate
-artisan telegram:check-webhook https://edge.ufamasters.ru:8443/start-stop/api/telegram/webhook
+timed 'refresh car landings' artisan car-landings:refresh
+timed 'generate sitemap' artisan sitemap:generate
+timed 'check Telegram webhook' artisan telegram:check-webhook https://edge.ufamasters.ru:8443/start-stop/api/telegram/webhook
 # Reopen only after Artisan checks; return to maintenance if HTTP bootstrap fails.
 artisan up
 compose exec -T nginx wget -q -O /dev/null http://127.0.0.1/up

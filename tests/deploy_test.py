@@ -11,9 +11,12 @@ exit 0
 '''
   tar='''#!/bin/bash
 if [[ "$*" == *"-xpzf"* ]]; then
- last="${!#}"
- mkdir -p "$last/database/migrations"
- touch "$last/artisan" "$last/docker-compose.prod.yml"
+ while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "-C" ]]; then shift; target="$1"; break; fi
+  shift
+ done
+ mkdir -p "$target/database/migrations"
+ touch "$target/artisan" "$target/docker-compose.prod.yml"
 fi
 '''
   for name,body in [('docker',docker),('tar',tar),('mv','#!/bin/bash\nexit 0\n')]:
@@ -53,3 +56,22 @@ with tempfile.TemporaryDirectory() as tmp:
   assert 'Another deployment is running' in result.stderr
   assert sorted(p.name for p in pathlib.Path(tmp).iterdir()) == ['.deploy.lock']
  print('PASS concurrent deployment is rejected before modifying files')
+
+# A real release is staged selectively: migration discovery must work without
+# extracting production code and assets into the temporary directory.
+with tempfile.TemporaryDirectory() as tmp:
+ root = pathlib.Path(tmp)
+ source = root / 'source'
+ stage = root / 'stage'
+ (source / 'database' / 'migrations').mkdir(parents=True)
+ (source / 'public').mkdir()
+ stage.mkdir()
+ for name in ['artisan', 'docker-compose.prod.yml', 'database/migrations/example.php', 'public/index.php']:
+  (source / name).write_text('fixture')
+ archive = root / 'release.tar.gz'
+ subprocess.run(['tar', '-czf', str(archive), '-C', str(source), 'artisan', 'docker-compose.prod.yml', 'database', 'public'], check=True)
+ subprocess.run(['tar', '-xpzf', str(archive), '-C', str(stage), 'artisan', 'docker-compose.prod.yml', 'database/migrations'], check=True)
+ assert (stage / 'database/migrations/example.php').exists()
+ assert (stage / 'artisan').exists()
+ assert not (stage / 'public').exists()
+ print('PASS selective staging from a real archive')

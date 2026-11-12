@@ -65,7 +65,6 @@ jobs:
             public \
             resources \
             routes \
-            storage \
             vendor \
             artisan \
             composer.json \
