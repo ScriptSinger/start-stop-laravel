@@ -140,7 +140,7 @@ class CreateProductsFromOneCTest extends TestCase
         $this->assertSame('L2', $battery->code);
         $this->assertSame(7000.0, (float) $battery->price);
         $this->assertSame(2, $battery->quantity);
-        $this->assertSame(1000.0, (float) $battery->trade_in_discount);
+        $this->assertSame(1500.0, (float) $battery->trade_in_discount);
         $this->assertSame('EDCON', $battery->manufacturer->name);
         $this->assertSame(['Аккумуляторы'], $battery->categories->pluck('name')->all());
 

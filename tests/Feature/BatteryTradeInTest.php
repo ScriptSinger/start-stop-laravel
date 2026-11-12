@@ -21,12 +21,12 @@ class BatteryTradeInTest extends TestCase
     public static function tiers(): array
     {
         return [
-            '35 Ач' => [35, 400],
+            '35 Ач' => [35, 500],
             '45 Ач' => [45, 700],
-            '60 Ач' => [60, 1000],
-            '68 Ач' => [68, 1000],
-            '70 Ач' => [70, 1200],
-            '80 Ач' => [80, 1300],
+            '60 Ач' => [60, 1500],
+            '68 Ач' => [68, 1500],
+            '70 Ач' => [70, 1500],
+            '80 Ач' => [80, 1500],
             '100 Ач' => [100, 1500],
             '140 Ач' => [140, 2000],
             '190 Ач' => [190, 2500],
@@ -60,7 +60,7 @@ class BatteryTradeInTest extends TestCase
 
         $this->artisan('products:fill-trade-in', ['--force' => true])->assertSuccessful();
 
-        $this->assertSame(1000.0, (float) $hidden->fresh()->trade_in_discount);
+        $this->assertSame(1500.0, (float) $hidden->fresh()->trade_in_discount);
         $this->assertSame(2500.0, (float) $big->fresh()->trade_in_discount);
         $this->assertSame(500.0, (float) $withDiscount->fresh()->trade_in_discount);
         $this->assertNull($active->fresh()->trade_in_discount);
