@@ -8,6 +8,7 @@ use App\Models\Supplier;
 use App\Models\SupplierOffer;
 use App\Services\Supplier\SupplierImportReport;
 use App\Services\Supplier\SupplierPriceImporter;
+use App\Services\Supplier\SupplierStockSync;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -135,6 +136,41 @@ class SupplierPriceImportTest extends TestCase
 
         $supplier->update(['is_active' => false]);
         $this->assertNull($product->refresh()->supplier_id);
+    }
+
+    public function test_deleting_supplier_clears_product_without_an_alternative(): void
+    {
+        $supplier = Supplier::factory()->create();
+        $product = $this->product('Battery');
+        SupplierOffer::factory()->create(['supplier_id' => $supplier->id, 'product_id' => $product->id, 'cost' => 1000, 'quantity' => 9, 'in_price' => true]);
+        app(SupplierStockSync::class)->sync();
+
+        $this->assertSame($supplier->id, $product->refresh()->supplier_id);
+        $supplier->delete();
+
+        $product->refresh();
+        $this->assertNull($product->supplier_id);
+        $this->assertNull($product->supplier_price);
+        $this->assertSame(0, $product->supplier_quantity);
+        $this->assertFalse($product->isAvailableOnOrder());
+    }
+
+    public function test_deleting_supplier_selects_remaining_offer(): void
+    {
+        $cheap = Supplier::factory()->create(['markup_percent' => 10]);
+        $alternative = Supplier::factory()->create(['markup_percent' => 30]);
+        $product = $this->product('Battery');
+        SupplierOffer::factory()->create(['supplier_id' => $alternative->id, 'product_id' => $product->id, 'cost' => 1000, 'quantity' => 9, 'in_price' => true]);
+        SupplierOffer::factory()->create(['supplier_id' => $cheap->id, 'product_id' => $product->id, 'cost' => 1000, 'quantity' => 9, 'in_price' => true]);
+        app(SupplierStockSync::class)->sync();
+
+        $this->assertSame($cheap->id, $product->refresh()->supplier_id);
+        $cheap->delete();
+
+        $product->refresh();
+        $this->assertSame($alternative->id, $product->supplier_id);
+        $this->assertSame(1300.0, (float) $product->supplier_price);
+        $this->assertTrue($product->isAvailableOnOrder());
     }
 
     private function import(Supplier $supplier, string $csv, bool $apply): SupplierImportReport

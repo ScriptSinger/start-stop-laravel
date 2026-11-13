@@ -14,6 +14,9 @@ class Supplier extends Model
     /** @use HasFactory<SupplierFactory> */
     use HasFactory;
 
+    /** @var list<int> */
+    private array $affectedProductIds = [];
+
     protected $fillable = [
         'name',
         'format',
@@ -39,6 +42,19 @@ class Supplier extends Model
      */
     protected static function booted(): void
     {
+        static::deleting(function (Supplier $supplier): void {
+            $supplier->affectedProductIds = Product::withTrashed()
+                ->where('supplier_id', $supplier->id)->pluck('id')->all();
+        });
+
+        static::deleted(function (Supplier $supplier): void {
+            Product::withTrashed()->whereIn('id', $supplier->affectedProductIds)
+                ->whereNull('supplier_id')
+                ->update(['supplier_quantity' => 0, 'supplier_price' => null]);
+
+            app(SupplierStockSync::class)->sync();
+        });
+
         static::saved(function (Supplier $supplier): void {
             if ($supplier->wasChanged(['markup_percent', 'lead_working_days', 'min_quantity', 'ignore_quantity', 'is_active'])) {
                 app(SupplierStockSync::class)->sync();
