@@ -98,6 +98,29 @@ class CatalogFilterTest extends TestCase
             ->assertDontSee('TITAN 75 О.П.');
     }
 
+    public function test_price_filters_and_bounds_use_displayed_prices(): void
+    {
+        Product::query()->where('name', 'TITAN 60 О.П.')->update(['price' => 9000, 'special_price' => 4000]);
+        Product::query()->where('name', 'VARTA 60 О.П.')->update(['supplier_price' => 12000]);
+
+        $this->category(['price_to' => 4500])->assertViewHas('products', fn ($products) => $products->pluck('name')->all() === ['TITAN 60 О.П.']);
+        $this->category(['price_from' => 11000])->assertViewHas('products', fn ($products) => $products->pluck('name')->all() === ['VARTA 60 О.П.']);
+        $this->category()->assertViewHas('priceMin', 4000)->assertViewHas('priceMax', 12000);
+        $this->getJson(route('category.count', ['category' => $this->batteries, 'price_to' => 4500]))->assertExactJson(['count' => 1]);
+    }
+
+    public function test_price_sort_uses_valid_special_and_supplier_prices(): void
+    {
+        Product::query()->update(['quantity' => 0]);
+        Product::query()->where('name', 'TITAN 60 О.П.')->update(['special_price' => 7000]);
+        Product::query()->where('name', 'TITAN 60 П.П.')->update(['supplier_quantity' => 5, 'supplier_price' => 2000]);
+        Product::query()->where('name', 'TITAN 75 О.П.')->update(['supplier_quantity' => 5, 'supplier_price' => 3000, 'special_price' => 4000]);
+
+        $expected = ['TITAN 60 П.П.', 'TITAN 75 О.П.', 'TITAN 60 О.П.', 'VARTA 60 О.П.'];
+        $this->category(['sort' => 'price'])->assertViewHas('products', fn ($products) => $products->pluck('name')->all() === $expected);
+        $this->category(['sort' => 'price-desc'])->assertViewHas('products', fn ($products) => $products->pluck('name')->all() === array_reverse($expected));
+    }
+
     public function test_counts_ignore_own_group_but_respect_others(): void
     {
         $response = $this->category(['manufacturer' => [$this->titan->id]]);

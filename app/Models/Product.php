@@ -84,6 +84,14 @@ class Product extends Model
         };
     }
 
+    /** SQL-выражение с тем же приоритетом цен, что и displayPrice(). */
+    public static function displayPriceSql(): string
+    {
+        return 'CASE WHEN products.special_price IS NOT NULL AND products.special_price < products.price THEN products.special_price '
+            .'WHEN products.quantity <= 0 AND products.supplier_quantity >= ? AND products.supplier_price IS NOT NULL THEN products.supplier_price '
+            .'ELSE products.price END';
+    }
+
     /**
      * Характеристики в порядке карточки товара: «Напряжение» => «12V».
      * Несколько значений одной характеристики — через запятую. Нужна
@@ -196,11 +204,11 @@ class Product extends Model
         $query->withAttributeValues($filter->attributeValueIds);
 
         if ($filter->priceFrom !== null) {
-            $query->where('price', '>=', $filter->priceFrom);
+            $query->whereRaw('('.self::displayPriceSql().') >= CAST(? AS DECIMAL(20, 4))', [config('shop.supplier_order_min_quantity'), $filter->priceFrom]);
         }
 
         if ($filter->priceTo !== null) {
-            $query->where('price', '<=', $filter->priceTo);
+            $query->whereRaw('('.self::displayPriceSql().') <= CAST(? AS DECIMAL(20, 4))', [config('shop.supplier_order_min_quantity'), $filter->priceTo]);
         }
 
         if ($filter->onlyAvailable) {
@@ -253,7 +261,7 @@ class Product extends Model
         $query->orderByRaw('products.quantity > 0 desc');
 
         match (true) {
-            $sort->isByPrice() => $query->orderByRaw("COALESCE(products.special_price, products.price) {$direction}"),
+            $sort->isByPrice() => $query->orderByRaw('('.self::displayPriceSql().") {$direction}", [config('shop.supplier_order_min_quantity')]),
             $sort->isByName() => $query->orderBy('products.name', $direction),
             default => $query->orderBy('products.name'),
         };

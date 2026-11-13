@@ -68,7 +68,10 @@ class CatalogFacets
     {
         $bounds = Product::query()
             ->whereIn('id', $this->activeProductIds($category))
-            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+            ->selectRaw('MIN('.Product::displayPriceSql().') as min_price, MAX('.Product::displayPriceSql().') as max_price', [
+                config('shop.supplier_order_min_quantity'),
+                config('shop.supplier_order_min_quantity'),
+            ])
             ->toBase()
             ->first();
 
