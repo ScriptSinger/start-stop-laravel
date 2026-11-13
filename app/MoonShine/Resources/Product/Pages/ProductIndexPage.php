@@ -41,6 +41,7 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Range;
 use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -91,7 +92,9 @@ class ProductIndexPage extends IndexPage
             Money::make('Цена', 'price')->sortable(),
             Number::make('Остаток', 'quantity')->sortable(),
             Number::make('У поставщика', 'supplier_quantity')->sortable(),
-            Text::make('Статус', 'status', fn (Product $product): string => $product->status ? 'Активен' : 'Неактивен')->sortable()->badge(fn (mixed $status): string => $status ? 'green' : 'gray'),
+            Switcher::make('Активен', 'status')
+                ->updateOnPreview(condition: fn (): bool => ! $this->isTrashedView() && $this->getResource()->can(Ability::UPDATE))
+                ->sortable(),
             Date::make('Удалён', 'deleted_at')->format('d.m.Y H:i')->sortable()->canSee(fn (): bool => $this->isTrashedView()),
         ];
     }

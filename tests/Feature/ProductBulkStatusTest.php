@@ -80,6 +80,30 @@ class ProductBulkStatusTest extends TestCase
         $this->get(route('product.show', $first->slug))->assertNotFound();
     }
 
+    public function test_admin_can_change_a_single_product_status_from_the_list(): void
+    {
+        $product = $this->product('switchable', false);
+        $other = $this->product('other', false);
+        $url = "/admin/update-field/column/product-resource/{$product->id}";
+
+        $this->put($url, ['field' => 'status', 'value' => '1'])->assertNoContent();
+        $this->assertTrue($product->fresh()->status);
+        $this->assertFalse($other->fresh()->status);
+        $this->put($url, ['field' => 'status', 'value' => '0'])->assertNoContent();
+        $this->assertFalse($product->fresh()->status);
+    }
+
+    public function test_deleted_product_status_cannot_be_changed_from_the_list(): void
+    {
+        $product = $this->product('deleted-switch', false);
+        $product->delete();
+
+        $this->put("/admin/update-field/column/product-resource/{$product->id}", [
+            'field' => 'status', 'value' => '1',
+        ])->assertForbidden();
+        $this->assertFalse($product->fresh()->status);
+    }
+
     public function test_status_action_requires_a_valid_non_empty_selection(): void
     {
         $product = $this->product('first', false);
