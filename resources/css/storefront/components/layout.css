@@ -11,6 +11,8 @@
 
 /* Отступы, которые в теме были пустыми div со style="height:…". */
 .footer__payments-gap {height: 15px}
+.footer__business-link {display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--footer-c) !important; font-weight: 600}
+.footer__business-link:hover {color: var(--footer-c) !important; text-decoration: underline}
 
 /* Всплывающее уведомление: одно за раз, под шапкой браузера. */
 .uni-alert {top: 50px}

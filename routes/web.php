@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BatteryFilterController;
+use App\Http\Controllers\BusinessPageController;
 use App\Http\Controllers\CallbackRequestController;
 use App\Http\Controllers\CarLandingController;
 use App\Http\Controllers\CartController;
@@ -28,6 +29,7 @@ Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->na
 Route::get('/category/{category:slug}/count', [CategoryController::class, 'count'])->name('category.count');
 // Адрес как на старом сайте (OpenCart information/contact).
 Route::get('/contact-us', ContactController::class)->name('contact');
+Route::get('/dlya-organizatsiy', BusinessPageController::class)->name('business');
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.show');
 
 Route::get('/auth/yandex', [YandexAuthController::class, 'redirect'])->middleware(['guest', 'throttle:10,1', 'noindex'])->name('auth.yandex');

@@ -1,0 +1,59 @@
+.business-page {padding-bottom:48px}
+.business-page__eyebrow {margin:0 0 10px;color:var(--btn-primary-bg);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.business-page__hero {display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:28px;align-items:center;padding:38px 42px;background:#f7f7f7;border-radius:8px}
+.business-page__hero h2 {max-width:600px;margin:0 0 16px;font-size:30px;font-weight:700;line-height:1.2}
+.business-page__lead {max-width:630px;margin:0;color:#555;font-size:16px;line-height:1.65}
+.business-page__actions {display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:26px}
+.business-page__button {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;height:auto;padding:10px 18px;font-size:15px;line-height:1.3 !important}
+.business-page__text-link {font-weight:600;text-decoration:underline}
+.business-page__text-link i {margin-left:6px}
+.business-page__hero-panel {display:grid;gap:0;padding:10px 22px;background:#fff;border:1px solid #e9e9e9;border-radius:6px}
+.business-page__hero-panel > div {display:flex;align-items:center;gap:16px;padding:17px 0;font-weight:600;line-height:1.45}
+.business-page__hero-panel > div + div {border-top:1px solid #eee}
+.business-page__hero-panel i {flex:0 0 24px;color:var(--btn-primary-bg);font-size:22px;text-align:center}
+.business-page__section {margin-top:52px}
+.business-page__section-heading {margin-bottom:22px}
+.business-page__section h2, .business-page__details h2, .business-page__contact h2 {margin:0;font-size:26px;font-weight:700;line-height:1.25}
+.business-page__cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.business-page__card {padding:26px;background:#fff;border:1px solid #e8e8e8;border-radius:6px}
+.business-page__card > i {display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin-bottom:20px;color:var(--btn-primary-bg);background:#f8eee9;border-radius:6px;font-size:22px}
+.business-page__card h3, .business-page__steps h3 {margin:0 0 9px;font-size:18px;font-weight:700}
+.business-page__card p, .business-page__steps p {margin:0;color:#666;line-height:1.6}
+.business-page__process {padding:34px 40px;background:#f7f7f7;border-radius:8px}
+.business-page__steps {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:0;padding:0;list-style:none}
+.business-page__steps li {display:flex;gap:15px}
+.business-page__step-number {flex:0 0 auto;color:var(--btn-primary-bg);font-size:28px;font-weight:700;line-height:1}
+.business-page__details {display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,1.5fr);gap:28px;align-items:center;margin-top:52px;padding:28px 34px;border-left:4px solid var(--btn-primary-bg);background:#fbfbfb}
+.business-page__details p:last-child {margin:0;color:#555;line-height:1.7}
+.business-page__contact {display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:52px;padding:32px 40px;color:#fff;background:#252525;border-radius:8px}
+.business-page__contact .business-page__eyebrow {color:#ff9b7d}
+.business-page__contact h2 {color:#fff}
+.business-page__contact p:last-child {margin:10px 0 0;color:#ddd;line-height:1.5}
+.business-page__contact-actions {display:flex;flex-direction:column;align-items:flex-start;gap:11px;flex:0 0 auto}
+.business-page__contact-actions > a:last-child {color:#fff;text-decoration:underline}
+@media (max-width:991px) {
+    .business-page__hero {grid-template-columns:1fr}
+    .business-page__hero-panel {grid-template-columns:repeat(3,minmax(0,1fr))}
+    .business-page__hero-panel > div {align-items:flex-start}
+    .business-page__hero-panel > div + div {border-top:0;border-left:1px solid #eee;padding-left:18px}
+    .business-page__steps {gap:18px}
+}
+
+@media (max-width:767px) {
+    .business-page__hero {padding:26px}
+    .business-page__hero h2 {font-size:25px}
+    .business-page__hero-panel {grid-template-columns:1fr}
+    .business-page__hero-panel > div + div {border-top:1px solid #eee;border-left:0;padding-left:0}
+    .business-page__cards, .business-page__steps {grid-template-columns:1fr}
+    .business-page__process {padding:26px}
+    .business-page__details {grid-template-columns:1fr;gap:14px}
+    .business-page__contact {align-items:flex-start;flex-direction:column;padding:28px}
+}
+
+@media (max-width:480px) {
+    .business-page__hero, .business-page__process, .business-page__details, .business-page__contact {padding:22px}
+    .business-page__section {margin-top:38px}
+    .business-page__section h2, .business-page__details h2, .business-page__contact h2 {font-size:22px}
+    .business-page__actions {align-items:stretch;flex-direction:column}
+    .business-page__button {width:100%}
+}
