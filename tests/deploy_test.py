@@ -22,9 +22,18 @@ fi
   for name,body in [('docker',docker),('tar',tar),('mv','#!/bin/bash\nexit 0\n')]:
    p=bins/name;p.write_text(body);p.chmod(0o755)
   env=dict(os.environ,PATH=str(bins)+':'+os.environ['PATH'],DEPLOY_ROOT=tmp,CALLS=str(log),PENDING=str(pending),FAIL=fail)
+  for i in range(4):
+   previous = root / f'.previous-old{i:05d}'
+   previous.mkdir()
+   (previous / '.successful').touch()
+   os.utime(previous / '.successful', (100 + i, 100 + i))
+  (root / '.previous-failed00').mkdir()
   result=subprocess.run(['bash',script,'archive','configuration'],env=env,capture_output=True,text=True)
   calls=log.read_text(); success=(pending in [0,2] and not fail)
   assert (result.returncode==0)==success,(pending,fail,result.stderr)
+  assert not list(root.glob('.release-*')),(pending,fail,'staging directory was left behind')
+  assert (root / '.previous-failed00').is_dir()
+  assert len(list(root.glob('.previous-*/.successful'))) == (3 if success else 4)
   assert (' db:backup ' in calls)==(pending==2),(pending,fail,calls)
   if fail=='db:backup': assert ' artisan migrate ' not in calls
   if pending==1: assert ' artisan down ' not in calls

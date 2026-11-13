@@ -9,6 +9,7 @@ flock -n 9 || { echo 'Another deployment is running.' >&2; exit 1; }
 archive=${1:?Release archive required}
 configuration=${2:?Configuration file required}
 stage=$(mktemp -d "$PWD/.release-XXXXXXXX")
+trap 'rm -rf -- "$stage"' EXIT
 previous=$(mktemp -d "$PWD/.previous-XXXXXXXX")
 migration_started=0
 maintenance=0
@@ -99,4 +100,15 @@ artisan up
 compose exec -T nginx wget -q -O /dev/null http://127.0.0.1/up
 compose up -d worker scheduler
 trap - ERR
+touch "$previous/.successful"
+retained=1
+while IFS= read -r -d '' entry; do
+    directory=${entry#* }
+    [[ "$directory" == "$previous" ]] && continue
+    if (( retained < 3 )); then
+        ((retained += 1))
+    else
+        rm -rf -- "$directory"
+    fi
+done < <(find "$PWD" -maxdepth 2 -mindepth 2 -path "$PWD/.previous-????????/.successful" -type f -printf '%T@ %h\0' | sort -z -rn)
 echo "Deployment completed. Previous code retained at $previous"
