@@ -3,12 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Models\Product;
+use App\Services\Catalog\ProductMedia;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Http\File;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Throwable;
 
 #[Signature('products:import-images {folder : Папка с фото: имя файла — код 1С (РТ-00000805.jpg); РТ-00000805_2.jpg — дополнительное фото} {--force : Записать; без флага — только отчёт} {--min-size=300 : Минимальная сторона фото, px}')]
 #[Description('Загрузить фото товаров из папки: файл называется кодом 1С; существующие фото не заменяются')]
@@ -75,16 +79,23 @@ class ImportProductImages extends Command
             return self::SUCCESS;
         }
 
-        foreach ($report['main'] as $item) {
-            $item['product']->update(['image' => $this->store($item['path'])]);
-        }
-
-        foreach ($report['gallery'] as $item) {
-            $path = $this->store($item['path']);
-
-            if (! $item['product']->images()->where('path', $path)->exists()) {
-                $item['product']->images()->create(['path' => $path, 'sort_order' => $item['extra']]);
+        try {
+            foreach ($report['main'] as $item) {
+                $item['product']->update(['image' => $this->store($item['path'])]);
             }
+
+            foreach ($report['gallery'] as $item) {
+                $path = $this->store($item['path']);
+
+                if (! $item['product']->images()->where('path', $path)->exists()) {
+                    $item['product']->images()->create(['path' => $path, 'sort_order' => $item['extra']]);
+                }
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Product image import failed', ['exception_type' => $exception::class]);
+            $this->error('Не удалось сохранить изображение. Импорт остановлен; уже загруженные файлы сохранены.');
+
+            return self::FAILURE;
         }
 
         $this->info('Загружено: главных фото — '.count($report['main']).', в галерею — '.count($report['gallery']).'.');
@@ -116,10 +127,12 @@ class ImportProductImages extends Command
     private function store(string $path): string
     {
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $target = 'catalog/products/'.md5_file($path).'.'.($extension === 'jpeg' ? 'jpg' : $extension);
+        $directory = ProductMedia::uploadDirectory();
+        $disk = Storage::disk(ProductMedia::uploadDisk());
+        $target = $directory.'/'.md5_file($path).'.'.($extension === 'jpeg' ? 'jpg' : $extension);
 
-        if (! Storage::disk('public')->exists($target)) {
-            Storage::disk('public')->putFileAs('catalog/products', new File($path), basename($target));
+        if (! $disk->exists($target) && $disk->putFileAs($directory, new File($path), basename($target)) === false) {
+            throw new RuntimeException('Не удалось сохранить изображение товара.');
         }
 
         return $target;

@@ -8,7 +8,7 @@
             @php($productUrl = route('product.show', $line->product))
             <div class="header-cart__item">
                 <div class="header-cart__image">
-                    <a href="{{ $productUrl }}"><img src="{{ Illuminate\Support\Facades\Storage::disk('public')->url($line->product->image ?: 'no_image.png') }}" alt="{{ $line->product->name }}" title="{{ $line->product->name }}" class="img-responsive" width="60" height="60" loading="lazy" /></a>
+                    <a href="{{ $productUrl }}"><img src="{{ App\Services\Catalog\ProductMedia::url($line->product->image ?: 'no_image.png') }}" alt="{{ $line->product->name }}" title="{{ $line->product->name }}" class="img-responsive" width="60" height="60" loading="lazy" /></a>
                 </div>
                 <form method="post" action="{{ route('cart.update', $line->product) }}" class="header-cart__item-wrapper" @submit.prevent="$store.cart.change($el)">
                     @csrf

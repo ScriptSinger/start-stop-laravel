@@ -6,7 +6,7 @@
 
 {{-- Разметка — 1:1 с product/product.twig темы UniShop2 старого сайта. --}}
 @php($category = $product->categories->first())
-@php($image = Illuminate\Support\Facades\Storage::disk('public')->url($product->image ?: 'no_image.png'))
+@php($image = App\Services\Catalog\ProductMedia::url($product->image ?: 'no_image.png'))
 @php($heading = $product->heading ?: $product->name)
 @php([$availabilityText, $availabilityClass] = match (true) {
     $product->quantity > 0 => ['В наличии', 't-5'],
@@ -62,7 +62,7 @@
                                         <div class="product-page__image-addit">
                                             @foreach ([$product->image, ...$product->images->pluck('path')] as $path)
                                                 @if ($path)
-                                                    @php($url = Illuminate\Support\Facades\Storage::disk('public')->url($path))
+                                                    @php($url = App\Services\Catalog\ProductMedia::url($path))
                                                     <img src="{{ $url }}" alt="{{ $heading }}" class="product-page__image-addit-img img-responsive" width="74" height="74" loading="lazy" @click="image = @js($url)" />
                                                 @endif
                                             @endforeach

@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
+use App\MoonShine\Fields\ProductPhoto;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -35,7 +36,6 @@ use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Checkbox;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Range;
 use MoonShine\UI\Fields\Select;
@@ -57,7 +57,7 @@ class ProductIndexPage extends IndexPage
     {
         return [
             ID::make()->sortable(),
-            Image::make('Фото', 'image'),
+            ProductPhoto::make('Фото', 'image'),
             Text::make('Название', 'name')->sortable(),
             Text::make('Код товара', 'code')->sortable(),
             Text::make('Артикул', 'sku')->sortable(),

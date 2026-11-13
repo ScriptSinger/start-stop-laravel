@@ -4,7 +4,6 @@ namespace App\Services\Catalog;
 
 use App\Models\Product;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Фото для товаров без фото по «родственным» товарам сайта. На сайте одно фото
@@ -29,14 +28,12 @@ class ProductImageSiblings
      */
     public function plan(): Collection
     {
-        $disk = Storage::disk('public');
-
         $donors = Product::query()
             ->whereNotNull('image')->where('image', '!=', '')
             ->orderByDesc('status')->orderBy('id')
             ->with('categories:id')
             ->get(['id', 'name', 'image', 'status'])
-            ->filter(fn (Product $product): bool => $disk->exists($product->image));
+            ->filter(fn (Product $product): bool => ProductMedia::diskFor($product->image)->exists($product->image));
 
         $bySeries = $donors->groupBy(fn (Product $product): string => $this->series($product->name) ?? '')->forget('');
         $byName = $donors->groupBy(fn (Product $product): string => $this->wordsOnly($product->name));

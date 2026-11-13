@@ -28,6 +28,10 @@ return [
     |
     */
 
+    // Новые фото можно переключить отдельно; старые — только после сверки копии.
+    'product_upload_disk' => env('PRODUCT_IMAGE_UPLOAD_DISK', 'public'),
+    'product_legacy_disk' => env('PRODUCT_IMAGE_LEGACY_DISK', 'public'),
+
     'disks' => [
 
         'local' => [
@@ -45,6 +49,20 @@ return [
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
+        ],
+
+        'media' => [
+            'driver' => 's3',
+            'key' => env('MEDIA_S3_ACCESS_KEY_ID'),
+            'secret' => env('MEDIA_S3_SECRET_ACCESS_KEY'),
+            'region' => env('MEDIA_S3_REGION', 'ru-central1'),
+            'bucket' => env('MEDIA_S3_BUCKET'),
+            'endpoint' => env('MEDIA_S3_ENDPOINT', 'https://storage.yandexcloud.net'),
+            'url' => env('MEDIA_S3_URL'),
+            'use_path_style_endpoint' => true,
+            // Публичное чтение медиа задаётся политикой бакета, ACL объектов остаётся private.
+            'visibility' => 'private',
+            'throw' => true,
         ],
 
         's3' => [

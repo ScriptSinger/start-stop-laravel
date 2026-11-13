@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Product;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -97,6 +98,38 @@ class ImportProductImagesTest extends TestCase
     public function test_missing_folder_fails(): void
     {
         $this->artisan('products:import-images', ['folder' => '/no/such/folder'])->assertFailed();
+    }
+
+    public function test_import_writes_main_and_gallery_to_media_when_enabled(): void
+    {
+        config(['filesystems.product_upload_disk' => 'media']);
+        $remote = Storage::fake('media');
+        $product = $this->product('РТ-1');
+        $this->image('РТ-1.jpg');
+        $this->image('РТ-1_2.png', 'png', 1);
+
+        $this->artisan('products:import-images', ['folder' => $this->folder, '--force' => true])->assertSuccessful();
+
+        $this->assertStringStartsWith('media/products/', $product->fresh()->image);
+        $remote->assertExists($product->fresh()->image);
+        $remote->assertExists($product->images()->firstOrFail()->path);
+        Storage::disk('public')->assertDirectoryEmpty('/');
+    }
+
+    public function test_failed_remote_write_does_not_attach_nonexistent_image(): void
+    {
+        config(['filesystems.product_upload_disk' => 'media']);
+        $disk = \Mockery::mock(FilesystemAdapter::class);
+        $disk->shouldReceive('exists')->once()->andReturn(false);
+        $disk->shouldReceive('putFileAs')->once()->andReturn(false);
+        Storage::set('media', $disk);
+        $product = $this->product('РТ-1');
+        $this->image('РТ-1.jpg');
+
+        $this->artisan('products:import-images', ['folder' => $this->folder, '--force' => true])
+            ->expectsOutputToContain('Не удалось сохранить изображение')->assertFailed();
+
+        $this->assertNull($product->fresh()->image);
     }
 
     private function product(string $code, ?string $image = null): Product

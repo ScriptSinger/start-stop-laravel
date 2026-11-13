@@ -53,7 +53,7 @@
                                             @php($productUrl = route('product.show', $line->product))
                                             <div class="checkout-cart__item">
                                                 <div class="checkout-cart__image">
-                                                    <a href="{{ $productUrl }}"><img src="{{ Illuminate\Support\Facades\Storage::disk('public')->url($line->product->image ?: 'no_image.png') }}" alt="{{ $line->product->name }}" title="{{ $line->product->name }}" class="checkout-cart__image-img img-responsive" width="90" height="90" loading="lazy" /></a>
+                                                    <a href="{{ $productUrl }}"><img src="{{ App\Services\Catalog\ProductMedia::url($line->product->image ?: 'no_image.png') }}" alt="{{ $line->product->name }}" title="{{ $line->product->name }}" class="checkout-cart__image-img img-responsive" width="90" height="90" loading="lazy" /></a>
                                                 </div>
                                                 <form method="post" action="{{ route('cart.update', $line->product) }}" class="checkout-cart__item-wrapper">
                                                     @csrf

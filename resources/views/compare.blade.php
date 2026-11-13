@@ -25,7 +25,7 @@
                                     @foreach ($products as $product)
                                         <div class="compare-page__info compare-page__cell text-center">
                                             <div class="compare-page__img">
-                                                <a href="{{ route('product.show', $product) }}"><img src="{{ Illuminate\Support\Facades\Storage::disk('public')->url($product->image ?: 'no_image.png') }}" alt="{{ $product->name }}" title="{{ $product->name }}" class="img-responsive" /></a>
+                                                <a href="{{ route('product.show', $product) }}"><img src="{{ App\Services\Catalog\ProductMedia::url($product->image ?: 'no_image.png') }}" alt="{{ $product->name }}" title="{{ $product->name }}" class="img-responsive" /></a>
                                                 <form method="post" action="{{ route('compare.destroy', $product) }}">
                                                     @csrf
                                                     @method('DELETE')

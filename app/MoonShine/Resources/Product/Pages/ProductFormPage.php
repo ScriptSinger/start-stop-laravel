@@ -9,6 +9,7 @@ use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
+use App\MoonShine\Fields\ProductPhoto;
 use App\MoonShine\Fields\SeoFields;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
@@ -16,7 +17,6 @@ use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\ProductImage\ProductImageResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
@@ -35,7 +35,6 @@ use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Tabs;
 use MoonShine\UI\Components\Tabs\Tab;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Switcher;
@@ -144,19 +143,11 @@ class ProductFormPage extends FormPage
     }
 
     /**
-     * Фото товара. Папку для новых загрузок задаём в имени файла, а не через
-     * dir(): MoonShine приписывает dir() к любому пути без него, а
-     * импортированные фото лежат в разных папках (catalog/productimg,
-     * catalog/i, catalog/akb...) — превью у всех старых фото ломалось.
-     *
-     * Файлы с диска не удаляем: после миграции 261 файл фото общий у
-     * нескольких товаров (одна картинка на серию).
+     * Относительные пути сохраняются; общие файлы при удалении связи не удаляются.
      */
-    private function photoField(string $label, string $column): Image
+    private function photoField(string $label, string $column): ProductPhoto
     {
-        return Image::make($label, $column)
-            ->customName(fn (UploadedFile $file): string => 'catalog/products/'.$file->hashName())
-            ->disableDeleteFiles();
+        return ProductPhoto::make($label, $column);
     }
 
     /**
@@ -234,6 +225,8 @@ class ProductFormPage extends FormPage
     {
         return [
             ...SeoFields::rules(),
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'images.*.path' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'external_id' => ['nullable', 'string', 'max:255', Rule::unique(Product::class, 'external_id')->ignore($item->getKey())],
         ];
     }

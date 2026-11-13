@@ -13,7 +13,10 @@ use App\MoonShine\Resources\Product\Pages\ProductDetailPage;
 use App\MoonShine\Resources\Product\Pages\ProductFormPage;
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
 use MoonShine\Contracts\Core\PageContract;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Crud\Handlers\Handler;
 use MoonShine\ImportExport\Contracts\HasImportExportContract;
@@ -42,6 +45,14 @@ class ProductResource extends ModelResource implements HasImportExportContract
     protected string $column = 'name';
 
     protected array $with = ['manufacturer', 'categories'];
+
+    /**
+     * Ошибка загрузки галереи не должна оставлять частично сохранённую карточку.
+     */
+    public function save(DataWrapperContract $item, ?FieldsContract $fields = null): DataWrapperContract
+    {
+        return DB::transaction(fn (): DataWrapperContract => parent::save($item, $fields));
+    }
 
     /**
      * Удалённые товары открываются по ссылке из списка (вкладка «Удалённые»).

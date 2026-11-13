@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Product\Pages;
 
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
+use App\MoonShine\Fields\ProductPhoto;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
@@ -18,7 +19,6 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
@@ -37,7 +37,7 @@ class ProductDetailPage extends DetailPage
     {
         return [
             ID::make(),
-            Image::make('Фото', 'image'),
+            ProductPhoto::make('Фото', 'image'),
             Text::make('Название', 'name'),
             Text::make('Slug', 'slug'),
             Text::make('Код товара', 'code'),

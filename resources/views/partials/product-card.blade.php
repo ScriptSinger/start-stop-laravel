@@ -2,7 +2,7 @@
      Ожидает загруженную связь attributeValues.attribute (Product::withCardData()).
      Цены в формате старого сайта: «7300р.». --}}
 @php($cardFormId = 'add-to-cart-'.$product->id)
-@php($image = Illuminate\Support\Facades\Storage::disk('public')->url($product->image ?: 'no_image.png'))
+@php($image = App\Services\Catalog\ProductMedia::url($product->image ?: 'no_image.png'))
 @php([$availabilityText, $availabilityClass] = match (true) {
     $product->quantity > 0 => ['В наличии', 't-5'],
     $product->isAvailableOnOrder() => ['Под заказ', 't-2'],

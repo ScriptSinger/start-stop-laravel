@@ -3,10 +3,10 @@
 namespace App\Services\Seo;
 
 use App\Models\Product;
+use App\Services\Catalog\ProductMedia;
 use Artesaos\SEOTools\Facades\JsonLdMulti;
 use Artesaos\SEOTools\Facades\OpenGraph;
 use Artesaos\SEOTools\Facades\SEOTools;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Теги <head> карточки товара: title и description из полей товара,
@@ -29,7 +29,7 @@ class ProductSeo
         OpenGraph::setType('product');
 
         if ($product->image) {
-            SEOTools::addImages(Storage::disk('public')->url($product->image));
+            SEOTools::addImages(ProductMedia::url($product->image));
         }
 
         JsonLdMulti::setType('Product')
