@@ -141,7 +141,7 @@ jobs:
             rm -f bootstrap/cache/*.php
             docker compose build php worker scheduler </dev/null
             docker compose up -d --no-deps --force-recreate php nginx </dev/null
-            docker compose exec -T php php artisan optimize:clear --no-interaction </dev/null
+            docker compose exec -T php php artisan optimize:clear --except=cache --no-interaction </dev/null
             pending=0
             docker compose exec -T php php artisan migrate:status --pending=2 --no-ansi --no-interaction </dev/null || pending=$?
             case "$pending" in
@@ -154,8 +154,6 @@ jobs:
             esac
             docker compose exec -T php php artisan storage:link --force --no-interaction </dev/null
             docker compose exec -T php php artisan optimize --no-interaction </dev/null
-            docker compose exec -T php php artisan car-landings:refresh --no-interaction </dev/null
-            docker compose exec -T php php artisan sitemap:generate --no-interaction </dev/null
             docker compose exec -T php php artisan telegram:check-webhook https://edge.ufamasters.ru:8443/start-stop/api/telegram/webhook --no-interaction </dev/null
             docker compose exec -T php php artisan up --no-interaction </dev/null
             docker compose exec -T nginx wget -q -O /dev/null http://127.0.0.1/up </dev/null || {

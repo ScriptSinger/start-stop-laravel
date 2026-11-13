@@ -31,10 +31,49 @@ export function initReviewsWidget() {
         .catch(() => {});
 }
 
-/** Карта из конструктора Яндекс.Карт: скрипт рисует карту там, где он вставлен. */
+let mapsPromise;
+
+function loadMaps(key) {
+    if (!mapsPromise) {
+        const params = new URLSearchParams({lang: 'ru_RU'});
+        if (key) {
+            params.set('apikey', key);
+        }
+        mapsPromise = loadScript(`https://api-maps.yandex.ru/2.1/?${params}`, document.head)
+            .then(() => new Promise((resolve, reject) => window.ymaps.ready(() => resolve(window.ymaps), reject)));
+    }
+    return mapsPromise;
+}
+
+/** Карта загружается при приближении к видимой области страницы. */
 export function initYandexMaps() {
     document.querySelectorAll('[data-yandex-map]').forEach((container) => {
-        loadScript(container.dataset.yandexMap, container).catch(() => {});
+        const mount = async () => {
+            try {
+                const ymaps = await loadMaps(container.dataset.mapKey);
+                const coordinates = JSON.parse(container.dataset.coordinates);
+                const map = new ymaps.Map(container, {
+                    center: coordinates,
+                    zoom: 17,
+                    controls: ['zoomControl'],
+                });
+                map.geoObjects.add(new ymaps.Placemark(coordinates, {
+                    hintContent: 'Старт-Стоп',
+                }, {preset: 'islands#redIcon'}));
+                map.behaviors.disable('scrollZoom');
+                const resizeObserver = new ResizeObserver(() => map.container.fitToViewport());
+                resizeObserver.observe(container);
+            } catch {
+                container.textContent = 'Карта временно недоступна. Адрес и контакты указаны рядом.';
+            }
+        };
+        const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                observer.disconnect();
+                mount();
+            }
+        }, {rootMargin: '400px 0px'});
+        observer.observe(container);
     });
 }
 

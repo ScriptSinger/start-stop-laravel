@@ -41,7 +41,7 @@
                             </div>
                             <div class="contacts__map col-xs-12 col-sm-6">
                                 <div class="heading">Схема проезда</div>
-                                <div data-yandex-map="{{ config('shop.yandex_map_src') }}"></div>
+                                <div data-yandex-map data-coordinates="{{ json_encode(config('shop.map_coordinates')) }}" data-map-key="{{ config('services.yandex_maps.key') }}"></div>
                             </div>
                         </div>
                     </div>

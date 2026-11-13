@@ -39,8 +39,7 @@ return [
         'uuid' => '87a6a8bf-39d1-4a14-a655-87f1da7fa7ea',
         'name' => 'g1162765',
     ],
-    // Карта «Схема проезда»: конструктор Яндекс.Карт из настроек темы.
-    'yandex_map_src' => 'https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Aef0add951ec54cba1f9cfc0cd56589920f6546e97b2b6782213bf3cbf9666ef6&width=100%25&height=400&lang=ru_RU&scroll=true',
+    'map_coordinates' => [54.785366, 56.123191],
 
     // Заголовок и описание главной для поисковиков — из общих настроек магазина
     // старого сайта (config_meta_title / config_meta_description).

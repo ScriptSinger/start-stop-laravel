@@ -48,3 +48,13 @@
 .fly-block__scrollup {background: var(--btn-primary-bg); box-shadow: 0 2px 8px rgba(0 0 0 / .3)}
 .fly-block__scrollup:hover {background: var(--btn-primary-bg-hover)}
 .fly-block--above-chat {bottom: 90px}
+
+/* Карта API требует собственной высоты контейнера. */
+[data-yandex-map] {height: 400px; background: #eee; border-radius: 15px; overflow: hidden}
+.contact-wrap .row {display: flex; flex-wrap: wrap}
+.contact-wrap .blockontact {position: relative; width: 40%; height: 400px}
+.contact-wrap .map-area {width: 60%}
+@media (max-width: 767px) {
+    .contact-wrap .blockontact {width: 100%; height: auto}
+    .contact-wrap .map-area {width: 100%}
+}

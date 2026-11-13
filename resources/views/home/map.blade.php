@@ -26,8 +26,8 @@
 					<span class="infobanner-overlay"></span>
 				</div>
 			</div>
-			{{-- Карту рисует скрипт конструктора Яндекс.Карт (embeds.js). --}}
-			<div class="col-md-12 map-area" data-yandex-map="{{ config('shop.yandex_map_src') }}"></div>
+			{{-- Интерактивная карта через JavaScript API Яндекса. --}}
+			<div class="col-md-12 map-area" data-yandex-map data-coordinates="{{ json_encode(config('shop.map_coordinates')) }}" data-map-key="{{ config('services.yandex_maps.key') }}"></div>
 		</div>
 	</div>
 </div>

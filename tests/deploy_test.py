@@ -10,6 +10,9 @@ for block in workflow.split("<< 'EOF'\n")[1:]:
     scripts.append(textwrap.dedent(block.split('\n          EOF', 1)[0]))
 
 assert len(scripts) == 2
+assert 'artisan optimize:clear --except=cache' in scripts[1]
+assert 'artisan car-landings:refresh' not in scripts[1]
+assert 'artisan sitemap:generate' not in scripts[1]
 for script in scripts:
     subprocess.run(['bash', '-n'], input=script, text=True, check=True)
 
