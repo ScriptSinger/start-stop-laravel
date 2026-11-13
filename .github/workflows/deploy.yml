@@ -18,11 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check Deployment Script
-        run: |
-          bash -n docker/deploy.sh
-          python3 tests/deploy_test.py
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -46,9 +41,7 @@ jobs:
         run: npm run build
 
       - name: Run Tests
-        run: |
-          cp .env.example .env
-          php artisan test
+        run: php artisan test --compact
 
       - name: Install Production Dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
@@ -96,30 +89,89 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
-      # .env пишется здесь и копируется файлом: так спецсимволы в паролях
-      # ($, кавычки) доходят как есть, а не разбираются shell на сервере.
-      - name: Upload Release to Server
+      - name: Prepare Server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" 'bash -se' << 'EOF'
+            set -Eeuo pipefail
+            cd ~/start-stop
+            exec 9>.deploy.lock
+            flock -n 9 || { echo 'Another deployment is running.' >&2; exit 1; }
+            docker compose exec -T php php artisan down --render=errors::503 --retry=60 --no-interaction </dev/null
+            docker compose stop -t 60 worker scheduler </dev/null
+          EOF
+
+      - name: Transfer Release
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
           umask 077
+          mkdir release
+          tar -xpzf release.tar.gz -C release
+          rsync -rlptzc --delete -e 'ssh -i ~/.ssh/id_ed25519' \
+            release/app release/config release/database release/lang \
+            release/resources release/routes release/vendor "$SSH_USER@$SSH_HOST:start-stop/"
+          rsync -rlptzc --exclude='/public/storage' --exclude='/public/sitemap.xml' -e 'ssh -i ~/.ssh/id_ed25519' \
+            release/public release/bootstrap release/docker release/artisan \
+            release/composer.json release/composer.lock release/docker-compose.prod.yml \
+            "$SSH_USER@$SSH_HOST:start-stop/"
           printf '%s\n' "$ENV_FILE" > production.env
-          scp -i ~/.ssh/id_ed25519 release.tar.gz \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/start-stop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
           scp -i ~/.ssh/id_ed25519 production.env \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/start-stop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.config"
+            "$SSH_USER@$SSH_HOST:/tmp/start-stop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.config"
 
       - name: Deploy on Server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} bash -s -- "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" << 'EOF'
-            set -e
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" bash -s -- "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" << 'EOF'
+            set -Eeuo pipefail
             case "$1:$2" in *[!0-9:]*|:*) exit 1 ;; esac
             cd ~/start-stop
-            archive="/tmp/start-stop-$1-$2.tar.gz"
+            exec 9>.deploy.lock
+            flock -n 9 || { echo 'Another deployment is running.' >&2; exit 1; }
             configuration="/tmp/start-stop-$1-$2.config"
-            # Run the deployment script shipped with the tested artifact.
-            script=$(mktemp /tmp/start-stop-deploy-XXXXXXXX.sh)
-            trap 'rm -f "$script" "$archive" "$configuration"' EXIT
-            tar -xOf "$archive" docker/deploy.sh > "$script"
-            bash "$script" "$archive" "$configuration"
+            trap 'rm -f "$configuration"' EXIT
+            mv "$configuration" .env
+            mv docker-compose.prod.yml docker-compose.yml
+            rm -f bootstrap/cache/*.php
+            docker compose build php worker scheduler </dev/null
+            docker compose up -d --no-deps --force-recreate php nginx </dev/null
+            docker compose exec -T php php artisan optimize:clear --no-interaction </dev/null
+            pending=0
+            docker compose exec -T php php artisan migrate:status --pending=2 --no-ansi --no-interaction </dev/null || pending=$?
+            case "$pending" in
+              0) ;;
+              2)
+                docker compose exec -T php php artisan db:backup --label=before-deploy --no-interaction </dev/null
+                docker compose exec -T php php artisan migrate --force --no-interaction </dev/null
+                ;;
+              *) echo 'Cannot determine migration state; deployment aborted.' >&2; exit 1 ;;
+            esac
+            docker compose exec -T php php artisan storage:link --force --no-interaction </dev/null
+            docker compose exec -T php php artisan optimize --no-interaction </dev/null
+            docker compose exec -T php php artisan car-landings:refresh --no-interaction </dev/null
+            docker compose exec -T php php artisan sitemap:generate --no-interaction </dev/null
+            docker compose exec -T php php artisan telegram:check-webhook https://edge.ufamasters.ru:8443/start-stop/api/telegram/webhook --no-interaction </dev/null
+            docker compose exec -T php php artisan up --no-interaction </dev/null
+            docker compose exec -T nginx wget -q -O /dev/null http://127.0.0.1/up </dev/null || {
+              docker compose exec -T php php artisan down --render=errors::503 --retry=60 --no-interaction </dev/null
+              exit 1
+            }
+            docker compose up -d worker scheduler </dev/null
           EOF
+
+      - name: Remove Temporary Configuration
+        if: always()
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          if [ -f ~/.ssh/id_ed25519 ]; then
+            ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+              "rm -f -- /tmp/start-stop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.config"
+          fi

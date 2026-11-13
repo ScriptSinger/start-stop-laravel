@@ -1,86 +1,77 @@
-import os, pathlib, tempfile, subprocess
-script=str(pathlib.Path('docker/deploy.sh').resolve())
-for pending,fail in [(0,''),(2,''),(1,''),(2,'db:backup'),(2,'migrate'),(0,'optimize')]:
- with tempfile.TemporaryDirectory() as tmp:
-  root=pathlib.Path(tmp); bins=root/'bin'; bins.mkdir(); log=root/'calls'
-  docker='''#!/bin/bash
+import os
+import pathlib
+import subprocess
+import tempfile
+import textwrap
+
+workflow = pathlib.Path('.github/workflows/deploy.yml').read_text()
+scripts = []
+for block in workflow.split("<< 'EOF'\n")[1:]:
+    scripts.append(textwrap.dedent(block.split('\n          EOF', 1)[0]))
+
+assert len(scripts) == 2
+for script in scripts:
+    subprocess.run(['bash', '-n'], input=script, text=True, check=True)
+
+for script, pending, failure in [(scripts[0], 0, ''), (scripts[0], 0, 'stop'),
+                                 (scripts[1], 0, ''), (scripts[1], 2, ''),
+                                 (scripts[1], 2, 'db:backup'), (scripts[1], 2, 'migrate'),
+                                 (scripts[1], 1, ''), (scripts[1], 0, 'wget')]:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = pathlib.Path(tmp)
+        bins = root / 'bin'
+        bins.mkdir()
+        log = root / 'calls'
+        docker = bins / 'docker'
+        docker.write_text('''#!/bin/bash
 printf '%s\\n' "$*" >> "$CALLS"
 if [[ "$*" == *"migrate:status"* ]]; then exit "$PENDING"; fi
 if [[ -n "$FAIL" && " $* " == *" $FAIL "* ]]; then exit 1; fi
-exit 0
-'''
-  tar='''#!/bin/bash
-if [[ "$*" == *"-xpzf"* ]]; then
- while [[ $# -gt 0 ]]; do
-  if [[ "$1" == "-C" ]]; then shift; target="$1"; break; fi
-  shift
- done
- mkdir -p "$target/database/migrations"
- touch "$target/artisan" "$target/docker-compose.prod.yml"
-fi
-'''
-  for name,body in [('docker',docker),('tar',tar),('mv','#!/bin/bash\nexit 0\n')]:
-   p=bins/name;p.write_text(body);p.chmod(0o755)
-  env=dict(os.environ,PATH=str(bins)+':'+os.environ['PATH'],DEPLOY_ROOT=tmp,CALLS=str(log),PENDING=str(pending),FAIL=fail)
-  for i in range(4):
-   previous = root / f'.previous-old{i:05d}'
-   previous.mkdir()
-   (previous / '.successful').touch()
-   os.utime(previous / '.successful', (100 + i, 100 + i))
-  (root / '.previous-failed00').mkdir()
-  result=subprocess.run(['bash',script,'archive','configuration'],env=env,capture_output=True,text=True)
-  calls=log.read_text(); success=(pending in [0,2] and not fail)
-  assert (result.returncode==0)==success,(pending,fail,result.stderr)
-  assert not list(root.glob('.release-*')),(pending,fail,'staging directory was left behind')
-  assert (root / '.previous-failed00').is_dir()
-  assert len(list(root.glob('.previous-*/.successful'))) == (3 if success else 4)
-  assert (' db:backup ' in calls)==(pending==2),(pending,fail,calls)
-  if fail=='db:backup': assert ' artisan migrate ' not in calls
-  if pending==1: assert ' artisan down ' not in calls
-  if fail=='migrate': assert ' artisan up ' not in calls
-  print('PASS',pending,fail or 'normal')
+''')
+        docker.chmod(0o755)
+        for name in ['mv', 'rm']:
+            command = bins / name
+            command.write_text('#!/bin/bash\nexit 0\n')
+            command.chmod(0o755)
+        env = dict(os.environ, PATH=str(bins) + ':' + os.environ['PATH'],
+                   DEPLOY_ROOT=tmp, CALLS=str(log), FAIL=failure, PENDING=str(pending))
+        command = script.replace('cd ~/start-stop', 'cd "$DEPLOY_ROOT"')
+        result = subprocess.run(['bash', '-s', '--', '123', '1'], input=command,
+                                env=env, text=True, capture_output=True)
+        calls = log.read_text()
+        assert (result.returncode == 0) == (failure == '' and pending != 1), (failure, result.stderr)
+        if script == scripts[1] and pending == 0:
+            assert ' artisan db:backup ' not in calls
+        if script == scripts[1] and pending == 2:
+            assert ' artisan db:backup ' in calls
+        if failure in ('db:backup', 'migrate'):
+            assert ' artisan up ' not in calls
+        if failure == 'wget':
+            assert calls.count(' artisan down ') == 1
+            assert ' up -d worker scheduler' not in calls
 
-# Real archive extraction must preserve public permissions despite private umask.
-with tempfile.TemporaryDirectory() as tmp:
- root=pathlib.Path(tmp); source=root/'source'; target=root/'target'
- (source/'public').mkdir(parents=True); target.mkdir()
- (source/'public'/'index.php').write_text('fixture')
- (source/'public').chmod(0o755); (source/'public'/'index.php').chmod(0o644)
- archive=root/'release.tar.gz'
- subprocess.run(['tar','-czf',str(archive),'-C',str(source),'public'],check=True)
- subprocess.run(['bash','-c','umask 077; tar -xpzf "$1" -C "$2"','bash',str(archive),str(target)],check=True)
- assert (target/'public').stat().st_mode & 0o777 == 0o755
- assert (target/'public'/'index.php').stat().st_mode & 0o777 == 0o644
- print('PASS real archive permissions with restrictive umask')
+assert 'rsync -rlptzc --delete' in workflow
+assert 'release/public release/bootstrap' in workflow
 
-# A second process must stop before it touches the release or application.
-import fcntl
 with tempfile.TemporaryDirectory() as tmp:
- lock = pathlib.Path(tmp) / '.deploy.lock'
- with lock.open('w') as handle:
-  fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-  result = subprocess.run(['bash', script, 'unused-archive', 'unused-config'],
-                          env=dict(os.environ, DEPLOY_ROOT=tmp), capture_output=True, text=True)
-  assert result.returncode != 0
-  assert 'Another deployment is running' in result.stderr
-  assert sorted(p.name for p in pathlib.Path(tmp).iterdir()) == ['.deploy.lock']
- print('PASS concurrent deployment is rejected before modifying files')
+    root = pathlib.Path(tmp)
+    release = root / 'release'
+    target = root / 'target'
+    (release / 'app').mkdir(parents=True)
+    (release / 'public').mkdir()
+    (target / 'app').mkdir(parents=True)
+    (target / 'public' / 'storage').mkdir(parents=True)
+    (release / 'app' / 'new.php').write_text('new')
+    (target / 'app' / 'old.php').write_text('old')
+    (release / 'public' / 'sitemap.xml').write_text('release')
+    (target / 'public' / 'sitemap.xml').write_text('server')
+    (target / 'public' / 'storage' / 'photo.jpg').write_text('upload')
+    subprocess.run(['rsync', '-rlptc', '--delete', str(release / 'app'), str(target)], check=True)
+    subprocess.run(['rsync', '-rlptc', '--exclude=/public/storage', '--exclude=/public/sitemap.xml',
+                    str(release / 'public'), str(target)], check=True)
+    assert not (target / 'app' / 'old.php').exists()
+    assert (target / 'app' / 'new.php').exists()
+    assert (target / 'public' / 'sitemap.xml').read_text() == 'server'
+    assert (target / 'public' / 'storage' / 'photo.jpg').exists()
 
-# A real release is staged selectively: migration discovery must work without
-# extracting production code and assets into the temporary directory.
-with tempfile.TemporaryDirectory() as tmp:
- root = pathlib.Path(tmp)
- source = root / 'source'
- stage = root / 'stage'
- (source / 'database' / 'migrations').mkdir(parents=True)
- (source / 'public').mkdir()
- stage.mkdir()
- for name in ['artisan', 'docker-compose.prod.yml', 'database/migrations/example.php', 'public/index.php']:
-  (source / name).write_text('fixture')
- archive = root / 'release.tar.gz'
- subprocess.run(['tar', '-czf', str(archive), '-C', str(source), 'artisan', 'docker-compose.prod.yml', 'database', 'public'], check=True)
- subprocess.run(['tar', '-xpzf', str(archive), '-C', str(stage), 'artisan', 'docker-compose.prod.yml', 'database/migrations'], check=True)
- assert (stage / 'database/migrations/example.php').exists()
- assert (stage / 'artisan').exists()
- assert not (stage / 'public').exists()
- print('PASS selective staging from a real archive')
+print('PASS deployment workflow syntax and failure handling')

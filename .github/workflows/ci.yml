@@ -30,7 +30,6 @@ jobs:
       - run: composer install --prefer-dist --no-interaction
       - run: npm ci
       - run: npm run build
-      - run: bash -n docker/deploy.sh
       - run: python3 tests/deploy_test.py
       - run: php artisan test --compact
 
