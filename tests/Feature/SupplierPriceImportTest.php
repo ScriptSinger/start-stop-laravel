@@ -10,6 +10,7 @@ use App\Services\Supplier\SupplierImportReport;
 use App\Services\Supplier\SupplierPriceImporter;
 use App\Services\Supplier\SupplierStockSync;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SupplierPriceImportTest extends TestCase
@@ -55,6 +56,45 @@ class SupplierPriceImportTest extends TestCase
         $this->assertSame(0, $report->productsRepriced);
         $this->assertSame(0, SupplierOffer::query()->count());
         $this->assertNull($product->refresh()->supplier_id);
+    }
+
+    public function test_preview_executes_no_writes_and_matches_applied_report(): void
+    {
+        $supplier = Supplier::factory()->create();
+        $this->product('BOLK Asia 6ст-50 Ач');
+        $csv = $this->akbAutoCsv('УТ-1', 'BOLK Asia 6ст-50 Ач', '3700', '9');
+        $writes = [];
+        DB::listen(function ($query) use (&$writes): void {
+            if (preg_match('/^\s*(insert|update|delete|replace)\b/i', $query->sql)) {
+                $writes[] = $query->sql;
+            }
+        });
+
+        $preview = $this->import($supplier, $csv, false);
+        $this->assertSame([], $writes);
+        $applied = $this->import($supplier, $csv, true);
+        $this->assertEquals($applied, $preview);
+    }
+
+    public function test_preview_matches_application_when_offers_change_and_compete(): void
+    {
+        $supplier = Supplier::factory()->create(['markup_percent' => 20]);
+        $competitor = Supplier::factory()->create(['markup_percent' => 20]);
+        $changed = $this->product('Changed');
+        $removed = $this->product('Removed');
+        $this->import($supplier, $this->akbAutoCsv('УТ-old', 'Changed', '1000', '9').$this->akbAutoCsv('УТ-gone', 'Removed', '1000', '9'), true);
+        SupplierOffer::factory()->create(['supplier_id' => $competitor->id, 'product_id' => $changed->id, 'cost' => 2000, 'quantity' => 9, 'in_price' => true]);
+        $csv = $this->akbAutoCsv('УТ-old', 'Changed', '2000', '9').$this->akbAutoCsv('УТ-old', 'Changed', '999', '9');
+
+        $preview = $this->import($supplier, $csv, false);
+        $applied = $this->import($supplier, $csv, true);
+
+        $this->assertEquals($applied, $preview);
+        $this->assertSame(1, $preview->vanished);
+        $this->assertSame(1, $preview->duplicates);
+        $this->assertSame(1, $preview->productsCleared);
+        $this->assertNull($removed->refresh()->supplier_id);
+        $this->assertSame($supplier->id, $changed->refresh()->supplier_id);
     }
 
     public function test_report_counts_only_what_changes_on_the_site(): void

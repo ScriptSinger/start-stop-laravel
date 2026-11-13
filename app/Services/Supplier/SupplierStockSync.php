@@ -27,22 +27,31 @@ class SupplierStockSync
      *
      * @return array{on_order: int, added: int, repriced: int, cleared: int}
      */
-    public function sync(): array
+    public function sync(?Collection $previewOffers = null, ?int $previewSupplierId = null): array
     {
         $minimum = (int) config('shop.supplier_order_min_quantity');
 
-        $best = SupplierOffer::query()
+        $offers = SupplierOffer::query()
             ->whereNotNull('product_id')
             ->where('in_price', true)
             ->whereHas('supplier', fn ($suppliers) => $suppliers->where('is_active', true))
+            ->when($previewSupplierId !== null, fn ($query) => $query->where('supplier_id', '!=', $previewSupplierId))
             ->with('supplier')
-            ->get()
+            ->orderBy('id')
+            ->get();
+
+        if ($previewOffers !== null) {
+            $offers = $offers->concat($previewOffers->filter(fn (SupplierOffer $offer): bool => $offer->product_id !== null && $offer->in_price && $offer->supplier->is_active));
+        }
+
+        $best = $offers
             ->filter(fn (SupplierOffer $offer): bool => $this->qualifies($offer))
             ->groupBy('product_id')
             ->map(fn (Collection $offers): SupplierOffer => $offers
                 ->sortBy([
                     fn (SupplierOffer $a, SupplierOffer $b): int => $this->retail($a) <=> $this->retail($b),
                     fn (SupplierOffer $a, SupplierOffer $b): int => $a->supplier->lead_working_days <=> $b->supplier->lead_working_days,
+                    fn (SupplierOffer $a, SupplierOffer $b): int => ($a->id ?? PHP_INT_MAX) <=> ($b->id ?? PHP_INT_MAX),
                 ])
                 ->first());
 
@@ -63,17 +72,21 @@ class SupplierStockSync
                 $repriced++;
             }
 
-            Product::query()->whereKey($productId)->update([
-                'supplier_quantity' => max((int) $offer->quantity, $minimum),
-                'supplier_price' => $retail,
-                'supplier_id' => $offer->supplier_id,
-            ]);
+            if ($previewOffers === null) {
+                Product::query()->whereKey($productId)->update([
+                    'supplier_quantity' => max((int) $offer->quantity, $minimum),
+                    'supplier_price' => $retail,
+                    'supplier_id' => $offer->supplier_id,
+                ]);
+            }
         }
 
-        $cleared = Product::query()
+        $toClear = Product::query()
             ->whereNotNull('supplier_id')
-            ->whereNotIn('id', $best->keys())
-            ->update(['supplier_quantity' => 0, 'supplier_price' => null, 'supplier_id' => null]);
+            ->whereNotIn('id', $best->keys());
+        $cleared = $previewOffers === null
+            ? $toClear->update(['supplier_quantity' => 0, 'supplier_price' => null, 'supplier_id' => null])
+            : $toClear->count();
 
         return ['on_order' => $before->count(), 'added' => $added, 'repriced' => $repriced, 'cleared' => $cleared];
     }
