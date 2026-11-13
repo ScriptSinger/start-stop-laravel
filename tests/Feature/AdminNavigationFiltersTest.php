@@ -246,13 +246,14 @@ class AdminNavigationFiltersTest extends TestCase
             ->assertDontSee('DELKOR');
     }
 
-    public function test_product_list_has_only_the_trashed_query_tag(): void
+    public function test_product_list_places_deleted_products_in_filters_instead_of_query_tags(): void
     {
         $html = $this->get('/admin/resource/product-resource/product-index-page')->assertOk()->getContent();
 
         preg_match_all('/query-tag=([\w-]+)/', $html, $matches);
 
-        $this->assertSame(['trashed'], array_values(array_unique($matches[1])));
+        $this->assertSame([], array_values(array_unique($matches[1])));
+        $this->assertStringContainsString('Удалённые товары', $html);
     }
 
     /**
