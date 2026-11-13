@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\MergeSocialCustomer;
 use App\Models\Customer;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\ConnectionException;
@@ -9,8 +10,6 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -155,7 +154,7 @@ class VkAuthController extends Controller
         return redirect()->intended(route('account'));
     }
 
-    public function merge(Request $request): RedirectResponse
+    public function merge(Request $request, MergeSocialCustomer $mergeCustomer): RedirectResponse
     {
         $request->validate(['password' => ['required', 'string']]);
 
@@ -165,30 +164,7 @@ class VkAuthController extends Controller
             return redirect()->route('account')->withErrors(['vkid' => 'Объединение аккаунтов недоступно.']);
         }
 
-        $password = (string) $request->input('password');
-
-        $mergedCustomer = DB::transaction(function () use ($customer, $password): ?Customer {
-            $source = Customer::query()->lockForUpdate()->find($customer->id);
-            $destination = $source?->vk_email === null
-                ? null
-                : Customer::query()->where('email', $source->vk_email)->lockForUpdate()->first();
-
-            if (! $source || ! $destination || $source->email !== null || $source->vk_id === null
-                || $destination->vk_id !== null || ($source->yandex_id !== null && $destination->yandex_id !== null)
-                || ! (($destination->password && Hash::check($password, $destination->password)) || $destination->upgradeLegacyPassword($password))) {
-                return null;
-            }
-
-            DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
-            $source->delete();
-            $destination->forceFill([
-                'vk_id' => $source->vk_id,
-                'vk_email' => $source->vk_email,
-                ...($source->yandex_id === null ? [] : ['yandex_id' => $source->yandex_id, 'yandex_email' => $source->yandex_email]),
-            ])->save();
-
-            return $destination;
-        });
+        $mergedCustomer = $mergeCustomer->vk($customer, (string) $request->input('password'));
 
         if (! $mergedCustomer) {
             return redirect()->route('account')->withErrors(['password' => 'Не удалось подтвердить прежний аккаунт. Проверьте пароль.']);

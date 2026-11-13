@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\MergeSocialCustomer;
 use App\Models\Customer;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\ConnectionException;
@@ -9,8 +10,6 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -145,7 +144,7 @@ class YandexAuthController extends Controller
      * Подтверждение связи с прежним аккаунтом его паролем. Заказы, уже
      * оформленные через Яндекс, остаются у покупателя после объединения.
      */
-    public function merge(Request $request): RedirectResponse
+    public function merge(Request $request, MergeSocialCustomer $mergeCustomer): RedirectResponse
     {
         $request->validate([
             'password' => ['required', 'string'],
@@ -157,31 +156,7 @@ class YandexAuthController extends Controller
             return redirect()->route('account')->withErrors(['yandex' => 'Объединение аккаунтов недоступно.']);
         }
 
-        $password = (string) $request->input('password');
-
-        $mergedCustomer = DB::transaction(function () use ($customer, $password): ?Customer {
-            $source = Customer::query()->lockForUpdate()->find($customer->id);
-            $destination = $source?->yandex_email === null
-                ? null
-                : Customer::query()->where('email', $source->yandex_email)->lockForUpdate()->first();
-
-            if (! $source || ! $destination || $source->email !== null || $source->yandex_id === null
-                || $destination->yandex_id !== null || ($source->vk_id !== null && $destination->vk_id !== null)
-                || ! (($destination->password && Hash::check($password, $destination->password)) || $destination->upgradeLegacyPassword($password))) {
-                return null;
-            }
-
-            $yandexId = $source->yandex_id;
-            DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
-            $source->delete();
-            $destination->forceFill([
-                'yandex_id' => $yandexId,
-                'yandex_email' => $source->yandex_email,
-                ...($source->vk_id === null ? [] : ['vk_id' => $source->vk_id, 'vk_email' => $source->vk_email]),
-            ])->save();
-
-            return $destination;
-        });
+        $mergedCustomer = $mergeCustomer->yandex($customer, (string) $request->input('password'));
 
         if (! $mergedCustomer) {
             return redirect()->route('account')->withErrors(['password' => 'Не удалось подтвердить прежний аккаунт. Проверьте пароль.']);

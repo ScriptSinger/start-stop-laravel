@@ -98,6 +98,21 @@ class VkAuthTest extends TestCase
         $this->assertAuthenticatedAs($customer);
     }
 
+    public function test_merge_rejects_conflicting_yandex_accounts(): void
+    {
+        $original = Customer::factory()->create(['email' => 'user@example.com']);
+        $original->forceFill(['yandex_id' => 'original-yandex'])->save();
+        $source = Customer::factory()->create(['email' => null]);
+        $source->forceFill(['vk_id' => 'vk-1', 'vk_email' => 'user@example.com', 'yandex_id' => 'source-yandex'])->save();
+
+        $this->actingAs($source)->post(route('auth.vkid.merge'), ['password' => 'password'])->assertSessionHasErrors('password');
+
+        $this->assertAuthenticatedAs($source);
+        $this->assertSame('original-yandex', $original->fresh()->yandex_id);
+        $this->assertSame('source-yandex', $source->fresh()->yandex_id);
+        $this->assertNull($original->fresh()->vk_id);
+    }
+
     public function test_new_vk_user_without_email_can_still_shop(): void
     {
         $this->fakeVk(['user_id' => '12345', 'first_name' => 'Иван']);

@@ -171,6 +171,21 @@ class YandexAuthTest extends TestCase
         $this->assertSame('other-id', $original->fresh()->yandex_id);
     }
 
+    public function test_merge_rejects_conflicting_vk_accounts(): void
+    {
+        $original = Customer::factory()->create(['email' => 'user@example.com']);
+        $original->forceFill(['vk_id' => 'original-vk'])->save();
+        $source = Customer::factory()->create(['email' => null]);
+        $source->forceFill(['yandex_id' => 'yandex-1', 'yandex_email' => 'user@example.com', 'vk_id' => 'source-vk'])->save();
+
+        $this->actingAs($source)->post(route('auth.yandex.merge'), ['password' => 'password'])->assertSessionHasErrors('password');
+
+        $this->assertAuthenticatedAs($source);
+        $this->assertSame('original-vk', $original->fresh()->vk_id);
+        $this->assertSame('source-vk', $source->fresh()->vk_id);
+        $this->assertNull($original->fresh()->yandex_id);
+    }
+
     public function test_authenticated_customer_can_link_yandex(): void
     {
         $customer = Customer::factory()->create();
