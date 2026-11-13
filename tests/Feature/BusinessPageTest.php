@@ -33,6 +33,6 @@ class BusinessPageTest extends TestCase
     public function test_header_links_to_business_page(): void
     {
         $this->get(route('home'))
-            ->assertSee('class="top-menu__business-link" href="'.route('business').'"', false);
+            ->assertSeeInOrder(['id="menu2"', 'href="'.route('business').'"', 'Для организаций'], false);
     }
 }

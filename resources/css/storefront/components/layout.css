@@ -12,14 +12,21 @@
 /* Отступы, которые в теме были пустыми div со style="height:…". */
 .footer__payments-gap {height: 15px}
 
-.top-menu__links {display: flex; align-items: center; gap: 14px; min-width: 0}
-.top-menu__business-link {display: inline-flex; align-items: center; gap: 7px; height: 27px; padding: 0 10px; border-radius: 3px; background: var(--btn-primary-bg); color: #fff; font-size: .8em; font-weight: 600; white-space: nowrap}
-.top-menu__business-link:hover, .top-menu__business-link:focus {background: var(--btn-primary-bg-hover); color: #fff; text-decoration: none}
-@media (max-width: 400px) {
-    .top-menu__links {gap: 6px}
-    .top-menu__business-link {padding: 0 6px; font-size: .75em}
-    .top-menu__business-link i {display: none}
-}
+/* Быстрый переход для организаций рядом с мобильным поиском. */
+.business-mobile-nav {clear: both; padding: 0 10px; margin-top: 10px}
+.business-mobile-nav a {display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 15px; background: var(--menu-right-bg); font-size: 14px; font-weight: 600}
+.business-mobile-nav {position: relative}
+.business-mobile-nav > a {padding-right: 105px}
+.business-mobile-nav__menu {position: absolute; top: 0; right: 10px; left: 10px; pointer-events: none; z-index: 99}
+.business-mobile-nav__menu summary {display: flex; align-items: center; justify-content: center; gap: 8px; width: 95px; min-height: 44px; margin-left: auto; border-left: 1px solid #ddd; cursor: pointer; font-weight: 600; background: var(--menu-right-bg); pointer-events: auto; list-style: none}
+.business-mobile-nav__menu summary::-webkit-details-marker {display: none}
+.business-mobile-nav__menu summary:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: -2px}
+.business-mobile-nav__menu[open] summary {color: var(--a-c-hover)}
+.business-mobile-nav__menu nav {max-height: 60vh; overflow-y: auto; background: #fff; border: 1px solid #ddd; box-shadow: 0 6px 12px rgba(0, 0, 0, .15); pointer-events: auto}
+.business-mobile-nav__menu nav a {background: #fff; border-bottom: 1px solid #eee}
+.business-mobile-nav__heading {display: block; padding: 12px 15px 4px; color: #777; font-size: 13px}
+.business-mobile-nav a:hover {color: var(--a-c-hover)}
+.business-mobile-nav a:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: 2px}
 
 /* Всплывающее уведомление: одно за раз, под шапкой браузера. */
 .uni-alert {top: 50px}

@@ -59,8 +59,12 @@ Alpine.directive('phone-mask', (el) => {
 
 // Вкладка Bootstrap по ссылке «Все характеристики»: $showTab('#tab-specification').
 Alpine.magic('showTab', () => (selector) => {
-    $(`a[href="${selector}"]`).tab('show');
-    scrollToElement(document.querySelector(`a[href="${selector}"]`).closest('ul'), 20);
+    const tab = document.querySelector(`a[data-toggle="tab"][href="${selector}"]`);
+
+    if (tab) {
+        $(tab).tab('show');
+        scrollToElement(tab.closest('ul'), 20);
+    }
 });
 
 window.Alpine = Alpine;

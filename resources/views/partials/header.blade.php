@@ -17,7 +17,6 @@
                         @endforeach
                     </ul>
                 </div>
-                <a class="top-menu__business-link" href="{{ route('business') }}"><i class="fas fa-briefcase" aria-hidden="true"></i>Для организаций</a>
             </div>
             <div class="top-menu__buttons">
                 @if ($hasWishlist)
@@ -137,6 +136,9 @@
                 <div class="col-xs-12 col-md-9 col-lg-9 col-xxl-16 hidden-xs hidden-sm">
                     <nav id="menu2" class="menu menu2 menu-right">
                         <ul class="menu__collapse">
+                            <li class="menu__level-1-li">
+                                <a class="menu__level-1-a" href="{{ route('business') }}"><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
+                            </li>
                             @foreach ($mainMenu as $item)
                                 <li class="menu__level-1-li {{ $item->children->isNotEmpty() ? 'has-children' : '' }}">
                                     <a class="menu__level-1-a" @if ($item->href()) href="{{ $item->href() }}" @endif>@if ($item->icon)<i class="menu__level-1-icon {{ $item->icon }} fa-fw"></i> @endif{{ $item->title }}</a>
@@ -157,6 +159,25 @@
                 </div>
             </div>
             <div id="search2" class="visible-xs visible-sm">@include('partials.search-form')</div>
+            <div class="business-mobile-nav visible-xs visible-sm">
+                <a href="{{ route('business') }}"><i class="fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
+                <details class="business-mobile-nav__menu">
+                    <summary><i class="fas fa-bars" aria-hidden="true"></i>Меню</summary>
+                    <nav aria-label="Разделы сайта">
+                        <a href="{{ route('business') }}">Для организаций</a>
+                        @foreach ($mainMenu as $item)
+                            @if ($item->href())
+                                <a href="{{ $item->href() }}">{{ $item->title }}</a>
+                            @else
+                                <span class="business-mobile-nav__heading">{{ $item->title }}</span>
+                            @endif
+                            @foreach ($item->children as $child)
+                                <a href="{{ $child->href() }}">{{ $child->title }}</a>
+                            @endforeach
+                        @endforeach
+                    </nav>
+                </details>
+            </div>
         </div>
     </div>
 </header>
