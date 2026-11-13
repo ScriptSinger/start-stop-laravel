@@ -62,7 +62,7 @@ class ProductSoftDeleteTest extends TestCase
             ->assertSee('ZUBR 60Ah О.П.')
             ->assertDontSee('Дубль DELKOR 60Ah О.П.');
 
-        $this->productTable(['query-tag' => 'trashed'])
+        $this->productTable(['filter' => ['deleted' => 'trashed']])
             ->assertSee('Дубль DELKOR 60Ah О.П.')
             ->assertDontSee('ZUBR 60Ah О.П.')
             ->assertSee('Восстановить')
@@ -75,7 +75,7 @@ class ProductSoftDeleteTest extends TestCase
             ->assertSee("product-resource-delete-modal-{$this->active->id}", false)
             ->assertSee("product-form-page/{$this->active->id}", false);
 
-        $this->productTable(['query-tag' => 'trashed'])
+        $this->productTable(['filter' => ['deleted' => 'trashed']])
             ->assertDontSee("product-resource-delete-modal-{$this->deleted->id}", false)
             ->assertDontSee("product-form-page/{$this->deleted->id}", false)
             ->assertSee("product-detail-page/{$this->deleted->id}", false);
@@ -85,7 +85,7 @@ class ProductSoftDeleteTest extends TestCase
     {
         $this->get('/admin/resource/product-resource/product-index-page')
             ->assertOk()
-            ->assertSee('Удалённые');
+            ->assertSee('Удалённые товары');
     }
 
     public function test_deleted_product_detail_page_opens_with_deletion_date(): void

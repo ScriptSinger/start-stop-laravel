@@ -19,6 +19,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use MoonShine\Contracts\UI\ActionButtonContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
@@ -26,8 +27,9 @@ use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Http\Responses\MoonShineJsonResponse;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
-use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\Attributes\AsyncMethod;
+use MoonShine\Support\Enums\Ability;
+use MoonShine\Support\Enums\TextWrap;
 use MoonShine\Support\Enums\ToastType;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\ActionButton;
@@ -39,7 +41,6 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Range;
 use MoonShine\UI\Fields\Select;
-use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -56,12 +57,12 @@ class ProductIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make()->sortable(),
+            ID::make()->sortable()->columnSelection(hideOnInit: true),
             ProductPhoto::make('Фото', 'image'),
-            Text::make('Название', 'name')->sortable(),
-            Text::make('Код товара', 'code')->sortable(),
+            Text::make('Название', 'name')->sortable()->textWrap(TextWrap::CLAMP),
+            Text::make('Код товара', 'code')->sortable()->columnSelection(hideOnInit: true),
             Text::make('Артикул', 'sku')->sortable(),
-            Text::make('Код 1С', 'external_id')->sortable(),
+            Text::make('Код 1С', 'external_id')->sortable()->columnSelection(hideOnInit: true),
             // По названию производителя, а не по его id.
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
                 ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query->orderBy(
@@ -86,11 +87,11 @@ class ProductIndexPage extends IndexPage
                     link: fn (Category $category, mixed $value, BelongsToMany $field): string => $field->getResource()->getFormPageUrl($category->getKey()),
                 ),
             // Сколько значений характеристик у товара; сами они — в просмотре товара.
-            Number::make('Хар-ки', 'attribute_values_count')->sortable(),
+            Number::make('Хар-ки', 'attribute_values_count')->sortable()->columnSelection(hideOnInit: true),
             Money::make('Цена', 'price')->sortable(),
             Number::make('Остаток', 'quantity')->sortable(),
             Number::make('У поставщика', 'supplier_quantity')->sortable(),
-            Switcher::make('Активен', 'status')->sortable(),
+            Text::make('Статус', 'status', fn (Product $product): string => $product->status ? 'Активен' : 'Неактивен')->sortable()->badge(fn (mixed $status): string => $status ? 'green' : 'gray'),
             Date::make('Удалён', 'deleted_at')->format('d.m.Y H:i')->sortable()->canSee(fn (): bool => $this->isTrashedView()),
         ];
     }
@@ -114,22 +115,59 @@ class ProductIndexPage extends IndexPage
                 ->icon('arrow-uturn-left')
                 ->canSee(fn (): bool => $this->isTrashedView())
                 ->showInLine(),
-            $this->bulkButton('Присвоить характеристику', 'tag', 'assignAttribute', [
-                Select::make('Значение (поиск: «емкость 60», «полярность»)', 'attribute_value_id')
+            $this->bulkButton('Активировать', 'check-circle', 'activateProducts', [], 'Отмеченные товары на этой странице станут активными и смогут отображаться на сайте.')
+                ->canSee(fn (): bool => ! $this->isTrashedView() && $resource->can(Ability::UPDATE)),
+            $this->bulkButton('Деактивировать', 'x-circle', 'deactivateProducts', [], 'Отмеченные товары на этой странице станут неактивными и перестанут отображаться на сайте.')
+                ->canSee(fn (): bool => ! $this->isTrashedView() && $resource->can(Ability::UPDATE)),
+            $this->bulkButton('Задать значение характеристики', 'tag', 'assignAttribute', [
+                Select::make('Характеристика и её значение', 'attribute_value_id')
                     ->options($this->attributeValueOptions())
+                    ->hint('Например: «Полярность · Обратная». Поиск по названию характеристики или значению.')
                     ->searchable()
                     ->required(),
                 Select::make('Если у товара уже есть значение этой характеристики', 'mode')
-                    ->options(['replace' => 'Заменить', 'add' => 'Добавить к имеющимся'])
+                    ->options(['replace' => 'Заменить прежние значения этой характеристики', 'add' => 'Добавить значение, сохранив прежние'])
                     ->default('replace'),
-            ], 'Точная ёмкость («60 Ah») сразу добавляет и диапазон («55 - 65 Ah») — по нему работает подбор по машине.'),
-            $this->bulkButton('Убрать характеристику', 'tag', 'detachAttribute', [
+            ], 'Выбранное значение будет задано каждому отмеченному товару на этой странице. Например: «Полярность · Обратная». Другие характеристики сохранятся. Для точной ёмкости автоматически добавятся подходящие диапазоны ёмкости для подбора по машине.'),
+            $this->bulkButton('Удалить значения характеристики', 'tag', 'detachAttribute', [
                 Select::make('Характеристика', 'attribute_id')
                     ->options(Attribute::query()->orderBy('name')->pluck('name', 'id')->all())
                     ->searchable()
                     ->required(),
-            ], 'У отмеченных товаров будут удалены все значения этой характеристики.'),
+            ], 'У каждого отмеченного товара на этой странице будут удалены все значения выбранной характеристики. Сама характеристика и её значения останутся в справочнике; другие товары не изменятся.'),
         );
+    }
+
+    #[AsyncMethod]
+    public function activateProducts(Request $request): MoonShineJsonResponse
+    {
+        return $this->setSelectedProductsStatus($request, true);
+    }
+
+    #[AsyncMethod]
+    public function deactivateProducts(Request $request): MoonShineJsonResponse
+    {
+        return $this->setSelectedProductsStatus($request, false);
+    }
+
+    private function setSelectedProductsStatus(Request $request, bool $status): MoonShineJsonResponse
+    {
+        abort_unless(auth(config('moonshine.auth.guard', 'moonshine'))->check(), 403);
+        abort_unless($this->getResource()->can(Ability::UPDATE), 403);
+
+        if ($request->input('ids') === null || $request->input('ids') === []) {
+            return MoonShineJsonResponse::make()->toast('Отметьте товары в списке.', ToastType::ERROR);
+        }
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $data['ids'])));
+        $updated = Product::query()->whereKey($ids)->where('status', '!=', $status)->update(['status' => $status]);
+
+        return $this->bulkDone(($status ? 'Включено товаров: ' : 'Отключено товаров: ').$updated);
     }
 
     /**
@@ -152,7 +190,7 @@ class ProductIndexPage extends IndexPage
      */
     private function isTrashedView(): bool
     {
-        return $this->getCore()->getRequest()->getScalar('query-tag') === 'trashed';
+        return request()->input('filter.deleted') === 'trashed';
     }
 
     /**
@@ -211,7 +249,11 @@ class ProductIndexPage extends IndexPage
                 formBuilder: fn (FormBuilderContract $form): FormBuilderContract => $form->async(events: [$resource->getListEventName()]),
             )
             ->icon($icon)
-            ->showInLine();
+            ->showInLine()
+            ->when(
+                in_array($method, ['assignAttribute', 'detachAttribute'], true),
+                fn (ActionButton $button): ActionButton => $button->showInDropdown(),
+            );
     }
 
     /**
@@ -284,6 +326,10 @@ class ProductIndexPage extends IndexPage
             Range::make('Цена', 'price')->nullable(),
             Range::make('Остаток у поставщика', 'supplier_quantity')->nullable(),
             Range::make('Цена под заказ', 'supplier_price')->nullable(),
+            Select::make('Удалённые товары', 'deleted')
+                ->options(['trashed' => 'Только удалённые'])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => $value === 'trashed' ? $query->onlyTrashed() : $query),
             Select::make('Статус', 'status')
                 ->options(['1' => 'Активные', '0' => 'Неактивные'])
                 ->nullable(),
@@ -362,19 +408,6 @@ class ProductIndexPage extends IndexPage
     }
 
     /**
-     * @return list<QueryTag>
-     */
-    protected function queryTags(): array
-    {
-        return [
-            // Мягко удалённые товары: просмотр и восстановление.
-            QueryTag::make('Удалённые', fn (Builder $query): Builder => $query->onlyTrashed())
-                ->alias('trashed')
-                ->icon('trash'),
-        ];
-    }
-
-    /**
      * @return list<Metric>
      */
     protected function metrics(): array
@@ -388,7 +421,7 @@ class ProductIndexPage extends IndexPage
      */
     protected function modifyListComponent(ComponentContract $component): ComponentContract
     {
-        return $component;
+        return $component->columnSelection();
     }
 
     /**

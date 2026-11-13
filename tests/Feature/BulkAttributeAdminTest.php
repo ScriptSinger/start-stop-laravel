@@ -59,8 +59,8 @@ class BulkAttributeAdminTest extends TestCase
         // Таблица с кнопками подгружается отдельным запросом компонента.
         $this->get('/admin/component/product-index-page/product-resource?_component_name=index-table-product-resource')
             ->assertOk()
-            ->assertSee('Присвоить характеристику')
-            ->assertSee('Убрать характеристику')
+            ->assertSee('Задать значение характеристики')
+            ->assertSee('Удалить значения характеристики')
             ->assertSee('Емкость · 60 Ah')
             ->assertSee('Полярность · Обратная');
     }
