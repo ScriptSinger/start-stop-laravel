@@ -17,6 +17,7 @@
                         @endforeach
                     </ul>
                 </div>
+                <a class="top-menu__business-link" href="{{ route('business') }}"><i class="fas fa-briefcase" aria-hidden="true"></i>Для организаций</a>
             </div>
             <div class="top-menu__buttons">
                 @if ($hasWishlist)

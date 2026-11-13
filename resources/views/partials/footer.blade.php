@@ -13,6 +13,9 @@
                         @foreach ($column->children as $link)
                             <li class="footer__column-li"><a href="{{ $link->href() }}" title="{{ $link->title }}" class="footer__column-a">{{ $link->title }}</a></li>
                         @endforeach
+                        @if ($loop->first)
+                            <li class="footer__column-li"><a href="{{ route('business') }}" class="footer__column-a">Для организаций</a></li>
+                        @endif
                     </ul>
                 </div>
             @endforeach
@@ -30,7 +33,6 @@
                 <ul class="footer__column-ul footer__contacts list-unstyled">
                     <li class="footer__column-li footer__contacts-li"><i class="footer__contacts-icon fa fa-map-marker fa-fw"></i><a class="footer__column-a" href="{{ route('contact') }}">{{ config('shop.address') }}</a></li>
                 </ul>
-                <a class="footer__business-link" href="{{ route('business') }}"><i class="fas fa-briefcase" aria-hidden="true"></i> Для организаций</a>
             </div>
         </div>
     </div>

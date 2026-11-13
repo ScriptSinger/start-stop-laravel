@@ -11,8 +11,15 @@
 
 /* Отступы, которые в теме были пустыми div со style="height:…". */
 .footer__payments-gap {height: 15px}
-.footer__business-link {display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--footer-c) !important; font-weight: 600}
-.footer__business-link:hover {color: var(--footer-c) !important; text-decoration: underline}
+
+.top-menu__links {display: flex; align-items: center; gap: 14px; min-width: 0}
+.top-menu__business-link {display: inline-flex; align-items: center; gap: 7px; height: 27px; padding: 0 10px; border-radius: 3px; background: var(--btn-primary-bg); color: #fff; font-size: .8em; font-weight: 600; white-space: nowrap}
+.top-menu__business-link:hover, .top-menu__business-link:focus {background: var(--btn-primary-bg-hover); color: #fff; text-decoration: none}
+@media (max-width: 400px) {
+    .top-menu__links {gap: 6px}
+    .top-menu__business-link {padding: 0 6px; font-size: .75em}
+    .top-menu__business-link i {display: none}
+}
 
 /* Всплывающее уведомление: одно за раз, под шапкой браузера. */
 .uni-alert {top: 50px}
