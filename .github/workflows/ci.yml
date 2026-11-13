@@ -1,0 +1,78 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests and frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, zip, gd, pdo_sqlite, curl, openssl
+          coverage: none
+          tools: composer
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: composer install --prefer-dist --no-interaction
+      - run: npm ci
+      - run: npm run build
+      - run: bash -n docker/deploy.sh
+      - run: python3 tests/deploy_test.py
+      - run: php artisan test --compact
+
+  mariadb:
+    name: MariaDB integration tests
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: test_app
+          MARIADB_USER: test_app
+          MARIADB_PASSWORD: test_password
+          MARIADB_ROOT_PASSWORD: test_root_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: test_app
+      DB_USERNAME: test_app
+      DB_PASSWORD: test_password
+      DB_URL: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, zip, gd, pdo_mysql, curl, openssl
+          coverage: none
+          tools: composer
+      - run: composer install --prefer-dist --no-interaction
+      - name: Exercise catalog, supplier and account queries
+        run: >-
+          php artisan test --compact
+          tests/Feature/CatalogFilterTest.php
+          tests/Feature/SupplierPriceImportTest.php
+          tests/Feature/YandexAuthTest.php
+          tests/Feature/VkAuthTest.php
