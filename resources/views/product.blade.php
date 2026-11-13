@@ -55,7 +55,13 @@
                                             </div>
                                         @endif
                                         <div class="product-page__image-main-carousel">
-                                            <img src="{{ $image }}" :src="image" alt="{{ $heading }}" title="{{ $heading }}" width="500" height="400" class="product-page__image-main-img img-responsive" />
+                                            <button type="button" class="product-image-zoom" aria-label="Увеличить фотографию товара" @click="$refs.photoDialog.showModal()">
+                                                <img src="{{ $image }}" :src="image" alt="{{ $heading }}" title="Увеличить фотографию" width="500" height="400" class="product-page__image-main-img img-responsive" />
+                                            </button>
+                                            <dialog x-ref="photoDialog" class="product-image-dialog" aria-label="Фотография товара" @click.self="$el.close()">
+                                                <button type="button" class="product-image-dialog__close" aria-label="Закрыть фотографию" @click="$refs.photoDialog.close()">&times;</button>
+                                                <img :src="image" alt="{{ $heading }}" class="product-image-dialog__image" />
+                                            </dialog>
                                         </div>
                                     </div>
                                     @if ($product->images->isNotEmpty())
