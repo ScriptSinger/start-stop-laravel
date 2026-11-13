@@ -87,6 +87,8 @@ class ImportLegacyOrders extends LegacyImportCommand
                     'status' => OrderStatus::fromLegacy($statusNames[$row->order_status_id] ?? null)->value,
                     'payment_method' => $this->methodLabel($row->payment_method),
                     'delivery_method' => $this->methodLabel($row->shipping_method),
+                    'payment_method_code' => null,
+                    'delivery_method_code' => null,
                     'total' => $row->total,
                     'shipping_address' => trim("{$row->shipping_address_1} {$row->shipping_address_2} {$row->shipping_city}"),
                     'updated_at' => $row->date_modified,

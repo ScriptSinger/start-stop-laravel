@@ -31,6 +31,8 @@ class PlaceOrderTest extends TestCase
         $this->assertSame(OrderStatus::New, $order->status);
         $this->assertSame(DeliveryMethod::Pickup->label(), $order->delivery_method);
         $this->assertSame(PaymentMethod::Card->label(), $order->payment_method);
+        $this->assertSame(DeliveryMethod::Pickup, $order->fresh()->delivery_method_code);
+        $this->assertSame(PaymentMethod::Card, $order->fresh()->payment_method_code);
         $this->assertNull($order->shipping_address);
         $this->assertEquals(12500, $order->total);
 

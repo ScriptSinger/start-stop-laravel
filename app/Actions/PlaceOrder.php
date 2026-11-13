@@ -35,6 +35,8 @@ class PlaceOrder
                 'status' => OrderStatus::New,
                 'payment_method' => $payment?->label(),
                 'delivery_method' => $delivery?->label(),
+                'payment_method_code' => $payment,
+                'delivery_method_code' => $delivery,
                 'shipping_address' => $delivery?->needsAddress() ? $contact['address'] : null,
                 'comment' => $contact['comment'],
                 'total' => $lines->sum(fn (CartLine $line): float => $line->total()) + ($delivery?->price() ?? 0),

@@ -21,6 +21,8 @@ class Order extends Model
         'status',
         'payment_method',
         'delivery_method',
+        'payment_method_code',
+        'delivery_method_code',
         'total',
         'shipping_address',
         'comment',
@@ -28,8 +30,22 @@ class Order extends Model
 
     protected $casts = [
         'status' => OrderStatus::class,
+        'payment_method_code' => PaymentMethod::class,
+        'delivery_method_code' => DeliveryMethod::class,
         'total' => 'decimal:4',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Order $order): void {
+            foreach (['payment_method' => PaymentMethod::cases(), 'delivery_method' => DeliveryMethod::cases()] as $field => $methods) {
+                $code = $field.'_code';
+                if ($order->isDirty($field) && ! $order->isDirty($code)) {
+                    $order->{$code} = collect($methods)->first(fn ($method): bool => $method->label() === $order->{$field});
+                }
+            }
+        });
+    }
 
     public function customer(): BelongsTo
     {
@@ -46,16 +62,20 @@ class Order extends Model
     }
 
     /**
-     * Заказы с этим способом получения. В заказе хранится текст подписи,
-     * а у старых заказов он свой («Бесплатная доставка» — это тоже доставка
-     * по городу), поэтому ищем по началу «Самовывоз».
+     * Для старых заказов без кода сохраняется поиск по исторической подписи.
      */
     #[Scope]
     protected function withDelivery(Builder $query, DeliveryMethod $method): void
     {
-        $method === DeliveryMethod::Pickup
-            ? $query->where('delivery_method', 'like', 'Самовывоз%')
-            : $query->where('delivery_method', 'not like', 'Самовывоз%');
+        $query->where(function (Builder $query) use ($method): void {
+            $query->where('delivery_method_code', $method->value)
+                ->orWhere(function (Builder $query) use ($method): void {
+                    $query->whereNull('delivery_method_code');
+                    $method === DeliveryMethod::Pickup
+                        ? $query->where('delivery_method', 'like', 'Самовывоз%')
+                        : $query->where('delivery_method', 'not like', 'Самовывоз%');
+                });
+        });
     }
 
     /**
@@ -65,13 +85,19 @@ class Order extends Model
     #[Scope]
     protected function withPayment(Builder $query, PaymentMethod $method): void
     {
-        match ($method) {
-            PaymentMethod::Cash => $query->where(fn (Builder $query): Builder => $query
-                ->where('payment_method', 'like', '%наличн%')
-                ->orWhere('payment_method', 'like', '%при доставке%')),
-            PaymentMethod::Transfer => $query->where('payment_method', 'like', '%перевод%'),
-            PaymentMethod::Card => $query->where('payment_method', 'like', '%картой%'),
-        };
+        $query->where(function (Builder $query) use ($method): void {
+            $query->where('payment_method_code', $method->value)
+                ->orWhere(function (Builder $query) use ($method): void {
+                    $query->whereNull('payment_method_code');
+                    match ($method) {
+                        PaymentMethod::Cash => $query->where(fn (Builder $query): Builder => $query
+                            ->where('payment_method', 'like', '%наличн%')
+                            ->orWhere('payment_method', 'like', '%при доставке%')),
+                        PaymentMethod::Transfer => $query->where('payment_method', 'like', '%перевод%'),
+                        PaymentMethod::Card => $query->where('payment_method', 'like', '%картой%'),
+                    };
+                });
+        });
     }
 
     public function items(): HasMany

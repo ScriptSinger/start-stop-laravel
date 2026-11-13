@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Page;
@@ -98,6 +100,42 @@ class AdminOrdersTest extends TestCase
         $this->get($table.'&filter[delivery_method]=city')->assertSee('Игорь Петров')->assertDontSee('Самовывозов');
         $this->get($table.'&filter[payment_method]=cash')->assertSee('Игорь Петров')->assertDontSee('Самовывозов');
         $this->get($table.'&filter[payment_method]=card')->assertSee('Самовывозов')->assertDontSee('Игорь Петров');
+    }
+
+    public function test_filters_use_codes_before_historical_labels(): void
+    {
+        $this->order->update([
+            'delivery_method' => 'Самовывоз по старой подписи',
+            'delivery_method_code' => DeliveryMethod::City,
+            'payment_method' => 'Оплата наличными',
+            'payment_method_code' => PaymentMethod::Card,
+        ]);
+        $table = '/admin/component/order-index-page/order-resource?_component_name=index-table-order-resource';
+
+        $this->get($table.'&filter[delivery_method]=city')->assertSee('Игорь Петров');
+        $this->get($table.'&filter[delivery_method]=pickup')->assertDontSee('Игорь Петров');
+        $this->get($table.'&filter[payment_method]=card')->assertSee('Игорь Петров');
+        $this->get($table.'&filter[payment_method]=cash')->assertDontSee('Игорь Петров');
+    }
+
+    public function test_editing_order_methods_updates_codes_and_keeps_legacy_labels_supported(): void
+    {
+        $this->order->update(['delivery_method_code' => DeliveryMethod::Pickup, 'payment_method_code' => PaymentMethod::Cash]);
+
+        $this->put("/admin/resource/order-resource/crud/{$this->order->id}", [
+            'status' => $this->order->status->value,
+            'customer_name' => 'Игорь Петров',
+            'delivery_method' => DeliveryMethod::City->label(),
+            'payment_method' => PaymentMethod::Transfer->label(),
+            'total' => 5200,
+        ])->assertRedirect();
+
+        $this->assertSame(DeliveryMethod::City, $this->order->refresh()->delivery_method_code);
+        $this->assertSame(PaymentMethod::Transfer, $this->order->payment_method_code);
+
+        $this->order->update(['payment_method' => 'Оплата при доставке']);
+        $this->assertNull($this->order->refresh()->payment_method_code);
+        $this->assertTrue(Order::query()->withPayment(PaymentMethod::Cash)->whereKey($this->order->id)->exists());
     }
 
     public function test_orders_sort_by_status_in_workflow_order(): void
