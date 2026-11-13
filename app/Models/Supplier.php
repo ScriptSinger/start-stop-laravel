@@ -52,12 +52,12 @@ class Supplier extends Model
                 ->whereNull('supplier_id')
                 ->update(['supplier_quantity' => 0, 'supplier_price' => null]);
 
-            app(SupplierStockSync::class)->sync();
+            app(SupplierStockSync::class)->syncProducts($supplier->affectedProductIds);
         });
 
         static::saved(function (Supplier $supplier): void {
             if ($supplier->wasChanged(['markup_percent', 'lead_working_days', 'min_quantity', 'ignore_quantity', 'is_active'])) {
-                app(SupplierStockSync::class)->sync();
+                app(SupplierStockSync::class)->syncSupplier($supplier);
             }
         });
     }

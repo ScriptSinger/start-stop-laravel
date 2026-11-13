@@ -178,6 +178,29 @@ class SupplierPriceImportTest extends TestCase
         $this->assertNull($product->refresh()->supplier_id);
     }
 
+    public function test_changing_supplier_recalculates_only_related_products_and_considers_competitors(): void
+    {
+        $supplier = Supplier::factory()->create(['markup_percent' => 10]);
+        $competitor = Supplier::factory()->create(['markup_percent' => 30]);
+        $related = $this->product('Related');
+        $unrelated = $this->product('Unrelated');
+        SupplierOffer::factory()->create(['supplier_id' => $supplier->id, 'product_id' => $related->id, 'cost' => 1000, 'quantity' => 9, 'in_price' => true]);
+        SupplierOffer::factory()->create(['supplier_id' => $competitor->id, 'product_id' => $related->id, 'cost' => 1000, 'quantity' => 9, 'in_price' => true]);
+        SupplierOffer::factory()->create(['supplier_id' => $competitor->id, 'product_id' => $unrelated->id, 'cost' => 2000, 'quantity' => 9, 'in_price' => true]);
+        app(SupplierStockSync::class)->sync();
+        $unrelated->update(['supplier_price' => 9999]);
+
+        $supplier->update(['markup_percent' => 50]);
+
+        $this->assertSame($competitor->id, $related->refresh()->supplier_id);
+        $this->assertSame(1300.0, (float) $related->supplier_price);
+        $this->assertSame(9999.0, (float) $unrelated->refresh()->supplier_price);
+
+        $competitor->update(['is_active' => false]);
+        $this->assertSame($supplier->id, $related->refresh()->supplier_id);
+        $this->assertNull($unrelated->refresh()->supplier_id);
+    }
+
     public function test_deleting_supplier_clears_product_without_an_alternative(): void
     {
         $supplier = Supplier::factory()->create();

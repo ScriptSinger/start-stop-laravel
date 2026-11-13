@@ -3,6 +3,7 @@
 namespace App\Services\Supplier;
 
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Models\SupplierOffer;
 use Illuminate\Support\Collection;
 
@@ -21,18 +22,38 @@ use Illuminate\Support\Collection;
  */
 class SupplierStockSync
 {
+    public function syncSupplier(Supplier $supplier): void
+    {
+        $productIds = $supplier->offers()->whereNotNull('product_id')->pluck('product_id')
+            ->merge(Product::query()->where('supplier_id', $supplier->id)->pluck('id'))
+            ->unique()->values()->all();
+
+        $this->syncProducts($productIds);
+    }
+
+    /** @param list<int> $productIds */
+    public function syncProducts(array $productIds): void
+    {
+        if ($productIds !== []) {
+            $this->sync(productIds: $productIds);
+        }
+    }
+
     /**
      * on_order — сколько товаров под заказ после пересчёта (всего); added, repriced и
      * cleared — что изменилось по сравнению с текущим состоянием сайта.
      *
+     * @param  Collection<int, SupplierOffer>|null  $previewOffers
+     * @param  list<int>|null  $productIds
      * @return array{on_order: int, added: int, repriced: int, cleared: int}
      */
-    public function sync(?Collection $previewOffers = null, ?int $previewSupplierId = null): array
+    public function sync(?Collection $previewOffers = null, ?int $previewSupplierId = null, ?array $productIds = null): array
     {
         $minimum = (int) config('shop.supplier_order_min_quantity');
 
         $offers = SupplierOffer::query()
             ->whereNotNull('product_id')
+            ->when($productIds !== null, fn ($query) => $query->whereIn('product_id', $productIds))
             ->where('in_price', true)
             ->whereHas('supplier', fn ($suppliers) => $suppliers->where('is_active', true))
             ->when($previewSupplierId !== null, fn ($query) => $query->where('supplier_id', '!=', $previewSupplierId))
@@ -83,6 +104,7 @@ class SupplierStockSync
 
         $toClear = Product::query()
             ->whereNotNull('supplier_id')
+            ->when($productIds !== null, fn ($query) => $query->whereIn('id', $productIds))
             ->whereNotIn('id', $best->keys());
         $cleared = $previewOffers === null
             ? $toClear->update(['supplier_quantity' => 0, 'supplier_price' => null, 'supplier_id' => null])
