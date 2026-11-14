@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\MoonShine\Pages\OneCImport;
-use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Pages\SupplierImport;
 use App\MoonShine\Resources\AccessLog\AccessLogResource;
 use App\MoonShine\Resources\Attribute\AttributeResource;
@@ -61,7 +60,6 @@ class MoonShineServiceProvider extends ServiceProvider
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),
-                StockReport::class,
                 OneCImport::class,
                 SupplierImport::class,
             ]);

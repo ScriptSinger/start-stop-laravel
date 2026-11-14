@@ -52,8 +52,6 @@ class ProductSoftDeleteTest extends TestCase
         $summary = app(StockSummary::class);
 
         $this->assertSame(1, $summary->overall()['total']);
-        $this->assertSame(1, $summary->byCategory()->sum('total'));
-        $this->assertSame(1, $summary->byManufacturer()->sum('total'));
     }
 
     public function test_deleted_products_are_listed_only_on_the_trashed_tab(): void

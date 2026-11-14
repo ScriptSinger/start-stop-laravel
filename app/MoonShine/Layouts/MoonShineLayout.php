@@ -9,7 +9,6 @@ use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\MoonShine\Pages\Dashboard;
 use App\MoonShine\Pages\OneCImport;
-use App\MoonShine\Pages\StockReport;
 use App\MoonShine\Pages\SupplierImport;
 use App\MoonShine\Resources\AccessLog\AccessLogResource;
 use App\MoonShine\Resources\Attribute\AttributeResource;
@@ -75,7 +74,6 @@ final class MoonShineLayout extends AppLayout
             MenuItem::make(CustomerResource::class, 'Клиенты')->icon('users'),
             MenuGroup::make('Каталог', [
                 MenuItem::make(ProductResource::class, 'Товары')->icon('cube'),
-                MenuItem::make(StockReport::class, 'Остатки')->icon('chart-bar'),
                 MenuItem::make(OneCImport::class, 'Загрузка из 1С')->icon('arrow-up-tray'),
                 MenuItem::make(SupplierResource::class, 'Поставщики')->icon('truck'),
                 MenuItem::make(SupplierImport::class, 'Прайсы поставщиков')->icon('arrow-up-tray'),

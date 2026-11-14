@@ -61,8 +61,7 @@ class Dashboard extends Page
     /**
      * Графики заказов и каталога, что требует внимания
      * (только ненулевое) и лидеры продаж. Таблицы заказов и заявок — в их
-     * разделах меню, новые там подсвечены счётчиком; склад подробно — на
-     * странице «Остатки».
+     * разделах меню, новые там подсвечены счётчиком.
      *
      * @return list<ComponentContract>
      */
@@ -231,12 +230,14 @@ class Dashboard extends Page
             [$count = $active()->withPriceProblem()->count(), $this->plural($count, 'товар|товара|товаров').' с ошибкой в цене — нулевая цена или акция не ниже обычной', $productsUrl('price_problem')],
             [$count = $active()->available()->where(fn ($query) => $query->whereNull('description')->orWhere('description', ''))->count(), $this->plural($count, 'товар|товара|товаров').' в продаже без описания — площадки и поисковики такие показывают хуже', $productsUrl('without_description')],
             [$count = Product::query()->where('status', false)->where('quantity', '>', 0)->count(), $this->plural($count, 'товар лежит|товара лежат|товаров лежат').' на складе, но скрыты с сайта', $this->pageUrl(ProductIndexPage::class, ProductResource::class, ['filter' => ['status' => '0', 'stock' => 'in']])],
-            [$topGap['cars'] ?? 0, $topGap ? "{$topGap['size']}, {$topGap['polarity']} — нужен ".$this->plural($topGap['cars'], 'машине|машинам|машинам').', в ассортименте нет' : '', $this->pageUrl(StockReport::class)],
+            [$topGap['cars'] ?? 0, $topGap ? "{$topGap['size']}, {$topGap['polarity']} — нужен ".$this->plural($topGap['cars'], 'машине|машинам|машинам').', в ассортименте нет' : '', null],
         ])->filter(fn (array $item): bool => $item[0] > 0);
 
         return Box::make('Требует внимания', $items->isEmpty()
             ? [Heading::make('Всё в порядке', h: 6)]
-            : $items->map(fn (array $item): Div => Div::make([Link::make($item[2], $item[1].' →')])->class('py-1'))->values()->all());
+            : $items->map(fn (array $item): Div => Div::make([
+                $item[2] === null ? Heading::make($item[1], h: 6) : Link::make($item[2], $item[1].' →'),
+            ])->class('py-1'))->values()->all());
     }
 
     /**

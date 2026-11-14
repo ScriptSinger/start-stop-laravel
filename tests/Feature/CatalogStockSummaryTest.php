@@ -11,11 +11,9 @@ use App\Models\Product;
 use App\Services\Catalog\AssortmentGaps;
 use App\Services\Catalog\StockSummary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use MoonShine\Laravel\Models\MoonshineUser;
-use MoonShine\Laravel\Models\MoonshineUserRole;
 use Tests\TestCase;
 
-class AdminStockReportTest extends TestCase
+class CatalogStockSummaryTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -59,26 +57,9 @@ class AdminStockReportTest extends TestCase
         $this->assertSame([
             'total' => 4,
             'in_stock' => 2,
-            'units' => 4,
             'on_order' => 1,
             'out_of_stock' => 1,
-            'stock_value' => 26000.0,
         ], app(StockSummary::class)->overall());
-    }
-
-    public function test_breakdown_by_manufacturer_and_category(): void
-    {
-        $summary = app(StockSummary::class);
-
-        $this->assertSame(
-            [
-                ['name' => 'ZUBR', 'total' => 3, 'in_stock' => 1, 'units' => 3, 'on_order' => 1, 'out_of_stock' => 1],
-                ['name' => 'Без производителя', 'total' => 1, 'in_stock' => 1, 'units' => 1, 'on_order' => 0, 'out_of_stock' => 0],
-            ],
-            $summary->byManufacturer()->map(fn (array $row): array => array_intersect_key($row, array_flip(['name', 'total', 'in_stock', 'units', 'on_order', 'out_of_stock'])))->all(),
-        );
-
-        $this->assertSame([['Аккумуляторы', 4, 4]], $summary->byCategory()->map(fn (array $row): array => [$row['name'], $row['total'], $row['units']])->all());
     }
 
     public function test_assortment_gaps_count_cars_without_batteries_by_size(): void
@@ -108,27 +89,6 @@ class AdminStockReportTest extends TestCase
     public function test_batteries_without_fitment_data_are_found(): void
     {
         $this->assertSame(['В наличии', 'Ещё в наличии', 'Под заказ', 'Мало у поставщика', 'Неактивный'], Product::query()->missingFitmentData()->orderBy('id')->pluck('name')->all());
-    }
-
-    public function test_page_shows_summary_with_links_to_filtered_products(): void
-    {
-        $this->actingAs(MoonshineUser::query()->create([
-            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
-            'email' => 'admin@example.com',
-            'name' => 'Admin',
-            'password' => bcrypt('secret'),
-        ]), 'moonshine');
-
-        $this->get('/admin/page/stock-report')
-            ->assertOk()
-            ->assertSee('2 из 4')
-            ->assertSee('26 000 ₽')
-            ->assertSee('По производителям')
-            ->assertSee('ZUBR')
-            ->assertSee('filter%5Bstatus%5D=1&amp;filter%5Bmanufacturer_id%5D='.$this->zubr->id.'&amp;filter%5Bstock%5D=order', false)
-            ->assertSee('filter%5Bcategories%5D%5B0%5D='.$this->batteries->id, false)
-            ->assertSee('filter%5Bstatus%5D=1&amp;filter%5Bwithout_manufacturer%5D=1', false)
-            ->assertDontSee('>http://localhost/admin', false);
     }
 
     private function product(string $name, int $quantity, int $price = 1000, int $supplierQuantity = 0, bool $status = true, ?Manufacturer $manufacturer = null): void

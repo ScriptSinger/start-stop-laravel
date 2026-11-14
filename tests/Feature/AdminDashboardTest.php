@@ -187,7 +187,9 @@ class AdminDashboardTest extends TestCase
             ['size' => 'Азия B24 (234 x 127 x 227 мм)', 'polarity' => 'Обратная', 'cars' => 5],
         ]]);
 
-        $this->dashboard()->assertSee('Азия B24 (234 x 127 x 227 мм), Обратная — нужен 5 машинам, в ассортименте нет →');
+        $this->dashboard()
+            ->assertSee('Азия B24 (234 x 127 x 227 мм), Обратная — нужен 5 машинам, в ассортименте нет')
+            ->assertDontSee('stock-report');
     }
 
     public function test_empty_shop_is_all_good(): void

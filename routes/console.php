@@ -13,7 +13,7 @@ Artisan::command('inspire', function () {
 Schedule::command('car-landings:refresh')->dailyAt('03:00')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::error('Ночной пересчёт посадочных «Аккумулятор для …» не выполнен.'));
 
-// Ночной расчёт «спроса без ассортимента» для панели и страницы «Остатки».
+// Ночной расчёт «спроса без ассортимента» для панели.
 Schedule::command('assortment:gaps')->dailyAt('03:30')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::error('Ночной расчёт «спроса без ассортимента» не выполнен.'));
 
