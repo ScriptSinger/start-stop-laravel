@@ -255,22 +255,33 @@ class SupplierImport extends Page
         $suppliers = Supplier::query()->pluck('name', 'id');
         $supplierPage = app(SupplierResource::class)->getIndexPageUrl();
 
+        $rows = $files->recent()->map(fn (array $upload): array => [
+            'id' => $upload['id'],
+            'name' => $upload['original_name'],
+            'supplier' => (string) $suppliers->get($upload['supplier_id'], ''),
+            'uploaded' => $upload['uploaded_at']?->format('d.m.Y H:i') ?? '',
+            'uploaded_sort' => $upload['uploaded_at']?->timestamp ?? 0,
+            'applied_by' => $upload['applied_at'] ? ($upload['applied_by_name'] ?? 'Неизвестно') : '—',
+            'status' => $upload['applied_at'] ? 'применено '.$upload['applied_at']->format('d.m.Y H:i') : 'не применено',
+        ]);
+        $sort = request()->query('sort');
+        if (is_string($sort)) {
+            $column = ltrim($sort, '-');
+            $sortColumns = ['uploaded' => 'uploaded_sort', 'supplier' => 'supplier', 'name' => 'name', 'status' => 'status', 'applied_by' => 'applied_by'];
+            if (isset($sortColumns[$column]) && ($sort === $column || $sort === '-'.$column)) {
+                $rows = $rows->sortBy($sortColumns[$column], SORT_NATURAL | SORT_FLAG_CASE, str_starts_with($sort, '-'))->values();
+            }
+        }
+
         return Box::make('Последние загрузки', [
             Link::make($supplierPage, 'Поставщики и их настройки'),
-            TableBuilder::make(items: $files->recent()->map(fn (array $upload): array => [
-                'id' => $upload['id'],
-                'name' => $upload['original_name'],
-                'supplier' => (string) $suppliers->get($upload['supplier_id'], ''),
-                'uploaded' => $upload['uploaded_at']?->format('d.m.Y H:i') ?? '',
-                'applied_by' => $upload['applied_at'] ? ($upload['applied_by_name'] ?? 'Неизвестно') : '—',
-                'status' => $upload['applied_at'] ? 'применено '.$upload['applied_at']->format('d.m.Y H:i') : 'не применено',
-            ])->all())
+            TableBuilder::make(items: $rows->all())
                 ->fields([
-                    Text::make('Дата', 'uploaded'),
-                    Text::make('Поставщик', 'supplier'),
-                    Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->render())->unescape(),
-                    Text::make('Состояние', 'status'),
-                    Text::make('Кто применил', 'applied_by'),
+                    Text::make('Дата', 'uploaded')->sortable(),
+                    Text::make('Поставщик', 'supplier')->sortable(),
+                    Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->render())->unescape()->sortable(),
+                    Text::make('Состояние', 'status')->sortable(),
+                    Text::make('Кто применил', 'applied_by')->sortable(),
                 ])
                 ->withNotFound(),
         ]);

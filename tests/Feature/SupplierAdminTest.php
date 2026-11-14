@@ -41,6 +41,28 @@ class SupplierAdminTest extends TestCase
         $this->product = Product::query()->create(['name' => 'Аккумулятор TOPLA Energy 60', 'slug' => 'topla-60', 'price' => 9000, 'quantity' => 0, 'status' => true]);
     }
 
+    public function test_recent_uploads_can_be_sorted_by_date_and_file_name(): void
+    {
+        $uploads = [
+            '20261031-120000-aaaaaa' => ['original_name' => 'z-price.csv', 'uploaded_at' => '2026-10-31T12:00:00+05:00'],
+            '20261101-120000-bbbbbb' => ['original_name' => 'a-price.csv', 'uploaded_at' => '2026-11-01T12:00:00+05:00'],
+        ];
+        foreach ($uploads as $id => $metadata) {
+            Storage::disk('local')->put('supplier-imports/'.$id.'.json', json_encode([...$metadata, 'supplier_id' => $this->supplier->id], JSON_THROW_ON_ERROR));
+        }
+
+        $this->get('/admin/page/supplier-import')->assertOk()
+            ->assertSeeInOrder(['a-price.csv', 'z-price.csv'])
+            ->assertSee('sort=uploaded', false)
+            ->assertSee('sort=name', false);
+        $this->get('/admin/page/supplier-import?sort=uploaded')->assertOk()
+            ->assertSeeInOrder(['z-price.csv', 'a-price.csv']);
+        $this->get('/admin/page/supplier-import?sort=-name')->assertOk()
+            ->assertSeeInOrder(['z-price.csv', 'a-price.csv']);
+        $this->get('/admin/page/supplier-import?sort=invalid')->assertOk()
+            ->assertSeeInOrder(['a-price.csv', 'z-price.csv']);
+    }
+
     public function test_menu_and_supplier_pages_are_available(): void
     {
         $this->get('/admin')->assertSee('Поставщики')->assertSee('Прайсы поставщиков');
