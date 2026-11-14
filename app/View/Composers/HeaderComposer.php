@@ -16,9 +16,16 @@ class HeaderComposer
 
     public function compose(View $view): void
     {
+        $mainMenu = MenuItem::query()->forLocation(MenuLocation::Main)->get();
+        foreach ($mainMenu as $item) {
+            if ($item->href() === route('page.show', 'uslugi')) {
+                $item->setRelation('children', $item->newCollection());
+            }
+        }
+
         $view->with([
             'topLinks' => MenuItem::query()->forLocation(MenuLocation::TopLinks)->get(),
-            'mainMenu' => MenuItem::query()->forLocation(MenuLocation::Main)->get(),
+            'mainMenu' => $mainMenu,
             'categoryMenu' => $this->categoryMenu->items(),
         ]);
     }

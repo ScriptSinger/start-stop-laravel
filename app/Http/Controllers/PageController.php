@@ -15,6 +15,6 @@ class PageController extends Controller
             SEOTools::setDescription($page->meta_description);
         }
 
-        return view('page', ['page' => $page]);
+        return view($page->slug === 'uslugi' ? 'services' : 'page', ['page' => $page]);
     }
 }
