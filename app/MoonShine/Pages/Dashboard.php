@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Laravel\Pages\Page;
 use MoonShine\MenuManager\Attributes\SkipMenu;
+use MoonShine\UI\Components\Collapse;
 use MoonShine\UI\Components\Heading;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Column;
@@ -68,17 +69,17 @@ class Dashboard extends Page
             ->sum('total');
 
         return [
-            Grid::make([
+            Collapse::make('Заказы', [Grid::make([
                 $this->metric('Новые заказы', Order::query()->where('status', OrderStatus::New)->count(), 'shopping-cart'),
                 $this->metric('Заявки — перезвонить', CustomerRequest::query()->where('is_processed', false)->count(), 'phone'),
                 $this->metric('Брошенные оформления, 30 дн.', Order::query()->where('status', OrderStatus::Abandoned)->where('created_at', '>=', now()->subDays(30))->count(), 'exclamation-triangle'),
                 $this->metric('Продажи за 30 дн. (было '.$this->money($previousSum).')', $this->money((float) (clone $sales)->sum('total')), 'banknotes'),
-            ]),
-            $this->catalogMetrics(),
+            ])])->open(),
+            Collapse::make('Товары', [$this->catalogMetrics()])->open(),
             Grid::make([
                 Column::make([$this->attention()], colSpan: 6, adaptiveColSpan: 12),
                 Column::make([$this->bestsellers()], colSpan: 6, adaptiveColSpan: 12),
-            ]),
+            ])->customAttributes(['style' => 'margin-top: 0.5rem']),
         ];
     }
 
@@ -89,15 +90,22 @@ class Dashboard extends Page
     private function catalogMetrics(): Grid
     {
         $stock = app(StockSummary::class)->overall();
+        $total = Product::query()->count();
         $available = $stock['in_stock'] + $stock['on_order'];
+        $warehouse = Product::query()->where('quantity', '>', 0)
+            ->selectRaw('sum(quantity) as units, sum(quantity * price) as stock_value')->first();
         $ready = Product::query()->readyForExport()->count();
+        $catalogTooltip = view('components.admin-tooltip', ['content' => 'Активные видны на сайте. Удалённые не учитываются.'])->render();
+        $availabilityTooltip = view('components.admin-tooltip', ['content' => 'Активные товары на складе магазина или под заказ.'])->render();
+        $warehouseTooltip = view('components.admin-tooltip', ['content' => 'Включая неактивные товары. Стоимость — по обычной цене.'])->render();
+        $exportTooltip = view('components.admin-tooltip', ['content' => 'Доступные товары с фото, ценой больше нуля, производителем и категорией.'])->render();
 
         return Grid::make([
-            $this->metric('В продаже (активных '.$stock['total'].')', $available, 'cube'),
-            $this->metric('На складе — '.$this->plural($stock['units'], 'штука|штуки|штук').' на сумму', $this->money($stock['stock_value']), 'archive-box'),
-            $this->metric('Под заказ у поставщика', $stock['on_order'], 'truck'),
-            $this->metric('Готовы к выгрузке', $ready.' из '.$available, 'arrow-up-tray'),
-        ]);
+            $this->metric('<strong>Активные в каталоге '.$catalogTooltip.'</strong>', number_format($stock['total'], 0, ',', ' ').' из '.number_format($total, 0, ',', ' ').' <span class="dashboard-unit">позиций</span>', 'cube', true),
+            $this->metric('<strong>Доступно к покупке '.$availabilityTooltip.'</strong><span class="dashboard-detail"><span class="dashboard-stock">На складе '.$stock['in_stock'].'</span> · <span class="dashboard-supplier">Под заказ '.$stock['on_order'].'</span> позиций</span>', number_format($available, 0, ',', ' ').' <span class="dashboard-unit">позиций</span>', 'shopping-bag', true),
+            $this->metric('<strong>Наш склад '.$warehouseTooltip.'</strong><span class="dashboard-detail">Стоимость остатков: '.$this->money((float) ($warehouse->stock_value ?? 0)).'</span>', (int) ($warehouse->units ?? 0).' <span class="dashboard-unit">шт.</span>', 'archive-box', true),
+            $this->metric('<strong>Готовы к выгрузке '.$exportTooltip.'</strong><span class="dashboard-detail">из доступных к покупке</span>', $ready.' из '.$available.' <span class="dashboard-unit">позиций</span>', 'arrow-up-tray', true),
+        ])->class('dashboard-product-grid');
     }
 
     /**
@@ -152,11 +160,11 @@ class Dashboard extends Page
             : $items->map(fn (array $item): Div => Div::make([Link::make($item[2], $item[1].' →')])->class('py-1'))->values()->all());
     }
 
-    private function metric(string $label, int|string $value, string $icon): Column
+    private function metric(string $label, int|string $value, string $icon, bool $productCard = false): Column
     {
         return Column::make([
-            ValueMetric::make($label)->value($value)->icon($icon),
-        ], colSpan: 3, adaptiveColSpan: 12);
+            ValueMetric::make($label)->value($value)->icon($icon)->class($productCard ? 'dashboard-product-metric' : ''),
+        ], colSpan: 3, adaptiveColSpan: 12)->class($productCard ? 'dashboard-product-column' : '');
     }
 
     /**

@@ -47,6 +47,25 @@ class AdminDashboardTest extends TestCase
             ->assertSeeInOrder(['Заказы', '>1<'], false);
     }
 
+    public function test_product_cards_separate_catalog_availability_and_physical_stock(): void
+    {
+        $minimum = (int) config('shop.supplier_order_min_quantity');
+        Product::query()->create(['name' => 'Склад', 'slug' => 'stock', 'price' => 100, 'status' => true, 'quantity' => 2, 'supplier_quantity' => $minimum]);
+        Product::query()->create(['name' => 'Поставщик', 'slug' => 'supplier', 'price' => 200, 'status' => true, 'quantity' => 0, 'supplier_quantity' => $minimum]);
+        Product::query()->create(['name' => 'Скрытый', 'slug' => 'hidden', 'price' => 400, 'status' => false, 'quantity' => 3]);
+        $deleted = Product::query()->create(['name' => 'Удалённый', 'slug' => 'deleted', 'price' => 500, 'status' => true, 'quantity' => 10]);
+        $deleted->delete();
+
+        $this->dashboard()
+            ->assertSee('2 из 3')
+            ->assertSee('Активные в каталоге')
+            ->assertSee('На складе 1')
+            ->assertSee('Под заказ 1')
+            ->assertSee('5 <span class="dashboard-unit">шт.</span>', false)
+            ->assertSee('Стоимость остатков: 1 400 ₽')
+            ->assertSee('Доступные товары с фото, ценой больше нуля, производителем и категорией.');
+    }
+
     public function test_attention_lists_only_problems_that_exist(): void
     {
         Product::query()->create(['name' => 'Без фото', 'slug' => 'a', 'price' => 1, 'status' => true, 'image' => null]);

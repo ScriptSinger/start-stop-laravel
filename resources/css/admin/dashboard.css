@@ -1,0 +1,82 @@
+.dashboard-product-metric .report-card-title {
+    white-space: normal;
+    line-height: 1.6;
+}
+
+.dashboard-product-metric .report-card-value {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-stock { color: #2563eb; }
+.dashboard-supplier { color: #9333ea; }
+.dark .dashboard-stock { color: #93c5fd; }
+.dark .dashboard-supplier { color: #d8b4fe; }
+
+.dashboard-product-grid {
+    grid-auto-rows: 1fr;
+}
+
+.dashboard-product-column > div {
+    height: 100%;
+}
+
+.dashboard-product-metric {
+    --ms-report-card-gap-y: 1rem;
+    padding: 1.25rem;
+}
+
+.dashboard-product-metric .report-card-body {
+    margin-top: 0;
+}
+
+.dashboard-product-metric .report-card-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.dashboard-product-metric .report-card-title {
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.dashboard-product-metric .report-card-title strong {
+    display: inline-block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.dashboard-product-metric .report-card-title {
+    display: contents;
+}
+
+.dashboard-product-metric .report-card-title strong {
+    order: -1;
+    margin: 0;
+}
+
+.dashboard-product-metric .dashboard-detail {
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.dashboard-product-metric .dashboard-unit {
+    font-size: 0.7em;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.dashboard-tooltip {
+    cursor: pointer;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+.dashboard-tooltip:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}

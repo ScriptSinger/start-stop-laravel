@@ -50,6 +50,7 @@ final class MoonShineLayout extends AppLayout
         return [
             ...parent::assets(),
             Css::make(Vite::asset('resources/css/admin/tables.css')),
+            Css::make(Vite::asset('resources/css/admin/dashboard.css')),
             Js::make(Vite::asset('resources/js/admin/tables.js'))->customAttributes(['type' => 'module']),
         ];
     }
