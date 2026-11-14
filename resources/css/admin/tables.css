@@ -20,6 +20,10 @@
     white-space: nowrap;
 }
 
+.table[data-resizable] .text-ellipsis {
+    max-width: 100%;
+}
+
 .table[data-resizable] .col-resizer {
     position: absolute;
     top: 0;
