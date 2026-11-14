@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\SupplierOffer;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 /**
  * Загрузка прайса поставщика: обновляет его предложения и пересчитывает
@@ -25,7 +26,11 @@ class SupplierPriceImporter
     public function run(Supplier $supplier, string $path, bool $apply): SupplierImportReport
     {
         return $apply
-            ? DB::transaction(fn (): SupplierImportReport => $this->import($supplier, $path, true))
+            ? DB::transaction(function () use ($supplier, $path): SupplierImportReport {
+                $supplier = Supplier::query()->lockForUpdate()->findOrFail($supplier->id);
+
+                return $this->import($supplier, $path, true);
+            })
             : $this->import($supplier, $path, false);
     }
 
@@ -87,6 +92,10 @@ class SupplierPriceImporter
             if ($offer->product_id === null) {
                 $unlinked->push(['code' => $row['code'], 'name' => $row['name'], 'cost' => $row['cost']]);
             }
+        }
+
+        if ($apply && $rows === 0) {
+            throw new RuntimeException('Не применено: в прайсе не распознано ни одной позиции. Проверьте файл и выбранного поставщика.');
         }
 
         $vanishedQuery = $supplier->offers()

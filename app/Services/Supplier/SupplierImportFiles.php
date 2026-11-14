@@ -5,6 +5,7 @@ namespace App\Services\Supplier;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -59,7 +60,13 @@ class SupplierImportFiles
      */
     public function markApplied(string $id, array $summary, int|string $adminId, string $adminName): void
     {
-        $this->writeMeta($id, [...$this->meta($id), 'applied_at' => now()->toIso8601String(), 'summary' => $summary, 'applied_by_id' => $adminId, 'applied_by_name' => $adminName]);
+        DB::table('supplier_import_applications')->insert([
+            'import_id' => $id,
+            'applied_at' => now(),
+            'summary' => json_encode($summary, JSON_THROW_ON_ERROR),
+            'applied_by_id' => $adminId,
+            'applied_by_name' => $adminName,
+        ]);
     }
 
     /**
@@ -69,7 +76,18 @@ class SupplierImportFiles
     {
         $disk = Storage::disk('local');
 
-        return $disk->exists($this->metaFile($id)) ? (array) json_decode((string) $disk->get($this->metaFile($id)), true) : [];
+        $meta = $disk->exists($this->metaFile($id)) ? (array) json_decode((string) $disk->get($this->metaFile($id)), true) : [];
+        $application = DB::table('supplier_import_applications')->where('import_id', $id)->first();
+        if ($application !== null) {
+            $meta = [...$meta,
+                'applied_at' => $application->applied_at,
+                'summary' => json_decode($application->summary, true, flags: JSON_THROW_ON_ERROR),
+                'applied_by_id' => $application->applied_by_id,
+                'applied_by_name' => $application->applied_by_name,
+            ];
+        }
+
+        return $meta;
     }
 
     /**

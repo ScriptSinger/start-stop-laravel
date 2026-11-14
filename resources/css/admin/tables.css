@@ -51,3 +51,27 @@
 .table[data-resizable] .col-resizer.is-active::after {
     opacity: 0.6;
 }
+
+/* Полные названия важны при сопоставлении предложений с товарами. */
+.table[data-wrap-text] th,
+.table[data-wrap-text] td,
+.table[data-wrap-text] td > *,
+.table[data-wrap-text] .text-ellipsis {
+    max-width: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}
+
+.table[data-wrap-text] td > *,
+.table[data-wrap-text] .text-ellipsis {
+    overflow: visible;
+}
+
+.supplier-product-select .ts-control .item,
+.supplier-product-options .option {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+

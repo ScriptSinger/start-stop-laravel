@@ -97,6 +97,46 @@ class SupplierPriceImportTest extends TestCase
         $this->assertSame($supplier->id, $changed->refresh()->supplier_id);
     }
 
+    public function test_empty_unrecognized_price_cannot_remove_existing_offers(): void
+    {
+        $supplier = Supplier::factory()->create();
+        $product = $this->product('Battery');
+        $this->import($supplier, $this->akbAutoCsv('УТ-1', 'Battery', '1000', '9'), true);
+        $offer = $supplier->offers()->firstOrFail();
+        $before = $product->fresh()->supplier_price;
+        $preview = $this->import($supplier, "неправильный формат\n", false);
+        $this->assertSame(0, $preview->rows);
+        $this->assertSame(1, $preview->vanished);
+        try {
+            $this->import($supplier, "неправильный формат\n", true);
+            $this->fail('Пустой прайс не должен применяться.');
+        } catch (\RuntimeException $exception) {
+            $this->assertStringContainsString('не распознано ни одной позиции', $exception->getMessage());
+        }
+        $this->assertTrue($offer->fresh()->in_price);
+        $this->assertSame(9, $offer->fresh()->quantity);
+        $this->assertSame($before, $product->fresh()->supplier_price);
+    }
+
+    public function test_command_refuses_unrecognized_price_without_changing_offers(): void
+    {
+        $supplier = Supplier::factory()->create();
+        $offer = SupplierOffer::factory()->create(['supplier_id' => $supplier->id, 'in_price' => true, 'quantity' => 9]);
+        $path = tempnam(sys_get_temp_dir(), 'sup');
+        file_put_contents($path, "неправильный формат\n");
+
+        try {
+            $this->artisan('suppliers:import', ['supplier' => $supplier->id, 'file' => $path, '--force' => true])
+                ->expectsOutputToContain('не распознано ни одной позиции')
+                ->assertFailed();
+        } finally {
+            unlink($path);
+        }
+
+        $this->assertTrue($offer->fresh()->in_price);
+        $this->assertSame(9, $offer->fresh()->quantity);
+    }
+
     public function test_report_counts_only_what_changes_on_the_site(): void
     {
         $supplier = Supplier::factory()->create(['markup_percent' => 10]);

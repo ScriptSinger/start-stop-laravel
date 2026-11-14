@@ -7,6 +7,7 @@ use App\Services\Supplier\SupplierPriceImporter;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use RuntimeException;
 
 #[Signature('suppliers:import {supplier : Id или название поставщика} {file : Прайс (.xlsx или .csv с разделителем «;»)} {--force : Записать в базу; без флага — только отчёт}')]
 #[Description('Загрузить прайс поставщика: обновить предложения и пересчитать «под заказ» у товаров')]
@@ -29,7 +30,13 @@ class ImportSupplierPrices extends Command
             return self::FAILURE;
         }
 
-        $report = $importer->run($supplier, $this->argument('file'), (bool) $this->option('force'));
+        try {
+            $report = $importer->run($supplier, $this->argument('file'), (bool) $this->option('force'));
+        } catch (RuntimeException $exception) {
+            $this->error($exception->getMessage());
+
+            return self::FAILURE;
+        }
 
         $this->table(['Показатель', 'Число'], [
             ['Строк в прайсе', $report->rows],
