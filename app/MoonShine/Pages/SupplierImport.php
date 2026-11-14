@@ -7,6 +7,7 @@ namespace App\MoonShine\Pages;
 use App\Enums\SupplierPriceFormat;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\SupplierOffer;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\Supplier\SupplierResource;
 use App\Services\Supplier\SupplierImportApplication;
@@ -386,19 +387,22 @@ class SupplierImport extends Page
         // Только у АКБ АВТО в прайсе есть настоящий код; у остальных «код» — это само название.
         $hasCodes = $supplier->format === SupplierPriceFormat::AkbAuto;
 
-        $offers = $applied ? $supplier->offers()->whereNull('product_id')->where('in_price', true)->pluck('id', 'supplier_code') : collect();
+        $offers = $applied ? $supplier->offers()->whereNull('product_id')->where('in_price', true)->get()->keyBy('supplier_code') : collect();
         $draft = $this->draftSelections($importId);
 
         return TableBuilder::make(items: $report->unlinked->forPage($this->unlinkedPage($report->unlinked->count()), self::MAX_ROWS_SHOWN)->map(fn (array $row): array => [
-            'offer_id' => $offers->get($row['code']),
-            'draft_product_id' => $draft[$offers->get($row['code'])] ?? null,
+            'offer_id' => $offers->get($row['code'])?->id,
+            'offer_record' => $offers->get($row['code']),
+            'draft_product_id' => $draft[$offers->get($row['code'])?->id] ?? null,
             'code' => $row['code'],
             'name' => $row['name'],
             'cost' => $this->money($row['cost']),
         ])->all())
             ->fields([
                 ...($hasCodes ? [Text::make('Код', 'code')] : []),
-                Text::make('Название в прайсе', 'name'),
+                Text::make('Название в прайсе', 'name', fn (array $row): string => $row['offer_record']
+                    ? $this->offerDetailsButton($row['offer_record'], $supplier, 'unlinked')
+                    : e($row['name']))->unescape(),
                 Text::make('Закупка', 'cost'),
                 Text::make('Товар на сайте', 'link', function (array $row) use ($importId): string {
                     if (! $row['offer_id']) {
@@ -474,30 +478,8 @@ class SupplierImport extends Page
                     if ($offer === null) {
                         return e($row['offer']);
                     }
-                    $details = TableBuilder::make([
-                        Text::make('Поставщик', 'supplier'),
-                        Text::make('Название', 'name'),
-                        Text::make('Код поставщика', 'code'),
-                        Text::make('Закупочная цена', 'cost'),
-                        Text::make('Остаток у поставщика', 'quantity'),
-                        Text::make('В актуальном прайсе', 'in_price'),
-                        Text::make('Товар на сайте', 'product'),
-                    ])->items([[
-                        'supplier' => $supplier->name,
-                        'name' => $offer->name,
-                        'code' => $supplier->format === SupplierPriceFormat::AkbAuto
-                            ? $offer->supplier_code
-                            : 'В этом формате используется название позиции',
-                        'cost' => $this->money((float) $offer->cost),
-                        'quantity' => $offer->quantity === null ? 'Не указан' : $offer->quantity.' шт.',
-                        'in_price' => $offer->in_price ? 'Да' : 'Нет',
-                        'product' => $offer->product_id === null ? 'Не привязан' : 'ID '.$offer->product_id,
-                    ]])->vertical(title: 2, value: 10)->simple()->preview()->class('table-divider');
 
-                    return (string) ActionButton::make(e($row['offer']))
-                        ->inModal(title: 'Позиция поставщика', name: 'supplier-offer-detail-'.$offer->id, builder: fn (ModalContract $modal): ModalContract => $modal->wide(), components: [$details])
-                        ->customAttributes(['title' => 'Открыть позицию поставщика'])
-                        ->render();
+                    return $this->offerDetailsButton($offer, $supplier, 'draft');
                 })->unescape(),
                 Text::make('Выбранный товар', 'product', fn (array $row): string => $row['product_id'] === null
                     ? e($row['product'])
@@ -518,6 +500,34 @@ class SupplierImport extends Page
                 ->withConfirm(title: 'Применить привязки?', content: 'Все пары будут проверены повторно. Если одна из них изменилась, ничего не сохранится.', button: 'Применить все')
                 ->primary(),
         ])];
+    }
+
+    private function offerDetailsButton(SupplierOffer $offer, Supplier $supplier, string $context): string
+    {
+        $details = TableBuilder::make([
+            Text::make('Поставщик', 'supplier'),
+            Text::make('Название', 'name'),
+            Text::make('Код поставщика', 'code'),
+            Text::make('Закупочная цена', 'cost'),
+            Text::make('Остаток у поставщика', 'quantity'),
+            Text::make('В актуальном прайсе', 'in_price'),
+            Text::make('Товар на сайте', 'product'),
+        ])->items([[
+            'supplier' => $supplier->name,
+            'name' => $offer->name,
+            'code' => $supplier->format === SupplierPriceFormat::AkbAuto
+                ? $offer->supplier_code
+                : 'В этом формате используется название позиции',
+            'cost' => $this->money((float) $offer->cost),
+            'quantity' => $offer->quantity === null ? 'Не указан' : $offer->quantity.' шт.',
+            'in_price' => $offer->in_price ? 'Да' : 'Нет',
+            'product' => $offer->product_id === null ? 'Не привязан' : 'ID '.$offer->product_id,
+        ]])->vertical(title: 2, value: 10)->simple()->preview()->class('table-divider');
+
+        return (string) ActionButton::make(e($offer->name))
+            ->inModal(title: 'Позиция поставщика', name: 'supplier-offer-detail-'.($context === 'draft' ? '' : $context.'-').$offer->id, builder: fn (ModalContract $modal): ModalContract => $modal->wide(), components: [$details])
+            ->customAttributes(['title' => 'Открыть позицию поставщика'])
+            ->render();
     }
 
     private function recentUploads(SupplierImportFiles $files): Box

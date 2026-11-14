@@ -149,6 +149,42 @@ class OneCImportPageTest extends TestCase
         $this->get('/admin/page/one-c-import')->assertSee('моя_выгрузка.csv')->assertSee('не применено');
     }
 
+    public function test_moderated_link_survives_session_and_updates_only_after_confirmation(): void
+    {
+        $this->mock(DatabaseBackup::class, fn (MockInterface $backup) => $backup->shouldReceive('create')->twice()->andReturn('backup.sql.gz'));
+        $id = $this->importId($this->upload($this->priceList()));
+        $this->applyImport($id)->assertOk();
+        $target = Product::query()->create(['name' => 'Новая карточка', 'slug' => 'new-card', 'price' => 900, 'quantity' => 4, 'status' => false]);
+        $this->postJson('/admin/method/one-c-import?method=selectProduct', ['import' => $id, 'code' => 'РТ-00000999', 'product_id' => $target->id])->assertOk();
+        $this->assertNull($target->fresh()->external_id);
+        $this->assertSame(900.0, (float) $target->fresh()->price);
+        $this->app['session']->flush();
+        $this->get('/admin/page/one-c-import?import='.$id)->assertSee('На проверке (1)')->assertSee('Изменить выбор')->assertSee('Позиция 1С')->assertSee('Карточка товара')->assertDontSee('Последние загрузки')->assertDontSee('Загрузить и проверить')->assertDontSee('Применить к базе');
+        $this->postJson('/admin/method/one-c-import?method=applyDrafts', ['import' => $id])->assertOk();
+        $this->assertSame('РТ-00000999', $target->fresh()->external_id);
+        $this->assertSame(500.0, (float) $target->fresh()->price);
+        $this->assertSame(1, $target->fresh()->quantity);
+        $this->assertFalse((bool) $target->fresh()->status);
+        $this->get('/admin/page/one-c-import?import='.$id)->assertDontSee('На проверке (1)');
+        $this->applyImport($id)->assertOk()->assertJsonPath('messageType', 'error');
+    }
+
+    public function test_moderation_rejects_existing_code_and_preserves_conflicted_draft(): void
+    {
+        $this->mock(DatabaseBackup::class, fn (MockInterface $backup) => $backup->shouldReceive('create')->once()->andReturn('backup.sql.gz'));
+        $id = $this->importId($this->upload($this->priceList()));
+        $this->applyImport($id)->assertOk();
+        $this->postJson('/admin/method/one-c-import?method=selectProduct', ['import' => $id, 'code' => 'РТ-00000999', 'product_id' => $this->akom->id])->assertJsonValidationErrors('product_id');
+        $target = Product::query()->create(['name' => 'Свободный', 'slug' => 'free', 'price' => 700, 'quantity' => 0]);
+        $this->postJson('/admin/method/one-c-import?method=selectProduct', ['import' => $id, 'code' => 'РТ-00000999', 'product_id' => $target->id])->assertOk();
+        $target->update(['external_id' => 'другой-код']);
+        $this->postJson('/admin/method/one-c-import?method=applyDrafts', ['import' => $id])->assertJsonValidationErrors('product_id');
+        $this->assertSame(700.0, (float) $target->fresh()->price);
+        $this->get('/admin/page/one-c-import?import='.$id)->assertSee('На проверке (1)');
+        $this->postJson('/admin/method/one-c-import?method=removeDraft', ['import' => $id, 'code' => 'РТ-00000999'])->assertOk();
+        $this->get('/admin/page/one-c-import?import='.$id)->assertDontSee('На проверке (1)');
+    }
+
     private function priceList(string $name = 'price_list.csv'): UploadedFile
     {
         return UploadedFile::fake()->createWithContent($name, self::HEADER

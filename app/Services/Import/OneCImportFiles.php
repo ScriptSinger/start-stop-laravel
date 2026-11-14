@@ -5,6 +5,7 @@ namespace App\Services\Import;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -47,7 +48,7 @@ class OneCImportFiles
 
     public function markApplied(string $id, int $changed, int|string $adminId, string $adminName): void
     {
-        $this->writeMeta($id, [...$this->meta($id), 'applied_at' => now()->toIso8601String(), 'applied_count' => $changed, 'applied_by_id' => $adminId, 'applied_by_name' => $adminName]);
+        DB::table('onec_applications')->insert(['import_id' => $id, 'metadata' => json_encode(['applied_at' => now()->toIso8601String(), 'applied_count' => $changed, 'applied_by_id' => $adminId, 'applied_by_name' => $adminName], JSON_THROW_ON_ERROR)]);
     }
 
     /**
@@ -57,7 +58,10 @@ class OneCImportFiles
     {
         $disk = Storage::disk('local');
 
-        return $disk->exists($this->metaFile($id)) ? (array) json_decode((string) $disk->get($this->metaFile($id)), true) : [];
+        $meta = $disk->exists($this->metaFile($id)) ? (array) json_decode((string) $disk->get($this->metaFile($id)), true) : [];
+        $applied = DB::table('onec_applications')->where('import_id', $id)->value('metadata');
+
+        return $applied === null ? $meta : [...$meta, ...json_decode($applied, true, flags: JSON_THROW_ON_ERROR)];
     }
 
     /**
