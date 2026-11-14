@@ -40,6 +40,20 @@ class AdminStockReportTest extends TestCase
         $this->product('Неактивный', quantity: 50, status: false, manufacturer: $this->zubr);
     }
 
+    public function test_filtered_summary_counts_each_product_once_and_excludes_other_categories(): void
+    {
+        $secondCategory = Category::query()->create(['name' => 'Грузовые', 'slug' => 'cargo']);
+        Product::query()->where('name', 'В наличии')->firstOrFail()->categories()->attach($secondCategory);
+        Product::query()->create(['name' => 'Другое', 'slug' => 'other', 'price' => 100, 'quantity' => 5, 'status' => true]);
+
+        $summary = app(StockSummary::class)->overall([$this->batteries->id, $secondCategory->id]);
+
+        $this->assertSame(4, $summary['total']);
+        $this->assertSame(2, $summary['in_stock']);
+        $this->assertSame(1, $summary['on_order']);
+        $this->assertSame(1, $summary['out_of_stock']);
+    }
+
     public function test_overall_counts_only_active_products(): void
     {
         $this->assertSame([

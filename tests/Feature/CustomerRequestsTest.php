@@ -95,7 +95,7 @@ class CustomerRequestsTest extends TestCase
         // Список заявок — в разделе «Заявки»; на графике все заявки, в меню — счётчик новых.
         $this->get('/admin')
             ->assertOk()
-            ->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.')
+            ->assertSee('Заказы и заявки за 30 дней')
             ->assertSeeInOrder(['Заявки', '>1<'], false);
 
         $this->get('/admin/resource/customer-request-resource/customer-request-index-page')->assertOk();

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\MoonShine\Pages;
 
 use App\Enums\OrderStatus;
+use App\Models\Category;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\Models\Product;
+use App\MoonShine\Components\OrdersChart;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\Order\Pages\OrderIndexPage;
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
@@ -16,18 +18,22 @@ use App\Services\Catalog\AssortmentGaps;
 use App\Services\Catalog\StockSummary;
 use Illuminate\Support\Facades\DB;
 use MoonShine\Apexcharts\Components\DonutChartMetric;
-use MoonShine\Apexcharts\Components\LineChartMetric;
 use MoonShine\Apexcharts\Support\SeriesItem;
 use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Crud\Components\Fragment;
 use MoonShine\Laravel\Pages\Page;
 use MoonShine\MenuManager\Attributes\SkipMenu;
+use MoonShine\Support\AlpineJs;
+use MoonShine\Support\Enums\JsEvent;
 use MoonShine\UI\Components\Collapse;
+use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Heading;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Column;
 use MoonShine\UI\Components\Layout\Div;
 use MoonShine\UI\Components\Layout\Grid;
 use MoonShine\UI\Components\Link;
+use MoonShine\UI\Fields\Select;
 
 /**
  * Стартовая страница админки: главное одним взглядом. Уведомлений о
@@ -64,7 +70,15 @@ class Dashboard extends Page
     {
         return [
             Collapse::make('Показатели', [Grid::make([
-                Column::make([Box::make([$this->catalogChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
+                Column::make([Box::make([
+                    FormBuilder::make()->hideSubmit()->fields([
+                        Select::make('Категория', 'catalog_scope')
+                            ->options($this->catalogCategoryOptions())
+                            ->default('all')
+                            ->onChangeEvent(AlpineJs::event(JsEvent::FRAGMENT_UPDATED, 'catalog-chart')),
+                    ]),
+                    Fragment::make([$this->catalogChart($this->catalogCategoryIds())->withoutWrapper()])->name('catalog-chart'),
+                ])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
                 Column::make([Box::make([$this->ordersChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
             ])])->open(),
             Grid::make([
@@ -74,7 +88,7 @@ class Dashboard extends Page
         ];
     }
 
-    private function ordersChart(): LineChartMetric
+    private function ordersChart(): OrdersChart
     {
         $start = now()->startOfDay()->subDays(29);
         $orders = Order::query()
@@ -97,7 +111,9 @@ class Dashboard extends Page
             $callbacks[$date] = (int) ($requests[$date] ?? 0);
         }
 
-        return LineChartMetric::make('Заказы и заявки за 30 дней (текущие статусы), шт.')
+        $tooltip = view('components.admin-tooltip', ['content' => 'Заказы распределены по дате создания и текущему статусу.'])->render();
+
+        return OrdersChart::make('Заказы и заявки за 30 дней '.$tooltip)
             ->series([
                 SeriesItem::make('Оформленные заказы', $confirmed),
                 SeriesItem::make('Брошенные оформления', $abandoned),
@@ -106,12 +122,60 @@ class Dashboard extends Page
             ->colors(['#2563eb', '#d97706', '#9333ea']);
     }
 
-    private function catalogChart(): DonutChartMetric
+    /** @return array<string, string> */
+    private function catalogCategoryOptions(): array
     {
-        $stock = app(StockSummary::class)->overall();
-        $total = Product::query()->count();
+        $categories = Category::query()->orderBy('name')->get(['id', 'parent_id', 'name', 'status']);
+        $parents = $categories->keyBy('id');
+        $options = ['all' => 'Все товары', 'batteries' => 'Все аккумуляторы'];
 
-        return DonutChartMetric::make('Структура каталога')
+        foreach ($categories as $category) {
+            $parent = $parents->get($category->parent_id);
+            $options['category_'.$category->id] = ($parent ? $parent->name.' / ' : '').$category->name.($category->status ? '' : ' (неактивная)');
+        }
+
+        return $options;
+    }
+
+    /** @return list<int>|null */
+    private function catalogCategoryIds(): ?array
+    {
+        $scope = request()->input('_data.catalog_scope', request()->input('catalog_scope'));
+        if ($scope === 'batteries') {
+            $rootIds = (array) config('shop.battery_fitment.category_ids');
+        } elseif (is_string($scope) && preg_match('/^category_([1-9][0-9]*)$/D', $scope, $matches)) {
+            $rootIds = [(int) $matches[1]];
+        } else {
+            return null;
+        }
+
+        $categories = Category::query()->get(['id', 'parent_id']);
+        $ids = $categories->whereIn('id', $rootIds)->pluck('id')->unique()->values()->all();
+        if ($ids === [] && $scope !== 'batteries') {
+            return null;
+        }
+
+        $children = $categories->groupBy('parent_id');
+        for ($i = 0; $i < count($ids); $i++) {
+            foreach ($children->get($ids[$i], collect()) as $child) {
+                if (! in_array($child->id, $ids, true)) {
+                    $ids[] = $child->id;
+                }
+            }
+        }
+
+        return $ids;
+    }
+
+    /** @param list<int>|null $categoryIds */
+    private function catalogChart(?array $categoryIds = null): DonutChartMetric
+    {
+        $stock = app(StockSummary::class)->overall($categoryIds);
+        $total = Product::query()
+            ->when($categoryIds !== null, fn ($query) => $query->whereHas('categories', fn ($categories) => $categories->whereIn('categories.id', $categoryIds)))
+            ->count();
+
+        return DonutChartMetric::make($categoryIds === null ? 'Структура каталога' : (request()->input('_data.catalog_scope', request()->input('catalog_scope')) === 'batteries' ? 'Аккумуляторы' : 'Выбранная категория'))
             ->values([
                 'Неактивные — '.($total - $stock['total']) => $total - $stock['total'],
                 'Активные, нет в наличии — '.$stock['out_of_stock'] => $stock['out_of_stock'],

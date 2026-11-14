@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomerRequestType;
+use App\Models\Category;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\Models\Product;
@@ -37,7 +38,7 @@ class AdminDashboardTest extends TestCase
         $this->order('Старый', 'Сделка завершена', createdAt: now()->subDays(45));
 
         $this->dashboard()
-            ->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.')
+            ->assertSee('Заказы и заявки за 30 дней')
             ->assertSee('Оформленные заказы')
             ->assertSee('Брошенные оформления')
             ->assertSee('Заявки');
@@ -94,11 +95,78 @@ class AdminDashboardTest extends TestCase
 
         $this->dashboard()
             ->assertSee('Структура каталога')
+            ->assertSee('Все аккумуляторы')
             ->assertSee('Неактивные — 1')
             ->assertSee('Активные, нет в наличии — 0')
             ->assertSee('Активные, на складе магазина — 1')
             ->assertSee('Активные, под заказ — 1')
-            ->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.');
+            ->assertSee('Заказы и заявки за 30 дней');
+    }
+
+    public function test_catalog_chart_fragment_filters_batteries_and_rejects_unknown_scope(): void
+    {
+        $batteryCategory = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'batteries']);
+        config(['shop.battery_fitment.category_ids' => [$batteryCategory->id]]);
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=batteries')
+            ->assertOk()
+            ->assertSee('Аккумуляторы')
+            ->assertSee('Активные, на складе магазина — 0');
+
+        $battery = Product::query()->create(['name' => 'АКБ', 'slug' => 'battery', 'price' => 100, 'quantity' => 1, 'status' => true]);
+        $battery->categories()->attach($batteryCategory);
+        Product::query()->create(['name' => 'Другое', 'slug' => 'other', 'price' => 100, 'quantity' => 1, 'status' => true]);
+
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=batteries')
+            ->assertOk()
+            ->assertSee('Аккумуляторы')
+            ->assertSee('Активные, на складе магазина — 1')
+            ->assertDontSee('Структура каталога');
+
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=all')
+            ->assertOk()
+            ->assertSee('Структура каталога')
+            ->assertSee('Активные, на складе магазина — 2');
+
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=unknown')
+            ->assertOk()
+            ->assertSee('Структура каталога')
+            ->assertSee('Активные, на складе магазина — 2');
+    }
+
+    public function test_all_batteries_include_subcategories_without_double_counting(): void
+    {
+        $root = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'battery-root']);
+        $child = Category::query()->create(['name' => 'Подкатегория АКБ', 'slug' => 'battery-child', 'parent_id' => $root->id, 'status' => false]);
+        config(['shop.battery_fitment.category_ids' => [$root->id, $child->id]]);
+        $battery = Product::query()->create(['name' => 'АКБ', 'slug' => 'battery-sub', 'price' => 100, 'quantity' => 1, 'status' => true]);
+        $battery->categories()->attach($child);
+        Product::query()->create(['name' => 'Другое', 'slug' => 'other-sub', 'price' => 100, 'quantity' => 1, 'status' => true]);
+
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=batteries')
+            ->assertOk()
+            ->assertSee('Активные, на складе магазина — 1');
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=category_'.$root->id)
+            ->assertOk()
+            ->assertSee('Активные, на складе магазина — 1');
+    }
+
+    public function test_catalog_filter_includes_subcategories_without_duplicate_products(): void
+    {
+        $parent = Category::query()->create(['name' => 'Раздел', 'slug' => 'section', 'status' => true]);
+        $child = Category::query()->create(['name' => 'Подраздел', 'slug' => 'subsection', 'status' => false, 'parent_id' => $parent->id]);
+        $product = Product::query()->create(['name' => 'Товар', 'slug' => 'item', 'price' => 100, 'quantity' => 1, 'status' => true]);
+        $product->categories()->attach([$parent->id, $child->id]);
+        Product::query()->create(['name' => 'Другой', 'slug' => 'another', 'price' => 100, 'quantity' => 1, 'status' => true]);
+
+        $this->dashboard()->assertSee('Раздел / Подраздел (неактивная)');
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=category_'.$parent->id)
+            ->assertOk()
+            ->assertSee('Выбранная категория')
+            ->assertSee('Активные, на складе магазина — 1');
+        $this->get('/admin/page/dashboard?_fragment-load=catalog-chart&_data%5Bcatalog_scope%5D=category_999999')
+            ->assertOk()
+            ->assertSee('Структура каталога')
+            ->assertSee('Активные, на складе магазина — 2');
     }
 
     public function test_attention_lists_only_problems_that_exist(): void
@@ -127,7 +195,7 @@ class AdminDashboardTest extends TestCase
         Cache::put('assortment-gaps', ['cars' => 0, 'without_batteries' => 0, 'sizes' => []]);
 
         $this->dashboard()->assertSee('Всё в порядке');
-        $this->dashboard()->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.');
+        $this->dashboard()->assertSee('Заказы и заявки за 30 дней');
     }
 
     private function dashboard(): TestResponse

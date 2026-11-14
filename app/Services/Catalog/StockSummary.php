@@ -14,12 +14,21 @@ use Illuminate\Support\Facades\DB;
 class StockSummary
 {
     /**
+     * @param  list<int>|null  $categoryIds
      * @return array{total: int, in_stock: int, units: int, on_order: int, out_of_stock: int, stock_value: float}
      */
-    public function overall(): array
+    public function overall(?array $categoryIds = null): array
     {
         return $this->normalize(
-            $this->aggregate(DB::table('products'))->where('products.status', true)->whereNull('products.deleted_at')->first(),
+            $this->aggregate(DB::table('products'))
+                ->where('products.status', true)
+                ->whereNull('products.deleted_at')
+                ->when($categoryIds !== null, fn (Builder $query) => $query->whereExists(fn (Builder $categories) => $categories
+                    ->selectRaw('1')
+                    ->from('category_product')
+                    ->whereColumn('category_product.product_id', 'products.id')
+                    ->whereIn('category_product.category_id', $categoryIds)))
+                ->first(),
         );
     }
 
