@@ -113,7 +113,8 @@ class SupplierImport extends Page
             return MoonShineJsonResponse::make()->toast($exception->getMessage(), ToastType::ERROR);
         }
 
-        $files->markApplied($id, ['created' => $report->created, 'added' => $report->productsAdded, 'repriced' => $report->productsRepriced, 'cleared' => $report->productsCleared]);
+        $admin = $request->user(config('moonshine.auth.guard'));
+        $files->markApplied($id, ['created' => $report->created, 'added' => $report->productsAdded, 'repriced' => $report->productsRepriced, 'cleared' => $report->productsCleared], $admin->getAuthIdentifier(), $admin->name);
 
         return MoonShineJsonResponse::make()
             ->toast("Применено: стало под заказ — {$report->productsAdded}, изменилась цена — {$report->productsRepriced}, снято — {$report->productsCleared}. Копия базы снята перед записью.", ToastType::SUCCESS)
@@ -261,6 +262,7 @@ class SupplierImport extends Page
                 'name' => $upload['original_name'],
                 'supplier' => (string) $suppliers->get($upload['supplier_id'], ''),
                 'uploaded' => $upload['uploaded_at']?->format('d.m.Y H:i') ?? '',
+                'applied_by' => $upload['applied_at'] ? ($upload['applied_by_name'] ?? 'Неизвестно') : '—',
                 'status' => $upload['applied_at'] ? 'применено '.$upload['applied_at']->format('d.m.Y H:i') : 'не применено',
             ])->all())
                 ->fields([
@@ -268,6 +270,7 @@ class SupplierImport extends Page
                     Text::make('Поставщик', 'supplier'),
                     Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->render())->unescape(),
                     Text::make('Состояние', 'status'),
+                    Text::make('Кто применил', 'applied_by'),
                 ])
                 ->withNotFound(),
         ]);

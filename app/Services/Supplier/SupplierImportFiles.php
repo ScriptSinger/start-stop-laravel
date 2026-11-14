@@ -57,13 +57,13 @@ class SupplierImportFiles
     /**
      * @param  array<string, int>  $summary
      */
-    public function markApplied(string $id, array $summary): void
+    public function markApplied(string $id, array $summary, int|string $adminId, string $adminName): void
     {
-        $this->writeMeta($id, [...$this->meta($id), 'applied_at' => now()->toIso8601String(), 'summary' => $summary]);
+        $this->writeMeta($id, [...$this->meta($id), 'applied_at' => now()->toIso8601String(), 'summary' => $summary, 'applied_by_id' => $adminId, 'applied_by_name' => $adminName]);
     }
 
     /**
-     * @return array{supplier_id?: int, extension?: string, original_name?: string, uploaded_at?: string, applied_at?: string, summary?: array<string, int>}
+     * @return array{supplier_id?: int, extension?: string, original_name?: string, uploaded_at?: string, applied_at?: string, summary?: array<string, int>, applied_by_id?: int|string, applied_by_name?: string}
      */
     public function meta(string $id): array
     {
@@ -75,7 +75,7 @@ class SupplierImportFiles
     /**
      * Последние загрузки, новые сверху.
      *
-     * @return Collection<int, array{id: string, original_name: string, supplier_id: ?int, uploaded_at: ?CarbonImmutable, applied_at: ?CarbonImmutable}>
+     * @return Collection<int, array{id: string, original_name: string, supplier_id: ?int, uploaded_at: ?CarbonImmutable, applied_at: ?CarbonImmutable, applied_by_name: ?string}>
      */
     public function recent(int $limit = 10): Collection
     {
@@ -94,6 +94,7 @@ class SupplierImportFiles
                     'supplier_id' => $meta['supplier_id'] ?? null,
                     'uploaded_at' => isset($meta['uploaded_at']) ? CarbonImmutable::parse($meta['uploaded_at']) : null,
                     'applied_at' => isset($meta['applied_at']) ? CarbonImmutable::parse($meta['applied_at']) : null,
+                    'applied_by_name' => $meta['applied_by_name'] ?? null,
                 ];
             })
             ->values();

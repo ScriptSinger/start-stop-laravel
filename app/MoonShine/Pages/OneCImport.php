@@ -101,7 +101,8 @@ class OneCImport extends Page
             return MoonShineJsonResponse::make()->toast($exception->getMessage(), ToastType::ERROR);
         }
 
-        $files->markApplied($id, $changed);
+        $admin = $request->user(config('moonshine.auth.guard'));
+        $files->markApplied($id, $changed, $admin->getAuthIdentifier(), $admin->name);
 
         return MoonShineJsonResponse::make()
             ->toast("Применено: обновлено товаров — {$changed}. Копия базы снята перед записью.", ToastType::SUCCESS)
@@ -238,12 +239,14 @@ class OneCImport extends Page
                 'id' => $upload['id'],
                 'name' => $upload['original_name'],
                 'uploaded' => $upload['uploaded_at']?->format('d.m.Y H:i') ?? '',
+                'applied_by' => $upload['applied_at'] ? ($upload['applied_by_name'] ?? 'Неизвестно') : '—',
                 'status' => $upload['applied_at'] ? 'применено '.$upload['applied_at']->format('d.m.Y H:i').' ('.$upload['applied_count'].')' : 'не применено',
             ])->all())
                 ->fields([
                     Text::make('Дата', 'uploaded'),
                     Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->render())->unescape(),
                     Text::make('Состояние', 'status'),
+                    Text::make('Кто применил', 'applied_by'),
                 ])
                 ->withNotFound(),
         ]);

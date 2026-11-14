@@ -136,10 +136,12 @@
                 <div class="col-xs-12 col-md-9 col-lg-9 col-xxl-16 hidden-xs hidden-sm">
                     <nav id="menu2" class="menu menu2 menu-right">
                         <ul class="menu__collapse">
+                            @foreach ($mainMenu as $item)
+                                @if ($item->href() === route('contact'))
                             <li class="menu__level-1-li">
                                 <a class="menu__level-1-a" href="{{ route('business') }}"><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
                             </li>
-                            @foreach ($mainMenu as $item)
+                                @endif
                                 <li class="menu__level-1-li {{ $item->children->isNotEmpty() ? 'has-children' : '' }}">
                                     <a class="menu__level-1-a" @if ($item->href()) href="{{ $item->href() }}" @endif>@if ($item->icon)<i class="menu__level-1-icon {{ $item->icon }} fa-fw"></i> @endif{{ $item->title }}</a>
                                     @if ($item->children->isNotEmpty())
@@ -154,6 +156,11 @@
                                     @endif
                                 </li>
                             @endforeach
+                            @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
+                            <li class="menu__level-1-li">
+                                <a class="menu__level-1-a" href="{{ route('business') }}"><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
+                            </li>
+                            @endif
                         </ul>
                     </nav>
                 </div>
@@ -164,8 +171,10 @@
                 <details class="business-mobile-nav__menu">
                     <summary><i class="fas fa-bars" aria-hidden="true"></i>Меню</summary>
                     <nav aria-label="Разделы сайта">
-                        <a href="{{ route('business') }}">Для организаций</a>
                         @foreach ($mainMenu as $item)
+                            @if ($item->href() === route('contact'))
+                                <a href="{{ route('business') }}">Для организаций</a>
+                            @endif
                             @if ($item->href())
                                 <a href="{{ $item->href() }}">{{ $item->title }}</a>
                             @else
@@ -175,6 +184,9 @@
                                 <a href="{{ $child->href() }}">{{ $child->title }}</a>
                             @endforeach
                         @endforeach
+                        @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
+                            <a href="{{ route('business') }}">Для организаций</a>
+                        @endif
                     </nav>
                 </details>
             </div>

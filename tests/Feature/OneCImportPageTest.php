@@ -99,7 +99,11 @@ class OneCImportPageTest extends TestCase
         $this->assertSame('AKOM 75 Ah О.П.', $this->akom->fresh()->name);
 
         $this->get("/admin/page/one-c-import?import={$id}")->assertSee('Применено');
-        $this->assertArrayHasKey('applied_at', app(OneCImportFiles::class)->meta($id));
+        $meta = app(OneCImportFiles::class)->meta($id);
+        $this->assertArrayHasKey('applied_at', $meta);
+        $this->assertSame('Admin', $meta['applied_by_name']);
+        $this->assertSame(auth('moonshine')->id(), $meta['applied_by_id']);
+        $this->get('/admin/page/one-c-import')->assertSee('Кто применил')->assertSee('Admin');
     }
 
     public function test_apply_does_nothing_when_backup_fails(): void

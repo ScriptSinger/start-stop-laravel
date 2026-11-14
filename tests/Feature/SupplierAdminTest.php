@@ -78,6 +78,10 @@ class SupplierAdminTest extends TestCase
 
         $this->assertSame($this->supplier->id, $this->supplier->offers()->first()->supplier_id);
         $this->get("/admin/page/supplier-import?import={$id}")->assertSee('Применено');
+        $meta = app(SupplierImportFiles::class)->meta($id);
+        $this->assertSame('Admin', $meta['applied_by_name']);
+        $this->assertSame(auth('moonshine')->id(), $meta['applied_by_id']);
+        $this->get('/admin/page/supplier-import')->assertSee('Кто применил')->assertSee('Admin');
     }
 
     public function test_old_xls_is_rejected(): void

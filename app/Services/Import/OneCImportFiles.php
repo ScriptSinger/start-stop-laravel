@@ -45,13 +45,13 @@ class OneCImportFiles
         Storage::disk('local')->delete([$this->file($id), $this->metaFile($id)]);
     }
 
-    public function markApplied(string $id, int $changed): void
+    public function markApplied(string $id, int $changed, int|string $adminId, string $adminName): void
     {
-        $this->writeMeta($id, [...$this->meta($id), 'applied_at' => now()->toIso8601String(), 'applied_count' => $changed]);
+        $this->writeMeta($id, [...$this->meta($id), 'applied_at' => now()->toIso8601String(), 'applied_count' => $changed, 'applied_by_id' => $adminId, 'applied_by_name' => $adminName]);
     }
 
     /**
-     * @return array{original_name?: string, uploaded_at?: string, applied_at?: string, applied_count?: int}
+     * @return array{original_name?: string, uploaded_at?: string, applied_at?: string, applied_count?: int, applied_by_id?: int|string, applied_by_name?: string}
      */
     public function meta(string $id): array
     {
@@ -63,7 +63,7 @@ class OneCImportFiles
     /**
      * Последние загрузки, новые сверху.
      *
-     * @return Collection<int, array{id: string, original_name: string, uploaded_at: ?CarbonImmutable, applied_at: ?CarbonImmutable, applied_count: ?int}>
+     * @return Collection<int, array{id: string, original_name: string, uploaded_at: ?CarbonImmutable, applied_at: ?CarbonImmutable, applied_count: ?int, applied_by_name: ?string}>
      */
     public function recent(int $limit = 10): Collection
     {
@@ -82,6 +82,7 @@ class OneCImportFiles
                     'uploaded_at' => isset($meta['uploaded_at']) ? CarbonImmutable::parse($meta['uploaded_at']) : null,
                     'applied_at' => isset($meta['applied_at']) ? CarbonImmutable::parse($meta['applied_at']) : null,
                     'applied_count' => $meta['applied_count'] ?? null,
+                    'applied_by_name' => $meta['applied_by_name'] ?? null,
                 ];
             })
             ->values();
