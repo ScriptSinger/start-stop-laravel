@@ -15,6 +15,9 @@ use App\MoonShine\Resources\Product\ProductResource;
 use App\Services\Catalog\AssortmentGaps;
 use App\Services\Catalog\StockSummary;
 use Illuminate\Support\Facades\DB;
+use MoonShine\Apexcharts\Components\DonutChartMetric;
+use MoonShine\Apexcharts\Components\LineChartMetric;
+use MoonShine\Apexcharts\Support\SeriesItem;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Laravel\Pages\Page;
 use MoonShine\MenuManager\Attributes\SkipMenu;
@@ -25,7 +28,6 @@ use MoonShine\UI\Components\Layout\Column;
 use MoonShine\UI\Components\Layout\Div;
 use MoonShine\UI\Components\Layout\Grid;
 use MoonShine\UI\Components\Link;
-use MoonShine\UI\Components\Metrics\Wrapped\ValueMetric;
 
 /**
  * Стартовая страница админки: главное одним взглядом. Уведомлений о
@@ -51,7 +53,7 @@ class Dashboard extends Page
     }
 
     /**
-     * Минимум: ряд чисел по заказам, ряд по товарам, что требует внимания
+     * Графики заказов и каталога, что требует внимания
      * (только ненулевое) и лидеры продаж. Таблицы заказов и заявок — в их
      * разделах меню, новые там подсвечены счётчиком; склад подробно — на
      * странице «Остатки».
@@ -60,22 +62,11 @@ class Dashboard extends Page
      */
     protected function components(): iterable
     {
-        $sales = Order::query()
-            ->whereNotIn('status', [OrderStatus::Abandoned, OrderStatus::Cancelled])
-            ->where('created_at', '>=', now()->subDays(30));
-        $previousSum = (float) Order::query()
-            ->whereNotIn('status', [OrderStatus::Abandoned, OrderStatus::Cancelled])
-            ->whereBetween('created_at', [now()->subDays(60), now()->subDays(30)])
-            ->sum('total');
-
         return [
-            Collapse::make('Заказы', [Grid::make([
-                $this->metric('Новые заказы', Order::query()->where('status', OrderStatus::New)->count(), 'shopping-cart'),
-                $this->metric('Заявки — перезвонить', CustomerRequest::query()->where('is_processed', false)->count(), 'phone'),
-                $this->metric('Брошенные оформления, 30 дн.', Order::query()->where('status', OrderStatus::Abandoned)->where('created_at', '>=', now()->subDays(30))->count(), 'exclamation-triangle'),
-                $this->metric('Продажи за 30 дн. (было '.$this->money($previousSum).')', $this->money((float) (clone $sales)->sum('total')), 'banknotes'),
+            Collapse::make('Показатели', [Grid::make([
+                Column::make([Box::make([$this->catalogChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
+                Column::make([Box::make([$this->ordersChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
             ])])->open(),
-            Collapse::make('Товары', [$this->catalogMetrics()])->open(),
             Grid::make([
                 Column::make([$this->attention()], colSpan: 6, adaptiveColSpan: 12),
                 Column::make([$this->bestsellers()], colSpan: 6, adaptiveColSpan: 12),
@@ -83,29 +74,53 @@ class Dashboard extends Page
         ];
     }
 
-    /**
-     * Товары: сколько можно купить, что на складе, что под заказ и сколько
-     * готово к выгрузке на площадки.
-     */
-    private function catalogMetrics(): Grid
+    private function ordersChart(): LineChartMetric
+    {
+        $start = now()->startOfDay()->subDays(29);
+        $orders = Order::query()
+            ->where('created_at', '>=', $start)
+            ->selectRaw('date(created_at) as day, status, count(*) as total')
+            ->groupByRaw('date(created_at), status')
+            ->get();
+        $requests = CustomerRequest::query()
+            ->where('created_at', '>=', $start)
+            ->selectRaw('date(created_at) as day, count(*) as total')
+            ->groupByRaw('date(created_at)')
+            ->pluck('total', 'day');
+
+        $confirmed = $abandoned = $callbacks = [];
+        for ($day = $start->copy(); $day->lte(now()); $day->addDay()) {
+            $date = $day->toDateString();
+            $dayOrders = $orders->where('day', $date);
+            $confirmed[$date] = (int) $dayOrders->filter(fn (Order $order): bool => ! in_array($order->status, [OrderStatus::Abandoned, OrderStatus::Cancelled], true))->sum('total');
+            $abandoned[$date] = (int) $dayOrders->where('status', OrderStatus::Abandoned)->sum('total');
+            $callbacks[$date] = (int) ($requests[$date] ?? 0);
+        }
+
+        return LineChartMetric::make('Заказы и заявки за 30 дней (текущие статусы), шт.')
+            ->series([
+                SeriesItem::make('Оформленные заказы', $confirmed),
+                SeriesItem::make('Брошенные оформления', $abandoned),
+                SeriesItem::make('Заявки', $callbacks),
+            ])
+            ->colors(['#2563eb', '#d97706', '#9333ea']);
+    }
+
+    private function catalogChart(): DonutChartMetric
     {
         $stock = app(StockSummary::class)->overall();
         $total = Product::query()->count();
-        $available = $stock['in_stock'] + $stock['on_order'];
-        $warehouse = Product::query()->where('quantity', '>', 0)
-            ->selectRaw('sum(quantity) as units, sum(quantity * price) as stock_value')->first();
-        $ready = Product::query()->readyForExport()->count();
-        $catalogTooltip = view('components.admin-tooltip', ['content' => 'Активные видны на сайте. Удалённые не учитываются.'])->render();
-        $availabilityTooltip = view('components.admin-tooltip', ['content' => 'Активные товары на складе магазина или под заказ.'])->render();
-        $warehouseTooltip = view('components.admin-tooltip', ['content' => 'Включая неактивные товары. Стоимость — по обычной цене.'])->render();
-        $exportTooltip = view('components.admin-tooltip', ['content' => 'Доступные товары с фото, ценой больше нуля, производителем и категорией.'])->render();
 
-        return Grid::make([
-            $this->metric('<strong>Активные в каталоге '.$catalogTooltip.'</strong>', number_format($stock['total'], 0, ',', ' ').' из '.number_format($total, 0, ',', ' ').' <span class="dashboard-unit">позиций</span>', 'cube', true),
-            $this->metric('<strong>Доступно к покупке '.$availabilityTooltip.'</strong><span class="dashboard-detail"><span class="dashboard-stock">На складе '.$stock['in_stock'].'</span> · <span class="dashboard-supplier">Под заказ '.$stock['on_order'].'</span> позиций</span>', number_format($available, 0, ',', ' ').' <span class="dashboard-unit">позиций</span>', 'shopping-bag', true),
-            $this->metric('<strong>Наш склад '.$warehouseTooltip.'</strong><span class="dashboard-detail">Стоимость остатков: '.$this->money((float) ($warehouse->stock_value ?? 0)).'</span>', (int) ($warehouse->units ?? 0).' <span class="dashboard-unit">шт.</span>', 'archive-box', true),
-            $this->metric('<strong>Готовы к выгрузке '.$exportTooltip.'</strong><span class="dashboard-detail">из доступных к покупке</span>', $ready.' из '.$available.' <span class="dashboard-unit">позиций</span>', 'arrow-up-tray', true),
-        ])->class('dashboard-product-grid');
+        return DonutChartMetric::make('Структура каталога')
+            ->values([
+                'Неактивные — '.($total - $stock['total']) => $total - $stock['total'],
+                'Активные, нет в наличии — '.$stock['out_of_stock'] => $stock['out_of_stock'],
+                'Активные, на складе магазина — '.$stock['in_stock'] => $stock['in_stock'],
+                'Активные, под заказ — '.$stock['on_order'] => $stock['on_order'],
+            ])
+            ->colors(['#9ca3af', '#d97706', '#2563eb', '#9333ea'])
+            ->height(260)
+            ->decimals(0);
     }
 
     /**
@@ -158,13 +173,6 @@ class Dashboard extends Page
         return Box::make('Требует внимания', $items->isEmpty()
             ? [Heading::make('Всё в порядке', h: 6)]
             : $items->map(fn (array $item): Div => Div::make([Link::make($item[2], $item[1].' →')])->class('py-1'))->values()->all());
-    }
-
-    private function metric(string $label, int|string $value, string $icon, bool $productCard = false): Column
-    {
-        return Column::make([
-            ValueMetric::make($label)->value($value)->icon($icon)->class($productCard ? 'dashboard-product-metric' : ''),
-        ], colSpan: 3, adaptiveColSpan: 12)->class($productCard ? 'dashboard-product-column' : '');
     }
 
     /**

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d5c92dca7a330f42a58c3625e09606ce",
+    "content-hash": "4249da089d76354d53a3ce024b5563bc",
     "packages": [
         {
             "name": "artesaos/seotools",
@@ -2806,6 +2806,74 @@
                 }
             ],
             "time": "2026-09-29T19:21:12+00:00"
+        },
+        {
+            "name": "moonshine/apexcharts",
+            "version": "3.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/moonshine-software/apexcharts.git",
+                "reference": "a0ad3ec076f1a4caec0cd5eaa4a2953cdf14f96c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/moonshine-software/apexcharts/zipball/a0ad3ec076f1a4caec0cd5eaa4a2953cdf14f96c",
+                "reference": "a0ad3ec076f1a4caec0cd5eaa4a2953cdf14f96c",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": "^8.2|^8.3"
+            },
+            "conflict": {
+                "moonshine/moonshine": "<3.0.0"
+            },
+            "require-dev": {
+                "moonshine/moonshine": "^3.0|^4.0",
+                "orchestra/testbench": "^9.0",
+                "phpunit/phpunit": "^11.0.1",
+                "rector/rector": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "MoonShine\\Apexcharts\\Providers\\ApexchartsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MoonShine\\Apexcharts\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Danil Shutsky",
+                    "email": "info@cutcode.ru",
+                    "homepage": "https://cutcode.dev"
+                }
+            ],
+            "description": "Apexcharts for MoonShine",
+            "homepage": "https://moonshine-laravel.com",
+            "keywords": [
+                "apexcharts",
+                "charts",
+                "donut charts",
+                "line charts",
+                "moonshine"
+            ],
+            "support": {
+                "issues": "https://github.com/moonshine-software/apexcharts/issues",
+                "source": "https://github.com/moonshine-software/apexcharts"
+            },
+            "time": "2026-01-19T12:56:09+00:00",
+            "published-time": "2026-01-19T12:57:07+00:00"
         },
         {
             "name": "moonshine/import-export",

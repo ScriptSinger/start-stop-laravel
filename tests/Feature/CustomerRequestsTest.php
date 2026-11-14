@@ -92,10 +92,10 @@ class CustomerRequestsTest extends TestCase
             'password' => bcrypt('secret'),
         ]), 'moonshine');
 
-        // Список заявок — в разделе «Заявки»; на панели число, в меню — счётчик новых.
+        // Список заявок — в разделе «Заявки»; на графике все заявки, в меню — счётчик новых.
         $this->get('/admin')
             ->assertOk()
-            ->assertSee('Заявки — перезвонить')
+            ->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.')
             ->assertSeeInOrder(['Заявки', '>1<'], false);
 
         $this->get('/admin/resource/customer-request-resource/customer-request-index-page')->assertOk();

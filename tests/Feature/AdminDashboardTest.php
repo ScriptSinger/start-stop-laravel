@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CustomerRequestType;
+use App\Models\CustomerRequest;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,10 +36,11 @@ class AdminDashboardTest extends TestCase
         $this->order('Брошенный', 'unknown', createdAt: now()->subDay());
         $this->order('Старый', 'Сделка завершена', createdAt: now()->subDays(45));
 
-        $this->assertMetric('Новые заказы', '1');
-        $this->assertMetric('Брошенные оформления, 30 дн.', '1');
-        // За 30 дней — новый и обработанный; брошенный не считается, старый — в прошлом периоде.
-        $this->assertMetric('Продажи за 30 дн. (было 6 000 ₽)', '12 000 ₽');
+        $this->dashboard()
+            ->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.')
+            ->assertSee('Оформленные заказы')
+            ->assertSee('Брошенные оформления')
+            ->assertSee('Заявки');
 
         // Таблицы заказов — в разделе «Заказы», на панели их нет; новые видны счётчиком в меню.
         $this->dashboard()
@@ -47,7 +50,40 @@ class AdminDashboardTest extends TestCase
             ->assertSeeInOrder(['Заказы', '>1<'], false);
     }
 
-    public function test_product_cards_separate_catalog_availability_and_physical_stock(): void
+    public function test_orders_chart_counts_each_series_by_creation_date_and_current_status(): void
+    {
+        $this->travelTo(now()->startOfDay()->addHours(12));
+        $this->order('Подтверждённый', 'new');
+        $abandoned = $this->order('Брошенный', 'unknown');
+        $this->order('Отменённый', 'Отменено');
+        $this->order('Вчера', 'Обработано', now()->subDay());
+        $this->order('За пределами периода', 'new', now()->subDays(30));
+        CustomerRequest::query()->create(['type' => CustomerRequestType::Callback, 'name' => 'Клиент', 'phone' => '89870000000']);
+
+        $series = $this->ordersChartSeries();
+        $this->assertSame([1, 1], array_slice($series[0]['data'], -2));
+        $this->assertSame([0, 1], array_slice($series[1]['data'], -2));
+        $this->assertSame([0, 1], array_slice($series[2]['data'], -2));
+        $this->assertSame(2, array_sum($series[0]['data']));
+
+        $abandoned->update(['status' => 'Обработано']);
+        $series = $this->ordersChartSeries();
+        $this->assertSame(2, end($series[0]['data']));
+        $this->assertSame(0, end($series[1]['data']));
+    }
+
+    /** @return array<int, array{name: string, data: array<int, int>}> */
+    private function ordersChartSeries(): array
+    {
+        $html = html_entity_decode($this->dashboard()->getContent(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        preg_match("/x-data=\"lineChart\\(\\{\\s*config: JSON\\.parse\\('([^']+)'\\)/", $html, $matches);
+        $this->assertNotEmpty($matches[1] ?? null);
+        $json = json_decode('"'.$matches[1].'"', true, flags: JSON_THROW_ON_ERROR);
+
+        return json_decode($json, true, flags: JSON_THROW_ON_ERROR)['series'];
+    }
+
+    public function test_catalog_chart_separates_product_availability(): void
     {
         $minimum = (int) config('shop.supplier_order_min_quantity');
         Product::query()->create(['name' => 'Склад', 'slug' => 'stock', 'price' => 100, 'status' => true, 'quantity' => 2, 'supplier_quantity' => $minimum]);
@@ -57,13 +93,12 @@ class AdminDashboardTest extends TestCase
         $deleted->delete();
 
         $this->dashboard()
-            ->assertSee('2 из 3')
-            ->assertSee('Активные в каталоге')
-            ->assertSee('На складе 1')
-            ->assertSee('Под заказ 1')
-            ->assertSee('5 <span class="dashboard-unit">шт.</span>', false)
-            ->assertSee('Стоимость остатков: 1 400 ₽')
-            ->assertSee('Доступные товары с фото, ценой больше нуля, производителем и категорией.');
+            ->assertSee('Структура каталога')
+            ->assertSee('Неактивные — 1')
+            ->assertSee('Активные, нет в наличии — 0')
+            ->assertSee('Активные, на складе магазина — 1')
+            ->assertSee('Активные, под заказ — 1')
+            ->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.');
     }
 
     public function test_attention_lists_only_problems_that_exist(): void
@@ -92,20 +127,12 @@ class AdminDashboardTest extends TestCase
         Cache::put('assortment-gaps', ['cars' => 0, 'without_batteries' => 0, 'sizes' => []]);
 
         $this->dashboard()->assertSee('Всё в порядке');
-        $this->assertMetric('Новые заказы', '0');
+        $this->dashboard()->assertSee('Заказы и заявки за 30 дней (текущие статусы), шт.');
     }
 
     private function dashboard(): TestResponse
     {
         return $this->get('/admin')->assertOk();
-    }
-
-    private function assertMetric(string $title, string $value): void
-    {
-        $this->assertMatchesRegularExpression(
-            '/report-card-value">\s*'.preg_quote($value, '/').'\s*<\/div>\s*<h5 class="report-card-title">\s*'.preg_quote($title, '/').'\s*</u',
-            $this->dashboard()->getContent(),
-        );
     }
 
     private function order(string $name, string $status, ?\DateTimeInterface $createdAt = null): Order

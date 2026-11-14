@@ -18,7 +18,6 @@ export default defineConfig({
                 'resources/css/storefront/pages/account.css',
                 'resources/js/storefront/app.js',
                 'resources/css/admin/tables.css',
-                'resources/css/admin/dashboard.css',
                 'resources/js/admin/tables.js',
             ],
             refresh: true,
