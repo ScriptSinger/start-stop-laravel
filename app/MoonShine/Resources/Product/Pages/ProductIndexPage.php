@@ -33,6 +33,7 @@ use MoonShine\Support\Enums\TextWrap;
 use MoonShine\Support\Enums\ToastType;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\ActionButton;
+use MoonShine\UI\Components\Collapse;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Checkbox;
@@ -296,10 +297,17 @@ class ProductIndexPage extends IndexPage
     }
 
     /**
-     * @return list<FieldContract>
+     * @return list<ComponentContract>
      */
     protected function filters(): iterable
     {
+        $filters = request()->input('filter', []);
+        $filters = is_array($filters) ? $filters : [];
+        $additionalKeys = ['code', 'sku', 'external_id', 'attribute_values', 'price', 'supplier_quantity', 'supplier_price', 'deleted'];
+        $qualityKeys = ['without_external_id', 'without_manufacturer', 'without_categories', 'without_image', 'without_fitment_data', 'without_description', 'price_problem', 'ready_for_export'];
+        $additionalOpen = collect($additionalKeys)->contains(fn (string $key): bool => filled($filters[$key] ?? null));
+        $qualityOpen = collect($qualityKeys)->contains(fn (string $key): bool => filter_var($filters[$key] ?? false, FILTER_VALIDATE_BOOLEAN));
+
         return [
             // Несколько вариантов через запятую: «60, 65» — название содержит любой из них.
             Text::make('Название', 'name')
@@ -309,11 +317,6 @@ class ProductIndexPage extends IndexPage
                         $query->orWhere('products.name', 'like', '%'.addcslashes($term, '%_\\').'%');
                     }
                 })),
-            Text::make('Код товара', 'code'),
-            Text::make('Артикул', 'sku'),
-            Text::make('Код 1С', 'external_id')
-                ->hint('Несколько кодов через запятую: РТ-00000805, 1252')
-                ->onApply(fn (Builder $query, mixed $value): Builder => $query->whereIn('products.external_id', array_filter(array_map('trim', explode(',', (string) $value))))),
             BelongsTo::make('Производитель', 'manufacturer', resource: ManufacturerResource::class)
                 ->nullable()
                 ->searchable(),
@@ -325,14 +328,6 @@ class ProductIndexPage extends IndexPage
                     'categories.id',
                     Category::query()->whereKey(array_filter((array) $value))->get()->flatMap(fn (Category $category): array => $category->treeIds())->unique()->all(),
                 ))),
-            $this->attributeValuesFilter(),
-            Range::make('Цена', 'price')->nullable(),
-            Range::make('Остаток у поставщика', 'supplier_quantity')->nullable(),
-            Range::make('Цена под заказ', 'supplier_price')->nullable(),
-            Select::make('Удалённые товары', 'deleted')
-                ->options(['trashed' => 'Только удалённые'])
-                ->nullable()
-                ->onApply(fn (Builder $query, mixed $value): Builder => $value === 'trashed' ? $query->onlyTrashed() : $query),
             Select::make('Статус', 'status')
                 ->options(['1' => 'Активные', '0' => 'Неактивные'])
                 ->nullable(),
@@ -347,15 +342,40 @@ class ProductIndexPage extends IndexPage
                         ->where('supplier_quantity', '<', config('shop.supplier_order_min_quantity')),
                     default => $query,
                 }),
-            $this->missingFilter('Без кода 1С', 'without_external_id', fn (Builder $query) => $query->whereNull('external_id')),
-            $this->missingFilter('Без производителя', 'without_manufacturer', fn (Builder $query) => $query->whereNull('manufacturer_id')),
-            $this->missingFilter('Без категории', 'without_categories', fn (Builder $query) => $query->doesntHave('categories')),
-            $this->missingFilter('Без фото', 'without_image', fn (Builder $query) => $query->whereNull('image')),
-            $this->missingFilter('АКБ без данных для подбора', 'without_fitment_data', fn (Builder $query) => $query->missingFitmentData()),
-            $this->missingFilter('Без описания', 'without_description', fn (Builder $query) => $query->where(fn (Builder $query) => $query->whereNull('description')->orWhere('description', ''))),
-            $this->missingFilter('Ошибка в цене', 'price_problem', fn (Builder $query) => $query->withPriceProblem()),
-            $this->missingFilter('Готовы к выгрузке', 'ready_for_export', fn (Builder $query) => $query->readyForExport()),
+            Collapse::make('Дополнительные фильтры', [
+                Text::make('Код товара', 'code'),
+                Text::make('Артикул', 'sku'),
+                Text::make('Код 1С', 'external_id')
+                    ->hint('Несколько кодов через запятую: РТ-00000805, 1252')
+                    ->onApply(fn (Builder $query, mixed $value): Builder => $query->whereIn('products.external_id', array_filter(array_map('trim', explode(',', (string) $value))))),
+                $this->attributeValuesFilter(),
+                $this->rangeFilter('Цена', 'price'),
+                $this->rangeFilter('Остаток у поставщика, шт.', 'supplier_quantity'),
+                $this->rangeFilter('Цена под заказ', 'supplier_price'),
+                Select::make('Удалённые товары', 'deleted')
+                    ->options(['trashed' => 'Только удалённые'])
+                    ->nullable()
+                    ->onApply(fn (Builder $query, mixed $value): Builder => $value === 'trashed' ? $query->onlyTrashed() : $query),
+            ])->open($additionalOpen)->persist(false),
+            Collapse::make('Качество карточек', [
+                $this->missingFilter('Без кода 1С', 'without_external_id', fn (Builder $query) => $query->whereNull('external_id')),
+                $this->missingFilter('Без производителя', 'without_manufacturer', fn (Builder $query) => $query->whereNull('manufacturer_id')),
+                $this->missingFilter('Без категории', 'without_categories', fn (Builder $query) => $query->doesntHave('categories')),
+                $this->missingFilter('Без фото', 'without_image', fn (Builder $query) => $query->whereNull('image')),
+                $this->missingFilter('АКБ без данных для подбора', 'without_fitment_data', fn (Builder $query) => $query->missingFitmentData()),
+                $this->missingFilter('Без описания', 'without_description', fn (Builder $query) => $query->where(fn (Builder $query) => $query->whereNull('description')->orWhere('description', ''))),
+                $this->missingFilter('Ошибка в цене', 'price_problem', fn (Builder $query) => $query->withPriceProblem()),
+                $this->missingFilter('Готовы к выгрузке', 'ready_for_export', fn (Builder $query) => $query->readyForExport()),
+            ])->open($qualityOpen)->persist(false),
         ];
+    }
+
+    private function rangeFilter(string $label, string $column): Range
+    {
+        return Range::make($label, $column)
+            ->nullable()
+            ->fromAttributes(['placeholder' => 'От', 'aria-label' => $label.' от'])
+            ->toAttributes(['placeholder' => 'До', 'aria-label' => $label.' до']);
     }
 
     /**

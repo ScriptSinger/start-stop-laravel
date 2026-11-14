@@ -246,6 +246,28 @@ class AdminNavigationFiltersTest extends TestCase
             ->assertDontSee('DELKOR');
     }
 
+    public function test_product_filters_group_advanced_and_quality_fields_and_open_active_group(): void
+    {
+        $this->get('/admin/resource/product-resource/product-index-page')
+            ->assertOk()
+            ->assertSeeInOrder(['Название', 'Производитель', 'Категории', 'Статус', 'Наличие', 'Дополнительные фильтры', 'Качество карточек'])
+            ->assertSee('Остаток у поставщика, шт.')
+            ->assertSee('placeholder="От"', false)
+            ->assertSee('placeholder="До"', false)
+            ->assertSee('aria-label="Цена от"', false)
+            ->assertSee('aria-label="Цена до"', false);
+
+        $this->get('/admin/resource/product-resource/product-index-page?filter%5Bwithout_image%5D=1')
+            ->assertOk()
+            ->assertSee('collapse(true)', false)
+            ->assertSee('Качество карточек');
+
+        $this->get('/admin/resource/product-resource/product-index-page?filter%5Bexternal_id%5D=123')
+            ->assertOk()
+            ->assertSee('collapse(true)', false)
+            ->assertSee('Дополнительные фильтры');
+    }
+
     public function test_product_list_places_deleted_products_in_filters_instead_of_query_tags(): void
     {
         $html = $this->get('/admin/resource/product-resource/product-index-page')->assertOk()->getContent();
