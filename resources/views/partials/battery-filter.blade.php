@@ -11,24 +11,24 @@
              логотипы грузятся только после «Показать все марки». --}}
         <div class="w-grid brands" id="battery-brand-list">
             @foreach ($popular_brands as $brand)
-                <div class="w-item brand-box" @click="loadModels(@js($brand['name']))">
+                <button type="button" class="w-item brand-box" @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
                         <img src="{{ $brand['image'] }}" alt="{{ $brand['name'] }}">
                     @else
                         <span class="brand-box__letter">{{ mb_substr($brand['name'], 0, 1) }}</span>
                     @endif
                     <span>{{ $brand['name'] }}</span>
-                </div>
+                </button>
             @endforeach
             @foreach ($other_brands as $brand)
-                <div class="w-item brand-box" x-show="allBrands" x-cloak @click="loadModels(@js($brand['name']))">
+                <button type="button" class="w-item brand-box" x-show="allBrands" x-cloak @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
                         <img :src="allBrands && @js($brand['image'])" alt="{{ $brand['name'] }}">
                     @else
                         <span class="brand-box__letter">{{ mb_substr($brand['name'], 0, 1) }}</span>
                     @endif
                     <span>{{ $brand['name'] }}</span>
-                </div>
+                </button>
             @endforeach
         </div>
 
@@ -38,32 +38,32 @@
     </div>
 
     <div class="w-step" x-show="step === 2" x-cloak>
-        <h3 class="w-title"><span class="w-back" @click="step = 1">←</span> Модели <span class="w-cur-brand" x-text="brand"></span></h3>
+        <h3 class="w-title"><button type="button" class="w-back" aria-label="Назад к маркам" @click="step = 1">←</button> Модели <span class="w-cur-brand" x-text="brand"></span></h3>
         <div class="w-grid models">
             <template x-for="item in models" :key="item.model">
-                <div class="w-item" @click="loadGenerations(item.model)"><b x-text="item.model"></b></div>
+                <button type="button" class="w-item" @click="loadGenerations(item.model)"><b x-text="item.model"></b></button>
             </template>
         </div>
     </div>
 
     <div class="w-step" x-show="step === 3" x-cloak>
-        <h3 class="w-title"><span class="w-back" @click="step = 2">←</span> Выберите поколение / кузов</h3>
+        <h3 class="w-title"><button type="button" class="w-back" aria-label="Назад к моделям" @click="step = 2">←</button> Выберите поколение / кузов</h3>
         <div class="w-grid gens">
             <template x-for="item in generations" :key="item.name">
-                <div class="w-item" @click="choose(item)">
+                <button type="button" class="w-item" @click="choose(item)">
                     <img :src="item.image" :alt="item.name">
-                    <div x-text="item.name"></div>
-                </div>
+                    <span x-text="item.name"></span>
+                </button>
             </template>
         </div>
     </div>
 
     {{-- Только когда разным двигателям поколения нужны разные аккумуляторы. --}}
     <div class="w-step" x-show="step === 4" x-cloak>
-        <h3 class="w-title"><span class="w-back" @click="step = 3">←</span> Выберите двигатель <span class="w-cur-brand" x-text="generation"></span></h3>
+        <h3 class="w-title"><button type="button" class="w-back" aria-label="Назад к поколениям" @click="step = 3">←</button> Выберите двигатель <span class="w-cur-brand" x-text="generation"></span></h3>
         <div class="w-grid engines">
             <template x-for="engine in engines" :key="engine">
-                <div class="w-item" @click="finish(generation, engine)"><b x-text="engine"></b></div>
+                <button type="button" class="w-item" @click="finish(generation, engine)"><b x-text="engine"></b></button>
             </template>
         </div>
     </div>

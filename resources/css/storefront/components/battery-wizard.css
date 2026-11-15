@@ -2,6 +2,9 @@
 .battery-wizard-container {background: #fff; padding: 20px; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px}
 .w-title {font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center}
 .w-back {cursor: pointer; color: #e31e24; font-size: 24px; vertical-align: middle; margin-right: 10px}
+.w-back {border:0; background:transparent; padding:0 6px}
+.w-item:focus-visible, .w-back:focus-visible {outline:2px solid var(--btn-primary-bg); outline-offset:3px}
+.w-item {font:inherit; color:inherit}
 .w-cur-brand {color: #e31e24}
 .w-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px}
 .w-grid.gens {grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))}

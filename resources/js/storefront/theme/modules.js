@@ -111,6 +111,20 @@ const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile, module_
 	};
 
 export function initUniModules(root = document) {
+	$(root).find('[data-home-selection]').each(function () {
+		const wrapper = $(this).children();
+		const mobile = window.matchMedia('(max-width: 767px)');
+		const update = () => {
+			if (mobile.matches && !wrapper.hasClass('owl-loaded')) {
+				wrapper.addClass('owl-carousel').owlCarousel({items: 2, dots: true, nav: true, mouseDrag: false, navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>']});
+			} else if (!mobile.matches && wrapper.hasClass('owl-loaded')) {
+				wrapper.trigger('destroy.owl.carousel').removeClass('owl-carousel');
+			}
+			wrapper.addClass('load-complete');
+		};
+		update();
+		mobile.addEventListener('change', update);
+	});
 	$(root).find('[data-uni-module]').each(function() {
 		const options = {type: $(this).data('uni-module')};
 		const items = $(this).data('uni-module-items');

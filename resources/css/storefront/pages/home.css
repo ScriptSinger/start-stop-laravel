@@ -2,3 +2,10 @@
 @import '../../../theme/stylesheet/home-banner.css';
 @import '../../../theme/stylesheet/category_wall.css';
 @import '../../../theme/stylesheet/news.css';
+@media (min-width: 768px) {
+    .home-product-selection .uni-module__wrapper {display:grid; grid-template-columns:repeat(3, minmax(0, 1fr))}
+    .home-product-selection .uni-module__wrapper > .product-thumb {margin:0 10px 20px}
+}
+@media (min-width: 992px) {
+    .home-product-selection .uni-module__wrapper {grid-template-columns:repeat(4, minmax(0, 1fr))}
+}

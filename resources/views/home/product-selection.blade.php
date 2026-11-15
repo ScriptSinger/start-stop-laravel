@@ -7,7 +7,7 @@
         <div class="tab-pane active">
             {{-- Тема на широких экранах ставит 5 карточек в ряд; у нас — 4,
                  как в «Популярных категориях» над подборкой. --}}
-            <div class="uni-module {{ $moduleClass }}" data-uni-module="carousel" data-uni-module-items='{"0":{"items":2},"700":{"items":3},"992":{"items":4}}'>
+            <div class="uni-module home-product-selection {{ $moduleClass }}" data-home-selection>
                 <div class="uni-module__wrapper">
                     @foreach ($products as $product)
                         @include('partials.product-card', ['product' => $product])

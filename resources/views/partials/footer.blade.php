@@ -6,10 +6,10 @@
         <div class="row row-flex">
             @foreach ($footerColumns as $column)
                 <div class="footer__column col-sm-6 col-md-3">
-                    <div class="footer__column-heading" data-toggle="collapse" data-target=".footer__column-ul-{{ $loop->iteration }}" x-data="{open: false}" :class="{open}" @click="open = !open">
+                    <button type="button" class="footer__column-heading footer__column-toggle" data-toggle="collapse" data-target=".footer__column-ul-{{ $loop->iteration }}" aria-controls="footer-column-{{ $loop->iteration }}" aria-expanded="false">
                         {{ $column->title }} <i class="fas fa-chevron-down visible-xs"></i>
-                    </div>
-                    <ul class="footer__column-ul footer__column-ul-{{ $loop->iteration }} collapse list-unstyled">
+                    </button>
+                    <ul id="footer-column-{{ $loop->iteration }}" class="footer__column-ul footer__column-ul-{{ $loop->iteration }} collapse list-unstyled">
                         @foreach ($column->children as $link)
                             <li class="footer__column-li"><a href="{{ $link->href() }}" title="{{ $link->title }}" class="footer__column-a">{{ $link->title }}</a></li>
                         @endforeach
@@ -57,7 +57,7 @@
 {{-- Кнопка «наверх» (fly-block темы; закладки, сравнение и контакты в нём
      на старом сайте были выключены). --}}
 <div @class(['fly-block', 'fly-block--above-chat' => config('shop.jivo_widget_id')])>
-    <div class="fly-block__item fly-block__scrollup" title="Наверх" x-data="{visible: false}" :class="{visible}" @scroll.window.throttle.50ms="visible = window.scrollY > 190" @click="window.scrollTo({top: 0, behavior: 'smooth'})">
+    <button type="button" class="fly-block__item fly-block__scrollup" aria-label="Наверх" title="Наверх" x-data="{visible: false}" :class="{visible}" :tabindex="visible ? 0 : -1" @scroll.window.throttle.50ms="visible = window.scrollY > 190" @click="window.scrollTo({top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'})">
         <i class="fa fa-chevron-up fly-block__scrollup-icon" aria-hidden="true"></i>
-    </div>
+    </button>
 </div>
