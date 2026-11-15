@@ -3,10 +3,13 @@
 <div class="battery-wizard-container" id="battery-wizard"
      x-data="batteryWizard({modelsUrl: @js(route('battery-filter.models')), generationsUrl: @js(route('battery-filter.generations')), enginesUrl: @js(route('battery-filter.engines')), resultUrl: @js(route('battery-filter.result'))})">
     <div class="w-step" x-show="step === 1">
-        <h3 class="w-title">Подбор аккумулятора по марке авто</h3>
+        <div class="w-brand-heading">
+            <h3 class="w-title">Подбор аккумулятора по марке авто</h3>
+            <a class="w-landings" href="{{ route('car-landing.index') }}">Все марки и модели <span aria-hidden="true">→</span></a>
+        </div>
         {{-- Одна сетка: остальные марки продолжают ряд популярных. Их
              логотипы грузятся только после «Показать все марки». --}}
-        <div class="w-grid brands">
+        <div class="w-grid brands" id="battery-brand-list">
             @foreach ($popular_brands as $brand)
                 <div class="w-item brand-box" @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
@@ -29,12 +32,8 @@
             @endforeach
         </div>
 
-        <div class="text-center">
-            <button type="button" class="w-btn-more" x-show="!allBrands" @click="allBrands = true">Показать все марки</button>
-        </div>
-
-        <div class="w-landings">
-            <a href="{{ route('car-landing.index') }}">Аккумуляторы для всех марок и моделей →</a>
+        <div class="w-brand-actions">
+            <button type="button" class="w-btn-more" aria-controls="battery-brand-list" :aria-expanded="allBrands.toString()" @click="allBrands = !allBrands"><span x-text="allBrands ? 'Скрыть марки' : 'Показать все марки'">Показать все марки</span></button>
         </div>
     </div>
 

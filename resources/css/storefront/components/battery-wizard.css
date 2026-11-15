@@ -13,9 +13,17 @@
 /* Марка без логотипа: первая буква в круге той же высоты, что логотип. */
 .brand-box__letter {display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0 auto 8px; border-radius: 50%; background: #f4f4f4; color: #999; font-size: 22px; font-weight: 700}
 .gens img {width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px}
-.w-btn-more {margin-top: 20px; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 25px; border-radius: 20px; color: #555; cursor: pointer}
+.w-brand-heading {display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px}
+.w-brand-heading .w-title {margin:0; text-align:left}
+.w-brand-actions {display:flex; justify-content:flex-start; margin-top:20px}
+.w-btn-more {min-height:44px; background:#fff; border:1px solid #aaa; padding:8px 18px; border-radius:4px; color:#333; font-weight:600; cursor:pointer}
 .battery-wizard-container .mt-3 {margin-top: 15px}
 
 /* Ссылки на посадочные «Аккумулятор для <модель>». */
-.w-landings {margin-top: 15px; text-align: center; color: #777}
-.w-landings a {margin-left: 6px; font-weight: 600}
+.w-landings {display:inline-flex; align-items:center; gap:6px; min-height:44px; color:#333; font-weight:600; text-decoration:none}
+.w-landings:hover {color:var(--btn-primary-bg); text-decoration:none}
+.w-landings:focus-visible, .w-btn-more:focus-visible {outline:2px solid var(--btn-primary-bg); outline-offset:3px}
+@media (max-width:767px) {
+    .w-brand-heading {align-items:flex-start; flex-direction:column; gap:4px; margin-bottom:16px}
+    .w-brand-actions {justify-content:center}
+}
