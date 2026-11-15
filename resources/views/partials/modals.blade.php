@@ -1,5 +1,5 @@
 {{-- Окна и всплывающее уведомление — разметка uniModalWindow и uniFlyAlert темы. --}}
-<div id="modal-cart" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal-cart-title">
+<div id="modal-cart" class="modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="modal-cart-title">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -11,14 +11,21 @@
     </div>
 </div>
 
-<div id="modal-form" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal-form-title">
+<div id="modal-form" class="modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="modal-form-title">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">&times;</button>
                 <h4 class="modal-title" id="modal-form-title" x-text="$store.modal.title"></h4>
             </div>
-            <div class="modal-body" x-html="$store.modal.html"></div>
+            <div class="modal-body">
+                <p x-show="$store.modal.loading" x-cloak role="status">Загружаем форму…</p>
+                <div x-show="$store.modal.error" x-cloak role="alert">
+                    <p>Не получилось открыть форму. Попробуйте ещё раз.</p>
+                    <button type="button" class="btn btn-default" @click="$store.modal.open($store.modal.lastUrl, $store.modal.title)">Повторить</button>
+                </div>
+                <div x-html="$store.modal.html"></div>
+            </div>
         </div>
     </div>
 </div>

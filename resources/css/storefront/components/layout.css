@@ -68,8 +68,10 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 .footer__column-toggle {width:100%; border:0; padding:0; background:transparent; text-align:left}
 .footer__column-toggle[aria-expanded="true"] .fa-chevron-down {transform:rotate(180deg)}
 .uni-alert button.uni-alert__icon {border:0; background:transparent}
-.fly-block.fly-block--above-chat {bottom: 160px}
-.fly-block--above-chat .fly-block__scrollup {width: 65px; height: 65px; font-size: 22px}
+:root {--floating-chat-offset: 80px; --floating-button-size: 65px; --floating-button-gap: 15px}
+.fly-block.fly-block--above-chat {bottom: calc(var(--floating-chat-offset) + var(--floating-button-size) + var(--floating-button-gap))}
+.fly-block--above-chat .fly-block__scrollup {width: var(--floating-button-size); height: var(--floating-button-size); font-size: 22px}
+body.modal-open jdiv, body.modal-open .fly-block {visibility: hidden !important}
 
 /* Карта API требует собственной высоты контейнера. */
 [data-yandex-map] {height: 400px; background: #eee; border-radius: 15px; overflow: hidden}
@@ -135,12 +137,12 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 }
 
 @media (max-width: 991px) {
-    .fly-block.fly-block--above-chat {right: 20px; bottom: calc(160px + env(safe-area-inset-bottom, 0px))}
+    .fly-block.fly-block--above-chat {right: 20px; bottom: calc(var(--floating-chat-offset) + var(--floating-button-size) + var(--floating-button-gap) + env(safe-area-inset-bottom, 0px))}
 }
 
 /* При смене размера браузера Jivo может оставить компьютерный ярлык: держим его над навигацией. */
 @media (max-width: 991px) {
-    jdiv.__jivoDesktopButton {bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important}
+    jdiv.__jivoDesktopButton {bottom: calc(var(--floating-chat-offset) + env(safe-area-inset-bottom, 0px)) !important}
 }
 
 /* Открытый каталог занимает экран: ярлык чата не должен перекрывать его пункты. */

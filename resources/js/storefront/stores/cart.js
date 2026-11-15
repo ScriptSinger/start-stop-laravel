@@ -11,8 +11,13 @@ export default {
     count: 0,
     products: [],
     html: '',
+    opener: null,
 
     init() {
+        $('#modal-cart').on('hidden.bs.modal', () => {
+            this.opener?.focus();
+            this.opener = null;
+        });
         const dropdown = document.querySelector('[data-mini-cart-html]');
 
         this.html = dropdown?.innerHTML ?? '';
@@ -30,6 +35,7 @@ export default {
 
     /** «В корзину» из карточки или со страницы товара. */
     async add(form) {
+        this.opener = document.activeElement;
         try {
             this.update(await postJson(form.action, new FormData(form)));
             this.open();
