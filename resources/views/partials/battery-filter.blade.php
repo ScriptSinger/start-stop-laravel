@@ -1,10 +1,11 @@
 {{-- Подбор АКБ по марке авто — порт battery_filter.twig старого сайта:
      марка → модель → поколение → страница подбора (компонент batteryWizard). --}}
 <div class="battery-wizard-container" id="battery-wizard"
-     x-data="batteryWizard({modelsUrl: @js(route('battery-filter.models')), generationsUrl: @js(route('battery-filter.generations')), enginesUrl: @js(route('battery-filter.engines')), resultUrl: @js(route('battery-filter.result'))})">
+     x-data="batteryWizard({modelsUrl: @js(route('battery-filter.models')), generationsUrl: @js(route('battery-filter.generations')), enginesUrl: @js(route('battery-filter.engines')), resultUrl: @js(route('battery-filter.result'))})"
+     x-init="$watch('step', value => $nextTick(() => requestAnimationFrame(() => $el.querySelectorAll('.w-step')[value - 1]?.querySelector('h3')?.focus())))">
     <div class="w-step" x-show="step === 1">
         <div class="w-brand-heading">
-            <h3 class="w-title">Подбор аккумулятора по марке авто</h3>
+            <h3 class="w-title" tabindex="-1">Подбор аккумулятора по марке авто</h3>
             <a class="w-landings" href="{{ route('car-landing.index') }}">Все марки и модели <span aria-hidden="true">→</span></a>
         </div>
         {{-- Одна сетка: остальные марки продолжают ряд популярных. Их
@@ -38,7 +39,7 @@
     </div>
 
     <div class="w-step" x-show="step === 2" x-cloak>
-        <h3 class="w-title"><button type="button" class="w-back" aria-label="Назад к маркам" @click="step = 1">←</button> Модели <span class="w-cur-brand" x-text="brand"></span></h3>
+        <h3 class="w-title" tabindex="-1"><button type="button" class="w-back" aria-label="Назад к маркам" @click="step = 1">←</button> Модели <span class="w-cur-brand" x-text="brand"></span></h3>
         <div class="w-grid models">
             <template x-for="item in models" :key="item.model">
                 <button type="button" class="w-item" @click="loadGenerations(item.model)"><b x-text="item.model"></b></button>
@@ -47,7 +48,7 @@
     </div>
 
     <div class="w-step" x-show="step === 3" x-cloak>
-        <h3 class="w-title"><button type="button" class="w-back" aria-label="Назад к моделям" @click="step = 2">←</button> Выберите поколение / кузов</h3>
+        <h3 class="w-title" tabindex="-1"><button type="button" class="w-back" aria-label="Назад к моделям" @click="step = 2">←</button> Выберите поколение / кузов</h3>
         <div class="w-grid gens">
             <template x-for="item in generations" :key="item.name">
                 <button type="button" class="w-item" @click="choose(item)">
@@ -60,7 +61,7 @@
 
     {{-- Только когда разным двигателям поколения нужны разные аккумуляторы. --}}
     <div class="w-step" x-show="step === 4" x-cloak>
-        <h3 class="w-title"><button type="button" class="w-back" aria-label="Назад к поколениям" @click="step = 3">←</button> Выберите двигатель <span class="w-cur-brand" x-text="generation"></span></h3>
+        <h3 class="w-title" tabindex="-1"><button type="button" class="w-back" aria-label="Назад к поколениям" @click="step = 3">←</button> Выберите двигатель <span class="w-cur-brand" x-text="generation"></span></h3>
         <div class="w-grid engines">
             <template x-for="engine in engines" :key="engine">
                 <button type="button" class="w-item" @click="finish(generation, engine)"><b x-text="engine"></b></button>
