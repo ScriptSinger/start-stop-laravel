@@ -138,3 +138,8 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 @media (max-width: 991px) {
     jdiv.__jivoDesktopButton {bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important}
 }
+
+/* Открытый каталог занимает экран: ярлык чата не должен перекрывать его пункты. */
+@media (max-width: 991px) {
+    body:has(header .menu-wrapper.show) jdiv {visibility: hidden !important}
+}

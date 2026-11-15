@@ -8,7 +8,7 @@ import './vendor';
 import $ from 'jquery';
 import Alpine from 'alpinejs';
 
-import { uniMenuAim, uniMenuDropdownHeight, uniMenuDropdownPos, uniMenuMobile, uniMenuMobileToggle, uniMenuUpd } from './theme/menu';
+import { uniMenuAim, uniMenuDropdownHeight, uniMenuDropdownPos, uniMenuMobileToggle, uniMenuUpd } from './theme/menu';
 import { initUniModules } from './theme/modules';
 import { initBannerSliders } from './theme/carousels';
 import { initUniHref, scrollBreadcrumbs } from './theme/links';
@@ -78,7 +78,6 @@ uniMenuAim();
 uniMenuMobileToggle();
 uniMenuDropdownHeight();
 uniMenuDropdownPos();
-uniMenuMobile();
 uniMenuUpd('header .menu2 .menu__collapse');
 initUniModules();
 initBannerSliders();
