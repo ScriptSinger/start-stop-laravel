@@ -36,17 +36,16 @@
                 {{-- Личный кабинет — как #account в шапке темы UniShop2. --}}
                 <div class="top-menu__account status-2">
                     <div id="account" class="btn-group">
-                        <button class="top-menu__btn dropdown-toggle" aria-label="Личный кабинет" data-toggle="dropdown"><i class="far fa-user"></i><span class="top-menu__btn-text">Личный кабинет</span></button>
-                        <ul class="dropdown-menu dropdown-menu-right">
-                            @guest
-                                <li><a href="{{ route('login') }}" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="fas fa-fw fa-sign-in-alt"></i>Авторизация</a></li>
-                                <li><a href="{{ route('register') }}"><i class="fas fa-fw fa-user-plus"></i>Регистрация</a></li>
-                            @else
+                        @guest
+                            <a class="top-menu__btn top-menu__account-link" href="{{ route('login') }}" aria-label="Войти" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="far fa-user" aria-hidden="true"></i><span class="top-menu__btn-text">Войти</span></a>
+                        @else
+                            <button class="top-menu__btn dropdown-toggle" aria-label="Личный кабинет" data-toggle="dropdown"><i class="far fa-user" aria-hidden="true"></i><span class="top-menu__btn-text">Личный кабинет</span></button>
+                            <ul class="dropdown-menu dropdown-menu-right">
                                 <li><a href="{{ route('account') }}"><i class="fas fa-fw fa-user"></i>Личный кабинет</a></li>
                                 <li><a href="{{ route('account.orders') }}"><i class="fas fa-fw fa-clipboard-list"></i>История заказов</a></li>
                                 <li><form method="post" action="{{ route('logout') }}">@csrf<button type="submit" class="top-menu__logout"><i class="fas fa-fw fa-sign-out-alt"></i>Выход</button></form></li>
-                            @endguest
-                        </ul>
+                            </ul>
+                        @endguest
                     </div>
                 </div>
             </div>
@@ -83,28 +82,29 @@
 
             <div class="header-block__item header-block__item-account">
                 @guest
-                    <a class="header-account" href="{{ route('login') }}" title="Войти" aria-label="Войти" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="header-account__icon far fa-user"></i></a>
+                    <a class="header-account header-action" href="{{ route('login') }}" title="Войти" aria-label="Войти" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="header-account__icon far fa-user" aria-hidden="true"></i><span class="header-action__label">Войти</span></a>
                 @else
-                    <a class="header-account" href="{{ route('account') }}" title="Личный кабинет" aria-label="Личный кабинет"><i class="header-account__icon far fa-user"></i></a>
+                    <a class="header-account header-action" href="{{ route('account') }}" title="Личный кабинет" aria-label="Личный кабинет"><i class="header-account__icon far fa-user" aria-hidden="true"></i><span class="header-action__label">Личный кабинет</span></a>
                 @endguest
             </div>
             @if ($hasWishlist)
                 <div class="header-block__item header-block__item-wishlist">
-                    <div class="header-wishlist uni-href" data-href="{{ route('wishlist.index') }}" title="Закладки"><i class="header-wishlist__icon far fa-heart"></i><span class="header-wishlist__total-items" x-text="$store.saved.wishlist">{{ $wishlistCount ?? 0 }}</span></div>
+                    <a class="header-wishlist header-action" href="{{ route('wishlist.index') }}" aria-label="Избранное"><i class="header-wishlist__icon far fa-heart" aria-hidden="true"></i><span class="header-wishlist__total-items" x-text="$store.saved.wishlist" x-show="$store.saved.wishlist > 0">{{ $wishlistCount ?? 0 }}</span><span class="header-action__label">Избранное</span></a>
                 </div>
             @endif
             @if ($hasCompare)
                 <div class="header-block__item header-block__item-compare">
-                    <div class="header-compare uni-href" data-href="{{ route('compare.index') }}" title="Сравнение"><i class="header-compare__icon fas fa-align-right"></i><span class="header-compare__total-items" x-text="$store.saved.compare">{{ $compareCount ?? 0 }}</span></div>
+                    <a class="header-compare header-action" href="{{ route('compare.index') }}" aria-label="Сравнение"><i class="header-compare__icon fas fa-align-right" aria-hidden="true"></i><span class="header-compare__total-items" x-text="$store.saved.compare" x-show="$store.saved.compare > 0">{{ $compareCount ?? 0 }}</span><span class="header-action__label">Сравнение</span></a>
                 </div>
             @endif
 
             <div class="header-block__item header-block__item-cart">
                 <div id="cart" class="header-cart" title="Корзина">
                     {{-- Без JavaScript — ссылка на корзину, с ним — окно с мини-корзиной. --}}
-                    <a class="header-cart__btn dropdown-toggle" href="{{ route('cart.index') }}" aria-label="Корзина" @click.prevent="$store.cart.open()">
-                        <i class="header-cart__icon fa fa-shopping-cart"></i>
-                        <span id="cart-total" class="header-cart__total-items" x-text="$store.cart.count">{{ $cartCount }}</span>
+                    <a class="header-cart__btn header-action dropdown-toggle" href="{{ route('cart.index') }}" aria-label="Корзина" @click.prevent="$store.cart.open()">
+                        <i class="header-cart__icon fa fa-shopping-cart" aria-hidden="true"></i>
+                        <span id="cart-total" class="header-cart__total-items" x-text="$store.cart.count" x-show="$store.cart.count > 0">{{ $cartCount }}</span>
+                        <span class="header-action__label">Корзина</span>
                     </a>
                     <div class="header-cart__dropdown" data-mini-cart-html data-count="{{ $cartCount }}" data-products="{{ $cartLines->map(fn ($line) => $line->product->id)->values()->toJson() }}" x-html="$store.cart.html">
                         @include('partials.mini-cart')

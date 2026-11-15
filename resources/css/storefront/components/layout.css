@@ -40,7 +40,23 @@
 .account-index__logout {display: flex; flex-direction: column; align-items: center; padding: 0; border: none; background: none; color: inherit; font: inherit}
 #column-right .list-group form button.list-group-item {width: 100%; text-align: left}
 .top-menu__logout {display: block; width: 100%; padding: 3px 20px; border: none; background: none; text-align: left; color: inherit; white-space: nowrap}
-.header-account {color: inherit}
+/* Единая группа действий: одинаковые иконки, подписи и область нажатия. */
+header .header-action {position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-width: 44px; min-height: 44px; margin: 0; color: var(--header-icon-c); text-decoration: none; border-radius: 6px}
+header .header-action:after, header .header-cart:after {display: none !important}
+header .header-action > i {display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; font-size: 28px; color: inherit}
+.header-action__label {font-size: 13px; font-weight: 500; line-height: 18px; white-space: nowrap}
+header .header-action:hover {color: var(--a-c-hover); background: rgba(255,255,255,.65)}
+.header-action:focus-visible, .top-menu__account-link:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: 3px}
+header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right: calc(50% - 25px); min-width: 16px; height: 16px; font-size: 10px; border: 2px solid #fff; box-sizing: content-box}
+.top-menu__account-link {display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 34px; text-decoration: none}
+@media (min-width: 992px) {
+    header .header-block__item-account, header .header-block__item-wishlist, header .header-block__item-compare, header .header-block__item-cart {flex: 0 0 auto; padding: 0 4px}
+    header .header-action {min-width: 80px; min-height: 64px; padding: 5px 8px}
+    header .header-cart {margin-top: 0}
+}
+@media (max-width: 991px) {
+    .header-action__label {display: none}
+}
 
 /* Кнопка «наверх»: у темы полупрозрачный чёрный фон, на чёрном подвале её не
    видно — сплошной фирменный цвет с тенью. С чатом Jivo — выше его ярлыка
