@@ -17,13 +17,15 @@
 .business-mobile-nav a {display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 15px; background: var(--menu-right-bg); font-size: 14px; font-weight: 600}
 .business-mobile-nav {position: relative}
 .business-mobile-nav__menu {position: relative; z-index: 99}
-.business-mobile-nav__menu summary {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; border: 0; cursor: pointer; font-weight: 600; background: var(--menu-right-bg); pointer-events: auto; list-style: none}
+.business-mobile-nav__menu summary {display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 0 15px; border: 0; cursor: pointer; font-weight: 600; background: var(--menu-right-bg); pointer-events: auto; list-style: none}
 .business-mobile-nav__menu summary::-webkit-details-marker {display: none}
 .business-mobile-nav__menu summary:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: -2px}
 .business-mobile-nav__menu[open] summary {color: var(--a-c-hover)}
+.business-mobile-nav__menu summary i {font-size: 12px; transition: transform .15s}
+.business-mobile-nav__menu[open] summary i {transform: rotate(180deg)}
 .business-mobile-nav__menu nav {position: absolute; top: 100%; left: 0; right: 0; max-height: 60vh; overflow-y: auto; background: #fff; border: 1px solid #ddd; box-shadow: 0 6px 12px rgba(0, 0, 0, .15); pointer-events: auto}
-.business-mobile-nav__menu nav a {background: #fff; border-bottom: 1px solid #eee}
-.business-mobile-nav__heading {display: block; padding: 12px 15px 4px; color: #777; font-size: 13px}
+.business-mobile-nav__menu nav a {padding-left: 14px; padding-right: 14px; background: #fff; border-bottom: 1px solid #eee}
+.business-mobile-nav__heading {display: block; padding: 12px 14px 4px; color: #777; font-size: 13px}
 .business-mobile-nav a:hover {color: var(--a-c-hover)}
 .business-mobile-nav a:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: 2px}
 
@@ -125,4 +127,14 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 }
 @media (max-width: 374px) {
     .mobile-navigation__item {font-size: 10px; letter-spacing: -.2px}
+}
+
+@media (max-width: 991px) {
+    .fly-block.fly-block--above-chat {right: 20px; bottom: calc(160px + env(safe-area-inset-bottom, 0px))}
+    .fly-block--above-chat .fly-block__scrollup {width: 65px; height: 65px; font-size: 22px}
+}
+
+/* При смене размера браузера Jivo может оставить компьютерный ярлык: держим его над навигацией. */
+@media (max-width: 991px) {
+    jdiv.__jivoDesktopButton {bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important}
 }

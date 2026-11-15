@@ -121,7 +121,7 @@
                     <nav id="menu" class="menu menu1">
                         <div class="menu__header">
                             <i class="menu__header-icon fa fa-fw fa-bars hidden-xs hidden-sm"></i>
-                            <span class="menu__header-title">Категории</span>
+                            <span class="menu__header-title">Каталог</span>
                             <i class="menu-close menu__header-icon fas fa-times visible-xs visible-sm"></i>
                         </div>
                         <ul class="menu__collapse main-menu__collapse">
@@ -131,7 +131,7 @@
                 </div>
                 <div class="menu-open visible-xs visible-sm">
                     <i class="menu-open__icon fas fa-bars"></i>
-                    <span class="menu-open__title show-on-mobile">Категории</span>
+                    <span class="menu-open__title show-on-mobile">Каталог</span>
                 </div>
                 <div class="col-xs-12 col-md-9 col-lg-9 col-xxl-16 hidden-xs hidden-sm">
                     <nav id="menu2" class="menu menu2 menu-right">
@@ -168,7 +168,7 @@
             <div id="search2" class="visible-xs visible-sm">@include('partials.search-form')</div>
             <div class="business-mobile-nav visible-xs visible-sm">
                 <details class="business-mobile-nav__menu">
-                    <summary><i class="fas fa-bars" aria-hidden="true"></i>Меню</summary>
+                    <summary><span>Меню</span><i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
                     <nav aria-label="Разделы сайта">
                         @auth
                             <a href="{{ route('account.orders') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i>История заказов</a>
@@ -189,9 +189,6 @@
                         @endforeach
                         @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
                             <a href="{{ route('business') }}">Для организаций</a>
-                        @endif
-                        @if (config('shop.jivo_widget_id'))
-                            <a href="{{ route('contact') }}" data-open-chat><i class="far fa-comment" aria-hidden="true"></i><span data-chat-label>Написать нам</span></a>
                         @endif
                         <span class="business-mobile-nav__heading">Информация</span>
                         @foreach ($topLinks as $link)

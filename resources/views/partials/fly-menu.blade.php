@@ -11,7 +11,7 @@
             <div class="fly-menu__menu hidden-xs hidden-sm">
                 <button class="fly-menu__menu-btn header-menu__btn">
                     <i class="menu__header-icon fa fa-fw fa-bars hidden-xs hidden-sm"></i>
-                    <span class="menu__header-title">Категории</span>
+                    <span class="menu__header-title">Каталог</span>
                 </button>
                 <div class="container fly-menu__dropdown">
                     <div class="menu-wrapper new">
