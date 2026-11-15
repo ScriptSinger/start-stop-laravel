@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CatalogSort;
 use App\Enums\ProductSelection;
+use App\Jobs\GenerateProductThumbnail;
 use App\Models\Concerns\HasHtmlDescription;
 use App\Services\Catalog\CatalogFilter;
 use App\Services\Supplier\SupplierDelivery;
@@ -21,6 +22,27 @@ class Product extends Model
 {
     use HasHtmlDescription;
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $product): void {
+            if ($product->isDirty('image')) {
+                $product->thumbnail_path = null;
+            }
+        });
+
+        static::created(function (self $product): void {
+            if (filled($product->image) && $product->image !== 'no_image.png') {
+                GenerateProductThumbnail::dispatch($product->getKey(), $product->image)->afterCommit();
+            }
+        });
+
+        static::updated(function (self $product): void {
+            if ($product->wasChanged('image') && filled($product->image) && $product->image !== 'no_image.png') {
+                GenerateProductThumbnail::dispatch($product->getKey(), $product->image)->afterCommit();
+            }
+        });
+    }
 
     protected $fillable = [
         'manufacturer_id',

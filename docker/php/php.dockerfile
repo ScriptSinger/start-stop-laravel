@@ -30,8 +30,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
+    libwebp-dev \
     libfreetype6-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql zip gd opcache \
     && apt-get install -y $PHPIZE_DEPS \
     && pecl install https://pecl.php.net/get/redis-${REDIS_VERSION}.tgz \
