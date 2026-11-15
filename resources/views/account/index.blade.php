@@ -20,7 +20,18 @@
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
                 <div class="uni-wrapper">
                     <p>Здравствуйте, {{ $customer->name }}! @if ($customer->email ?? $customer->yandex_email ?? $customer->vk_email) Вы вошли как {{ $customer->email ?? $customer->yandex_email ?? $customer->vk_email }}. @endif</p>
-                    @if (session('status'))
+                    @if ($customer->email && ! $customer->hasVerifiedEmail())
+                        <div class="alert alert-warning">
+                            Почта {{ $customer->email }} не подтверждена.
+                            <form method="post" action="{{ route('verification.send') }}">
+                                @csrf
+                                <button type="submit">Отправить письмо для подтверждения</button>
+                            </form>
+                        </div>
+                    @endif
+                    @if (session('status') === 'verification-link-sent')
+                        <div class="alert alert-success">Письмо для подтверждения отправлено. Проверьте почту и папку «Спам».</div>
+                    @elseif (session('status'))
                         <div class="alert alert-success">{{ session('status') }}</div>
                     @endif
                     @error('yandex')

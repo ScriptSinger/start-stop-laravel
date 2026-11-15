@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use Database\Factories\CustomerFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
  * Покупатель: входит на сайт по e-mail и паролю (Fortify), видит свои заказы.
  * Администраторы — отдельно, в MoonShine (moonshine_users).
  */
-class Customer extends Authenticatable
+class Customer extends Authenticatable implements MustVerifyEmail
 {
     public const ONLINE_MINUTES = 5;
 
@@ -41,6 +42,7 @@ class Customer extends Authenticatable
         return [
             'password' => 'hashed',
             'last_seen_at' => 'datetime',
+            'email_verified_at' => 'datetime',
         ];
     }
 

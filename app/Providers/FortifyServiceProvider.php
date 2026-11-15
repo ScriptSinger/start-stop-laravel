@@ -30,6 +30,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn (Request $request) => $request->ajax()
             ? view('auth.partials.login-form', ['formId' => 'modal'])
             : $this->authView('Авторизация', 'auth.login'));
+        Fortify::verifyEmailView(fn () => $this->authView('Подтверждение почты', 'auth.verify-email'));
         Fortify::registerView(fn () => $this->authView('Регистрация', 'auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => $this->authView('Забыли пароль?', 'auth.forgot-password'));
         Fortify::resetPasswordView(fn (Request $request) => $this->authView('Новый пароль', 'auth.reset-password', ['request' => $request]));

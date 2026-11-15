@@ -174,7 +174,7 @@ class Dashboard extends Page
             ->when($categoryIds !== null, fn ($query) => $query->whereHas('categories', fn ($categories) => $categories->whereIn('categories.id', $categoryIds)))
             ->count();
 
-        return DonutChartMetric::make($categoryIds === null ? 'Структура каталога' : (request()->input('_data.catalog_scope', request()->input('catalog_scope')) === 'batteries' ? 'Аккумуляторы' : 'Выбранная категория'))
+        return DonutChartMetric::make(($categoryIds === null ? 'Структура каталога' : (request()->input('_data.catalog_scope', request()->input('catalog_scope')) === 'batteries' ? 'Аккумуляторы' : 'Выбранная категория')).' — товарные позиции')
             ->values([
                 'Неактивные — '.($total - $stock['total']) => $total - $stock['total'],
                 'Активные, нет в наличии — '.$stock['out_of_stock'] => $stock['out_of_stock'],

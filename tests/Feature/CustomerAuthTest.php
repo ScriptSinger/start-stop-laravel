@@ -6,10 +6,12 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class CustomerAuthTest extends TestCase
@@ -31,6 +33,24 @@ class CustomerAuthTest extends TestCase
         $this->assertSame('ivan@example.com', $customer->email);
         $this->assertTrue(Hash::check('secret-pass', $customer->password));
         $this->assertAuthenticatedAs($customer);
+    }
+
+    public function test_registration_sends_verification_and_signed_link_confirms_email(): void
+    {
+        Notification::fake();
+        $this->post(route('register.store'), [
+            'name' => 'Иван', 'email' => 'ivan@example.com', 'phone' => '+7 (987) 000-00-00',
+            'password' => 'secret-pass', 'password_confirmation' => 'secret-pass', 'agree' => 1,
+        ])->assertRedirect(route('account'));
+        $customer = Customer::query()->sole();
+        Notification::assertSentTo($customer, VerifyEmail::class);
+        $this->assertFalse($customer->hasVerifiedEmail());
+        $this->get(route('account'))->assertSee('не подтверждена');
+        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(30), [
+            'id' => $customer->id, 'hash' => sha1($customer->getEmailForVerification()),
+        ]);
+        $this->get($url)->assertRedirect();
+        $this->assertTrue($customer->fresh()->hasVerifiedEmail());
     }
 
     public function test_registration_with_existing_email_suggests_password_recovery(): void
