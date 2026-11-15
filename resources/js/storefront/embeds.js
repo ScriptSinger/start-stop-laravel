@@ -117,15 +117,103 @@ export function initJivoChat() {
         return;
     }
 
+    const mobile = window.matchMedia('(max-width: 991px)');
+    const links = document.querySelectorAll('[data-open-chat]');
     const events = ['scroll', 'pointerdown', 'keydown', 'touchstart'];
+    let loaded = false;
+    let loading = false;
+    let destroyed = false;
+    let pending = false;
     let timer;
+    let timeout;
+    let reopenTimer;
 
-    const load = () => {
-        clearTimeout(timer);
-        events.forEach((event) => window.removeEventListener(event, load));
-        loadScript(`https://code.jivo.ru/widget/${widgetId}`).catch(() => {});
+    const reset = () => {
+        clearTimeout(timeout);
+        clearInterval(reopenTimer);
+        pending = false;
+        links.forEach((link) => {
+            link.removeAttribute('aria-busy');
+            link.querySelector('[data-chat-label]').textContent = 'Написать нам';
+        });
     };
-
-    timer = setTimeout(load, 5000);
-    events.forEach((event) => window.addEventListener(event, load, {once: true, passive: true}));
+    const stopAutoLoad = () => {
+        clearTimeout(timer);
+        events.forEach((event) => window.removeEventListener(event, autoLoad));
+    };
+    const destroy = () => {
+        if (typeof window.jivo_destroy === 'function') {
+            window.jivo_destroy();
+            destroyed = true;
+        }
+    };
+    const openChat = () => {
+        if (pending && window.jivo_api?.open()?.result === 'ok') {
+            reset();
+            document.querySelector('.business-mobile-nav details')?.removeAttribute('open');
+        }
+    };
+    window.jivo_onLoadCallback = () => {
+        loaded = true;
+        loading = false;
+        destroyed = false;
+        if (mobile.matches && !pending) {
+            destroy();
+        } else {
+            openChat();
+        }
+    };
+    window.jivo_onClose = () => {
+        if (mobile.matches) destroy();
+    };
+    const load = () => {
+        if (loading) return;
+        if (loaded) {
+            if (destroyed) {
+                destroyed = false;
+                window.jivo_init?.();
+            }
+            if (pending) {
+                reopenTimer = setInterval(openChat, 500);
+            }
+            return;
+        }
+        loading = true;
+        loadScript(`https://code.jivo.ru/widget/${widgetId}`).catch(() => {
+            loading = false;
+            const link = pending ? links[0] : null;
+            reset();
+            if (link) window.location.assign(link.href);
+        });
+    };
+    function autoLoad() {
+        stopAutoLoad();
+        if (!mobile.matches) load();
+    }
+    const syncViewport = () => {
+        stopAutoLoad();
+        if (mobile.matches) {
+            reset();
+            destroy();
+        } else if (loaded) {
+            load();
+        } else if (!loading) {
+            timer = setTimeout(autoLoad, 5000);
+            events.forEach((event) => window.addEventListener(event, autoLoad, {once: true, passive: true}));
+        }
+    };
+    links.forEach((link) => link.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (pending) return;
+        pending = true;
+        link.setAttribute('aria-busy', 'true');
+        link.querySelector('[data-chat-label]').textContent = 'Открываем чат…';
+        timeout = setTimeout(() => {
+            reset();
+            window.location.assign(link.href);
+        }, 15000);
+        load();
+    }));
+    mobile.addEventListener('change', syncViewport);
+    syncViewport();
 }

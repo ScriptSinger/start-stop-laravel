@@ -94,7 +94,7 @@
             @endif
             @if ($hasCompare)
                 <div class="header-block__item header-block__item-compare">
-                    <a class="header-compare header-action" href="{{ route('compare.index') }}" aria-label="Сравнение"><i class="header-compare__icon fas fa-align-right" aria-hidden="true"></i><span class="header-compare__total-items" x-text="$store.saved.compare" x-show="$store.saved.compare > 0">{{ $compareCount ?? 0 }}</span><span class="header-action__label">Сравнение</span></a>
+                    <a class="header-compare header-action" href="{{ route('compare.index') }}" aria-label="Сравнение"><i class="header-compare__icon site-icon--compare fas fa-align-right" aria-hidden="true"></i><span class="header-compare__total-items" x-text="$store.saved.compare" x-show="$store.saved.compare > 0">{{ $compareCount ?? 0 }}</span><span class="header-action__label">Сравнение</span></a>
                 </div>
             @endif
 
@@ -167,22 +167,12 @@
             </div>
             <div id="search2" class="visible-xs visible-sm">@include('partials.search-form')</div>
             <div class="business-mobile-nav visible-xs visible-sm">
-                <a href="{{ route('business') }}"><i class="fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
                 <details class="business-mobile-nav__menu">
                     <summary><i class="fas fa-bars" aria-hidden="true"></i>Меню</summary>
                     <nav aria-label="Разделы сайта">
-                        @guest
-                            <a href="{{ route('register') }}"><i class="fas fa-user-plus" aria-hidden="true"></i>Регистрация</a>
-                        @else
-                            <a href="{{ route('account') }}"><i class="far fa-user" aria-hidden="true"></i>Личный кабинет</a>
+                        @auth
                             <a href="{{ route('account.orders') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i>История заказов</a>
-                        @endguest
-                        @if ($hasWishlist)
-                            <a href="{{ route('wishlist.index') }}"><i class="far fa-heart" aria-hidden="true"></i>Избранное <span x-show="$store.saved.wishlist > 0" x-text="$store.saved.wishlist"></span></a>
-                        @endif
-                        @if ($hasCompare)
-                            <a href="{{ route('compare.index') }}"><i class="fas fa-align-right" aria-hidden="true"></i>Сравнение <span x-show="$store.saved.compare > 0" x-text="$store.saved.compare"></span></a>
-                        @endif
+                        @endauth
                         <span class="business-mobile-nav__heading">Разделы сайта</span>
                         @foreach ($mainMenu as $item)
                             @if ($item->href() === route('contact'))
@@ -199,6 +189,9 @@
                         @endforeach
                         @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
                             <a href="{{ route('business') }}">Для организаций</a>
+                        @endif
+                        @if (config('shop.jivo_widget_id'))
+                            <a href="{{ route('contact') }}" data-open-chat><i class="far fa-comment" aria-hidden="true"></i><span data-chat-label>Написать нам</span></a>
                         @endif
                         <span class="business-mobile-nav__heading">Информация</span>
                         @foreach ($topLinks as $link)

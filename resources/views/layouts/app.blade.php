@@ -26,13 +26,14 @@
 </head>
 <body x-data class="@yield('body_class')">
     @include('partials.header')
+    @include('partials.cookie-notice')
 
     <main>
         @yield('content')
     </main>
 
     @include('partials.footer')
-    @include('partials.cookie-notice')
+    @include('partials.mobile-navigation')
     @include('partials.modals')
 
     @if (session('notice'))

@@ -16,13 +16,12 @@
 .business-mobile-nav {clear: both; padding: 0 10px; margin-top: 10px}
 .business-mobile-nav a {display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 15px; background: var(--menu-right-bg); font-size: 14px; font-weight: 600}
 .business-mobile-nav {position: relative}
-.business-mobile-nav > a {padding-right: 105px}
-.business-mobile-nav__menu {position: absolute; top: 0; right: 10px; left: 10px; pointer-events: none; z-index: 99}
-.business-mobile-nav__menu summary {display: flex; align-items: center; justify-content: center; gap: 8px; width: 95px; min-height: 44px; margin-left: auto; border-left: 1px solid #ddd; cursor: pointer; font-weight: 600; background: var(--menu-right-bg); pointer-events: auto; list-style: none}
+.business-mobile-nav__menu {position: relative; z-index: 99}
+.business-mobile-nav__menu summary {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; border: 0; cursor: pointer; font-weight: 600; background: var(--menu-right-bg); pointer-events: auto; list-style: none}
 .business-mobile-nav__menu summary::-webkit-details-marker {display: none}
 .business-mobile-nav__menu summary:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: -2px}
 .business-mobile-nav__menu[open] summary {color: var(--a-c-hover)}
-.business-mobile-nav__menu nav {max-height: 60vh; overflow-y: auto; background: #fff; border: 1px solid #ddd; box-shadow: 0 6px 12px rgba(0, 0, 0, .15); pointer-events: auto}
+.business-mobile-nav__menu nav {position: absolute; top: 100%; left: 0; right: 0; max-height: 60vh; overflow-y: auto; background: #fff; border: 1px solid #ddd; box-shadow: 0 6px 12px rgba(0, 0, 0, .15); pointer-events: auto}
 .business-mobile-nav__menu nav a {background: #fff; border-bottom: 1px solid #eee}
 .business-mobile-nav__heading {display: block; padding: 12px 15px 4px; color: #777; font-size: 13px}
 .business-mobile-nav a:hover {color: var(--a-c-hover)}
@@ -84,8 +83,46 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
     header .header-block__item-account {display: flex !important; flex: 0 0 auto; padding: 0 6px; order: 1}
     header .header-block__item-cart {flex: 0 0 auto; padding: 0 0 0 6px; order: 2}
     header .header-block__item-wishlist, header .header-block__item-compare {display: none !important}
-    header .header-block__item-telephone {order: 3; flex: 0 0 100%; justify-content: center; margin-top: 12px; padding: 0}
+    header .header-block__item-telephone {order: 3; flex: 0 0 auto; justify-content: flex-end; margin: 0; padding: 0}
     header .header-action {min-width: 52px; min-height: 52px; gap: 4px}
     header .header-action > i {font-size: 26px; width: 28px; height: 28px}
     header .header-action__label {display: block; font-size: 11px; line-height: 14px; max-width: 76px; white-space: normal; text-align: center}
+}
+
+/* На телефоне уведомление участвует в потоке и не закрывает товары. */
+@media (max-width: 991px) {
+    #uni-notification.notification.fixed {position: relative; z-index: auto; bottom: auto; background: #f7f7f7; border-bottom: 1px solid #ddd}
+    #uni-notification.notification.fixed:before {display: none}
+    #uni-notification .notification__wrapper {padding: 12px 0}
+    #uni-notification .notification__text {color: #444; font-size: 12px; line-height: 1.5; margin-bottom: 8px}
+    #uni-notification .notification__button {min-height: 44px; padding: 10px 16px}
+    .fly-block.fly-block--above-chat {bottom: 20px}
+}
+
+/* Нижняя навигация на телефонах и планшетах. */
+.mobile-navigation {display: none}
+@media (max-width: 991px) {
+    body {padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px))}
+    .mobile-navigation {position: fixed; z-index: 1040; left: 0; right: 0; bottom: 0; display: flex; padding: 0 4px env(safe-area-inset-bottom, 0px); background: #fff; border-top: 1px solid #ddd; box-shadow: 0 -2px 10px rgba(0,0,0,.08)}
+    .mobile-navigation__item {flex: 1 1 0; min-width: 0; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; color: #333; font-size: 11px; line-height: 14px; text-decoration: none}
+    .mobile-navigation__item > i, .mobile-navigation__icon > i {font-size: 22px; line-height: 24px}
+    .mobile-navigation__icon {position: relative; height: 24px}
+    .mobile-navigation__item > span:last-child {text-align: center}
+    .mobile-navigation__count {position: absolute; top: -5px; left: calc(100% - 5px); min-width: 16px; padding: 1px 4px; border-radius: 10px; background: var(--btn-primary-bg); color: #fff; font-size: 10px; line-height: 14px; text-align: center}
+    .mobile-navigation__item.is-active, .mobile-navigation__item:hover {color: var(--btn-primary-bg); text-decoration: none}
+    .mobile-navigation__item:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: -3px}
+    header .header-block__item-account, header .header-block__item-cart {display: none !important}
+    header .menu-open {position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%)}
+    #fly-menu {display: none !important}
+    .fly-block.fly-block--above-chat, .fly-block {bottom: calc(80px + env(safe-area-inset-bottom, 0px))}
+}
+
+.site-icon--compare {transform: rotate(90deg)}
+
+@media (max-width: 374px) {
+    header .header-block__item-logo {padding-right: 6px}
+    header .header-phones__main {font-size: 1.1em}
+}
+@media (max-width: 374px) {
+    .mobile-navigation__item {font-size: 10px; letter-spacing: -.2px}
 }

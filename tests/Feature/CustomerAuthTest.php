@@ -192,13 +192,18 @@ class CustomerAuthTest extends TestCase
 
     public function test_header_shows_login_for_guests_and_account_for_customers(): void
     {
-        $this->get(route('home'))->assertSee('Авторизация')->assertSee(route('register'), false);
+        $this->get(route('home'))->assertSee('Авторизация')->assertDontSee(route('register'), false);
 
         $this->actingAs(Customer::factory()->create())
             ->get(route('home'))
             ->assertSee(route('account.orders'), false)
             ->assertSee(route('logout'), false)
             ->assertDontSee('Авторизация');
+    }
+
+    public function test_login_page_offers_registration(): void
+    {
+        $this->get(route('login'))->assertSee(route('register'), false);
     }
 
     private function order(Customer $customer, string $status, int $total): Order
