@@ -171,6 +171,19 @@
                 <details class="business-mobile-nav__menu">
                     <summary><i class="fas fa-bars" aria-hidden="true"></i>Меню</summary>
                     <nav aria-label="Разделы сайта">
+                        @guest
+                            <a href="{{ route('register') }}"><i class="fas fa-user-plus" aria-hidden="true"></i>Регистрация</a>
+                        @else
+                            <a href="{{ route('account') }}"><i class="far fa-user" aria-hidden="true"></i>Личный кабинет</a>
+                            <a href="{{ route('account.orders') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i>История заказов</a>
+                        @endguest
+                        @if ($hasWishlist)
+                            <a href="{{ route('wishlist.index') }}"><i class="far fa-heart" aria-hidden="true"></i>Избранное <span x-show="$store.saved.wishlist > 0" x-text="$store.saved.wishlist"></span></a>
+                        @endif
+                        @if ($hasCompare)
+                            <a href="{{ route('compare.index') }}"><i class="fas fa-align-right" aria-hidden="true"></i>Сравнение <span x-show="$store.saved.compare > 0" x-text="$store.saved.compare"></span></a>
+                        @endif
+                        <span class="business-mobile-nav__heading">Разделы сайта</span>
                         @foreach ($mainMenu as $item)
                             @if ($item->href() === route('contact'))
                                 <a href="{{ route('business') }}">Для организаций</a>
@@ -187,6 +200,10 @@
                         @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
                             <a href="{{ route('business') }}">Для организаций</a>
                         @endif
+                        <span class="business-mobile-nav__heading">Информация</span>
+                        @foreach ($topLinks as $link)
+                            <a href="{{ $link->href() }}">{{ $link->title }}</a>
+                        @endforeach
                     </nav>
                 </details>
             </div>

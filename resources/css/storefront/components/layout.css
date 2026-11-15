@@ -74,3 +74,18 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
     .contact-wrap .blockontact {width: 100%; height: auto}
     .contact-wrap .map-area {width: 100%}
 }
+
+/* Мобильная шапка: логотип и основные действия, телефон отдельной строкой. */
+@media (max-width: 991px) {
+    header > .top-menu {display: none}
+    header .header-block {flex-wrap: wrap; align-items: center; padding: 16px 0 12px}
+    header .header-block__item-logo {flex: 1 1 0; width: auto; padding: 0 12px 0 0}
+    header .header-logo__img {width: 150px; max-width: 100%}
+    header .header-block__item-account {display: flex !important; flex: 0 0 auto; padding: 0 6px; order: 1}
+    header .header-block__item-cart {flex: 0 0 auto; padding: 0 0 0 6px; order: 2}
+    header .header-block__item-wishlist, header .header-block__item-compare {display: none !important}
+    header .header-block__item-telephone {order: 3; flex: 0 0 100%; justify-content: center; margin-top: 12px; padding: 0}
+    header .header-action {min-width: 52px; min-height: 52px; gap: 4px}
+    header .header-action > i {font-size: 26px; width: 28px; height: 28px}
+    header .header-action__label {display: block; font-size: 11px; line-height: 14px; max-width: 76px; white-space: normal; text-align: center}
+}
