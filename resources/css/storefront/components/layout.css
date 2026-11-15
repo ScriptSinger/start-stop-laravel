@@ -68,7 +68,8 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 .footer__column-toggle {width:100%; border:0; padding:0; background:transparent; text-align:left}
 .footer__column-toggle[aria-expanded="true"] .fa-chevron-down {transform:rotate(180deg)}
 .uni-alert button.uni-alert__icon {border:0; background:transparent}
-.fly-block--above-chat {bottom: 90px}
+.fly-block.fly-block--above-chat {bottom: 160px}
+.fly-block--above-chat .fly-block__scrollup {width: 65px; height: 65px; font-size: 22px}
 
 /* Карта API требует собственной высоты контейнера. */
 [data-yandex-map] {height: 400px; background: #eee; border-radius: 15px; overflow: hidden}
@@ -135,7 +136,6 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 
 @media (max-width: 991px) {
     .fly-block.fly-block--above-chat {right: 20px; bottom: calc(160px + env(safe-area-inset-bottom, 0px))}
-    .fly-block--above-chat .fly-block__scrollup {width: 65px; height: 65px; font-size: 22px}
 }
 
 /* При смене размера браузера Jivo может оставить компьютерный ярлык: держим его над навигацией. */

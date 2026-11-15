@@ -187,9 +187,15 @@ class CarLandingTest extends TestCase
 
     public function test_selector_leads_to_landing_pages(): void
     {
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee('<a href="'.route('car-landing.index').'">Аккумуляторы для всех марок и моделей →</a>', false);
+        $response = $this->get(route('home'))->assertOk();
+        $document = new \DOMDocument;
+        @$document->loadHTML('<?xml encoding="utf-8" ?>'.$response->getContent());
+        $links = (new \DOMXPath($document))->query('//a[@href="'.route('car-landing.index').'"]');
+
+        $this->assertNotFalse($links);
+        $this->assertTrue(collect(iterator_to_array($links))->contains(
+            fn (\DOMNode $link): bool => str_contains($link->textContent, 'Все марки и модели'),
+        ));
 
         // Поколения с посадочными страницами: без марки в подписи, по годам, со ссылками.
         $this->getJson(route('battery-filter.generations', ['brand' => 'ВАЗ (Lada)', 'model' => '2131 (4x4)']))
