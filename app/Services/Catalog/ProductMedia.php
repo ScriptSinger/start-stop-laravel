@@ -41,7 +41,7 @@ class ProductMedia
     public static function thumbnailUrl(?string $original, ?string $thumbnail): string
     {
         if (self::hasThumbnail($original, $thumbnail)) {
-            return Storage::disk('public')->url($thumbnail);
+            return Storage::disk('media')->url($thumbnail);
         }
 
         return self::url($original);
@@ -50,9 +50,8 @@ class ProductMedia
     public static function hasThumbnail(?string $original, ?string $thumbnail): bool
     {
         return filled($original) && filled($thumbnail)
-            && preg_match('~^catalog/thumbnails/v1/([a-f0-9]{64})-[a-f0-9]{64}\.webp$~D', $thumbnail, $matches)
-            && hash_equals(self::thumbnailSourceKey($original), $matches[1])
-            && Storage::disk('public')->exists($thumbnail);
+            && preg_match('~^catalog/thumbnails/v2/([a-f0-9]{64})-[a-f0-9]{64}\.webp$~D', $thumbnail, $matches)
+            && hash_equals(self::thumbnailSourceKey($original), $matches[1]);
     }
 
     public static function thumbnailSourceKey(string $path): string

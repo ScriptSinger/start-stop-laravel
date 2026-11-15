@@ -44,9 +44,12 @@ class GenerateProductThumbnail implements ShouldQueue
         }
 
         $thumbnail = $generator->make($contents);
-        $path = 'catalog/thumbnails/v1/'.ProductMedia::thumbnailSourceKey($this->sourcePath).'-'.hash('sha256', $thumbnail).'.webp';
-        $disk = Storage::disk('public');
-        if (! $disk->exists($path) && ! $disk->put($path, $thumbnail)) {
+        $path = 'catalog/thumbnails/v2/'.ProductMedia::thumbnailSourceKey($this->sourcePath).'-'.hash('sha256', $thumbnail).'.webp';
+        $disk = Storage::disk('media');
+        if (! $disk->exists($path) && ! $disk->put($path, $thumbnail, [
+            'ContentType' => 'image/webp',
+            'CacheControl' => 'public, max-age=31536000, immutable',
+        ])) {
             throw new RuntimeException('Не удалось сохранить миниатюру.');
         }
 

@@ -3,6 +3,7 @@
      Цены в формате старого сайта: «7300р.». --}}
 @php($cardFormId = 'add-to-cart-'.$product->id)
 @php($image = App\Services\Catalog\ProductMedia::thumbnailUrl($product->image, $product->thumbnail_path))
+@php($originalImage = App\Services\Catalog\ProductMedia::url($product->image))
 @php([$availabilityText, $availabilityClass] = match (true) {
     $product->quantity > 0 => ['В наличии', 't-5'],
     $product->isAvailableOnOrder() => ['Под заказ', 't-2'],
@@ -26,7 +27,7 @@
             </div>
         @endif
         <a href="{{ route('product.show', $product) }}" title="{{ $product->name }}">
-            <img src="{{ $image }}" alt="{{ $product->name }}" class="img-responsive" width="220" height="230" loading="lazy" />
+            <img src="{{ $image }}" @if ($image !== $originalImage) data-original-src="{{ $originalImage }}" onerror="if(this.dataset.originalSrc){this.src=this.dataset.originalSrc;delete this.dataset.originalSrc}" @endif alt="{{ $product->name }}" class="img-responsive" width="220" height="230" loading="lazy" />
         </a>
     </div>
     <div class="product-thumb__caption">
