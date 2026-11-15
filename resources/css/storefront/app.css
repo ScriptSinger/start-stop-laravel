@@ -21,3 +21,12 @@
 @import './components/forms.css';
 @import './components/errors.css';
 @import './components/car-landing.css';
+
+:root {
+    --store-control-height: 44px;
+    --store-control-radius: 4px;
+    --store-space-md: 20px;
+    --store-icon-size: 22px;
+    --store-focus-ring: 2px solid var(--btn-primary-bg);
+    --store-focus-offset: 3px;
+}

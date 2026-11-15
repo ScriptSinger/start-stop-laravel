@@ -35,7 +35,7 @@
         @if (($specifications = $product->specifications(6))->isNotEmpty())
             <div class="product-thumb__attribute product-thumb__description attribute">
                 @foreach ($specifications as $name => $value)
-                    {{ $name }}: <span class="product-thumb__attribute-value">{{ $value }}</span>
+                    <span class="product-thumb__attribute-item">{{ $name }}: <span class="product-thumb__attribute-value">{{ $value }}</span></span>
                 @endforeach
             </div>
         @endif
@@ -47,7 +47,7 @@
                 <div class="option__group">
                     <label class="option__item" data-toggle="tooltip" title="- {{ number_format((float) $product->trade_in_discount, 0, '', '') }}р.">
                         <input type="checkbox" name="trade_in" value="1" form="{{ $cardFormId }}" x-model="tradeIn" />
-                        <span class="option__name"><i class="fa fa-recycle fa-fw"></i> <span class="option__tit hidden-xs">Трейд-ин</span> <span class="option__val"> {{ number_format($product->priceFor(true), 0, '', '') }}р. </span></span>
+                        <span class="option__name"><i class="fa fa-recycle fa-fw" aria-hidden="true"></i> <span class="option__tit">С обменом</span> <span class="option__val"> {{ number_format($product->priceFor(true), 0, '', '') }}р. </span></span>
                     </label>
                 </div>
             </div>

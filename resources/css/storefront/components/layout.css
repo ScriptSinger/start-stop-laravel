@@ -70,7 +70,7 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
 .uni-alert button.uni-alert__icon {border:0; background:transparent}
 :root {--floating-chat-offset: 80px; --floating-button-size: 65px; --floating-button-gap: 15px}
 .fly-block.fly-block--above-chat {bottom: calc(var(--floating-chat-offset) + var(--floating-button-size) + var(--floating-button-gap))}
-.fly-block--above-chat .fly-block__scrollup {width: var(--floating-button-size); height: var(--floating-button-size); font-size: 22px}
+.fly-block--above-chat .fly-block__scrollup {width: var(--floating-button-size); height: var(--floating-button-size); font-size: var(--store-icon-size)}
 body.modal-open jdiv, body.modal-open .fly-block {visibility: hidden !important}
 
 /* Карта API требует собственной высоты контейнера. */
@@ -98,6 +98,9 @@ body.modal-open jdiv, body.modal-open .fly-block {visibility: hidden !important}
     header .header-action__label {display: block; font-size: 11px; line-height: 14px; max-width: 76px; white-space: normal; text-align: center}
 }
 
+/* Заданное в head состояние cookie исключает сдвиг до запуска Alpine. */
+.cookie-notice-accepted #uni-notification {display: none}
+
 /* На телефоне уведомление участвует в потоке и не закрывает товары. */
 @media (max-width: 991px) {
     #uni-notification.notification.fixed {position: relative; z-index: auto; bottom: auto; background: #f7f7f7; border-bottom: 1px solid #ddd}
@@ -114,7 +117,7 @@ body.modal-open jdiv, body.modal-open .fly-block {visibility: hidden !important}
     body {padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px))}
     .mobile-navigation {position: fixed; z-index: 1040; left: 0; right: 0; bottom: 0; display: flex; padding: 0 4px env(safe-area-inset-bottom, 0px); background: #fff; border-top: 1px solid #ddd; box-shadow: 0 -2px 10px rgba(0,0,0,.08)}
     .mobile-navigation__item {flex: 1 1 0; min-width: 0; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; color: #333; font-size: 11px; line-height: 14px; text-decoration: none}
-    .mobile-navigation__item > i, .mobile-navigation__icon > i {font-size: 22px; line-height: 24px}
+    .mobile-navigation__item > i, .mobile-navigation__icon > i {font-size: var(--store-icon-size); line-height: 24px}
     .mobile-navigation__icon {position: relative; height: 24px}
     .mobile-navigation__item > span:last-child {text-align: center}
     .mobile-navigation__count {position: absolute; top: -5px; left: calc(100% - 5px); min-width: 16px; padding: 1px 4px; border-radius: 10px; background: var(--btn-primary-bg); color: #fff; font-size: 10px; line-height: 14px; text-align: center}

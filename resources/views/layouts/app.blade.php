@@ -10,6 +10,7 @@
     {!! Artesaos\SEOTools\Facades\SEOTools::generate() !!}
     <meta name="theme-color" content="{{ config('shop.theme_color') }}" />
     <meta name="format-detection" content="telephone=no" />
+    <script>document.documentElement.classList.toggle('cookie-notice-accepted', document.cookie.split(';').some(cookie => cookie.trim().startsWith('notificationOffTime=')));</script>
     @if (config('shop.jivo_widget_id'))
         <meta name="jivo-widget" content="{{ config('shop.jivo_widget_id') }}" />
     @endif

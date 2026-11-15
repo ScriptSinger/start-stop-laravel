@@ -10,3 +10,8 @@
     object-fit: contain;
     margin: 0 auto;
 }
+
+.product-thumb__attribute-item {display: inline-block; margin-right: 8px}
+.product-thumb__attribute-value:not(:last-child):after {content: none}
+.product-thumb .option__name {white-space: normal}
+.product-thumb .option input:focus-visible + .option__name {outline: var(--store-focus-ring); outline-offset: var(--store-focus-offset)}
