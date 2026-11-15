@@ -6,13 +6,13 @@
             @foreach ($categoryWall as ['category' => $wallCategory, 'links' => $links])
                 @php($categoryUrl = route('category.show', $wallCategory))
                 <div @class(['category-wall__item uni-item type2', 'category-wall__item_image' => $wallCategory->image]) @if ($wallCategory->image) style="background-image: url('{{ Illuminate\Support\Facades\Storage::disk('public')->url($wallCategory->image) }}')" @endif>
-                    <a href="{{ $categoryUrl }}" class="category-wall__image child type2"> </a>
+                    <a href="{{ $categoryUrl }}" class="category-wall__image child type2" aria-label="Категория: {{ $wallCategory->name }}"></a>
                     <ul class="category-wall__ul child type2">
                         <li class="category-wall__title child type2"><a href="{{ $categoryUrl }}">{{ $wallCategory->name }}</a></li>
                         @foreach ($links as $link)
                             <li class="category-wall__li type2"><a href="{{ $link['url'] }}">{{ $link['title'] }}</a></li>
                         @endforeach
-                        <li><a class="category-wall__more uni-href type2" data-href="{{ $categoryUrl }}"><span>Все категории</span></a></li>
+                        <li><a class="category-wall__more type2" href="{{ $categoryUrl }}"><span>Все категории</span></a></li>
                     </ul>
                 </div>
             @endforeach

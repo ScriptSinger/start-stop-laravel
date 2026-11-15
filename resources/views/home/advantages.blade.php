@@ -3,14 +3,14 @@
 <div class="html-module">
     <div class="row">
         @foreach ([
-            ['advantage-battery.png', 'Диагностика аккумулятора', 'Проверим Ваш аккумулятор и при необходимости подберем новый', null],
-            ['advantage-car.png', 'Диагностика автомобиля', 'Бесплатная проверка генератора, стартера и утечки тока на Вашем автомобиле', null],
-            ['advantage-service.png', 'Обслуживание и зарядка', 'Бесплатная зарядка и обслуживание АКБ в течение гарантийного периода', 'iconblock-8__img_small'],
-        ] as [$icon, $title, $text, $iconClass])
+            ['advantage-battery.png', 'Диагностика аккумулятора', 'Проверим Ваш аккумулятор и при необходимости подберем новый', null, 180, 136],
+            ['advantage-car.png', 'Диагностика автомобиля', 'Бесплатная проверка генератора, стартера и утечки тока на Вашем автомобиле', null, 221, 196],
+            ['advantage-service.png', 'Обслуживание и зарядка', 'Бесплатная зарядка и обслуживание АКБ в течение гарантийного периода', 'iconblock-8__img_small', 162, 190],
+        ] as [$icon, $title, $text, $iconClass, $width, $height])
             <div class="col-md-4">
                 <div class="iconblock-8">
                     <div class="icon">
-                        <img src="{{ Vite::asset("resources/images/home/{$icon}") }}" alt="" @class([$iconClass])>
+                        <img src="{{ Vite::asset("resources/images/home/{$icon}") }}" alt="" width="{{ $width }}" height="{{ $height }}" @class([$iconClass])>
                     </div>
                     <div class="block">
                         <h3>{{ $title }}</h3>

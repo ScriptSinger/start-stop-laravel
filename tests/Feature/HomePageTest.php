@@ -26,6 +26,7 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertSee('catalog/banners/trade-in.png', false)
             ->assertSee('href="'.url('/page/trade-in').'"', false)
+            ->assertSee('aria-label="Условия трейд-ин"', false)
             ->assertSee('catalog/banners/delivery.png', false)
             ->assertDontSee('catalog/banners/old.png', false);
     }
@@ -63,6 +64,7 @@ class HomePageTest extends TestCase
         $wall = substr($response->getContent(), strpos($response->getContent(), 'category-wall_v2-0'));
 
         $this->assertStringContainsString('Моторное масло', $wall);
+        $this->assertStringContainsString('aria-label="Категория: Аккумуляторы"', $wall);
         $this->assertStringContainsString(e(route('category.show', ['category' => $batteries, 'manufacturer' => [$titan->id]])), $wall);
         $this->assertStringNotContainsString('Скрытая подкатегория', $wall);
         $this->assertStringNotContainsString('>Лампы<', $wall);

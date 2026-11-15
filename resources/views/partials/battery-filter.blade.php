@@ -16,7 +16,7 @@
             @foreach ($popular_brands as $brand)
                 <button type="button" class="w-item brand-box" @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
-                        <img src="{{ $brand['image'] }}" alt="{{ $brand['name'] }}">
+                        <img src="{{ $brand['image'] }}" alt="" width="60" height="50">
                     @else
                         <span class="brand-box__letter">{{ mb_substr($brand['name'], 0, 1) }}</span>
                     @endif
@@ -26,7 +26,7 @@
             @foreach ($other_brands as $brand)
                 <button type="button" class="w-item brand-box" x-show="allBrands" x-cloak @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
-                        <img :src="allBrands && @js($brand['image'])" alt="{{ $brand['name'] }}">
+                        <img :src="allBrands && @js($brand['image'])" alt="" width="60" height="50">
                     @else
                         <span class="brand-box__letter">{{ mb_substr($brand['name'], 0, 1) }}</span>
                     @endif

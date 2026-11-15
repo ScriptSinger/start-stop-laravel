@@ -15,3 +15,8 @@
 .product-thumb__attribute-value:not(:last-child):after {content: none}
 .product-thumb .option__name {white-space: normal}
 .product-thumb .option input:focus-visible + .option__name {outline: var(--store-focus-ring); outline-offset: var(--store-focus-offset)}
+.product-thumb__attribute, .product-thumb .price-old {color: #666}
+.product-thumb .qty-indicator__text.t-2 {color: #994300}
+.product-thumb .qty-indicator__text.t-5 {color: #276b2b}
+.product-thumb .sticker__item.ean {opacity: 1; color: #fff; background: #26712d}
+.product-thumb .sticker__item.special {opacity: 1; color: #fff; background: #b42318}

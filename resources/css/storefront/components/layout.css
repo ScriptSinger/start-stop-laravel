@@ -44,6 +44,7 @@
 /* Единая группа действий: одинаковые иконки, подписи и область нажатия. */
 header .header-action {position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-width: 44px; min-height: 44px; margin: 0; color: var(--header-icon-c); text-decoration: none; border-radius: 6px}
 header .header-action:after, header .header-cart:after {display: none !important}
+header .header-search__input::placeholder {color: #666; opacity: 1}
 header .header-action > i {display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; font-size: 28px; color: inherit}
 .header-action__label {font-size: 13px; font-weight: 500; line-height: 18px; white-space: nowrap}
 header .header-action:hover {color: var(--a-c-hover); background: rgba(255,255,255,.65)}
