@@ -21,11 +21,12 @@
                 <div class="uni-wrapper">
                     <p>Здравствуйте, {{ $customer->name }}! @if ($customer->email ?? $customer->yandex_email ?? $customer->vk_email) Вы вошли как {{ $customer->email ?? $customer->yandex_email ?? $customer->vk_email }}. @endif</p>
                     @if ($customer->email && ! $customer->hasVerifiedEmail())
-                        <div class="alert alert-warning">
-                            Почта {{ $customer->email }} не подтверждена.
+                        <div class="account-index__email-verification">
+                            <p class="account-index__email-verification-title">Подтвердите адрес электронной почты</p>
+                            <p>Почта {{ $customer->email }} не подтверждена. Проверьте письмо со ссылкой или отправьте его ещё раз.</p>
                             <form method="post" action="{{ route('verification.send') }}">
                                 @csrf
-                                <button type="submit">Отправить письмо для подтверждения</button>
+                                <button type="submit" class="btn btn-default">Отправить письмо для подтверждения</button>
                             </form>
                         </div>
                     @endif

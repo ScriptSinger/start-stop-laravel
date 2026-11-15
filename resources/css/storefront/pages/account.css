@@ -7,3 +7,8 @@
 .account-index__merge p {margin-bottom:16px}
 .account-index__merge-form {max-width:420px}
 .account-index__merge-form .form-control {margin-top:8px}
+
+.account-index__email-verification {margin:0 0 20px;padding:16px;border:1px solid #ddd;border-radius:4px;background:#f8f8f8;color:#333}
+.account-index__email-verification-title {font-weight:600}
+.account-index__email-verification p {margin:0 0 10px}
+.account-index__email-verification form {margin:0}
