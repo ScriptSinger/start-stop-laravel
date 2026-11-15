@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Order;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -54,6 +56,34 @@ class VkAuthTest extends TestCase
             && $request['code'] === 'code' && str_contains($request->url(), 'device_id=device-1'));
         Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://id.vk.ru/oauth2/user_info?')
             && $request['access_token'] === 'token');
+    }
+
+    public function test_vk_registration_sends_verification_only_once(): void
+    {
+        Notification::fake();
+        $this->fakeVk();
+        $this->get(route('auth.vkid'));
+        $this->returnFromVk()->assertRedirect(route('account'));
+
+        $customer = Customer::query()->sole();
+        $this->assertFalse($customer->hasVerifiedEmail());
+        Notification::assertSentToTimes($customer, VerifyEmail::class, 1);
+
+        $this->post(route('logout'));
+        $this->get(route('auth.vkid'));
+        $this->returnFromVk()->assertRedirect(route('account'));
+        Notification::assertSentToTimes($customer, VerifyEmail::class, 1);
+    }
+
+    public function test_vk_registration_without_email_does_not_send_verification(): void
+    {
+        Notification::fake();
+        $this->fakeVk(['user_id' => '12345']);
+        $this->get(route('auth.vkid'));
+        $this->returnFromVk()->assertRedirect(route('account'));
+
+        $this->assertNull(Customer::query()->sole()->email);
+        Notification::assertNothingSent();
     }
 
     public function test_existing_email_stays_separate_until_password_proves_ownership(): void

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\MergeSocialCustomer;
 use App\Models\Customer;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -145,6 +146,10 @@ class VkAuthController extends Controller
                 $linkedCustomer->save();
             } catch (UniqueConstraintViolationException $exception) {
                 return redirect()->route('login')->withErrors(['vkid' => 'Не удалось создать аккаунт. Попробуйте ещё раз.']);
+            }
+
+            if ($linkedCustomer->email !== null) {
+                event(new Registered($linkedCustomer));
             }
         }
 

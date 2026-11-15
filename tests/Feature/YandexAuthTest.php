@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Order;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class YandexAuthTest extends TestCase
@@ -53,6 +56,60 @@ class YandexAuthTest extends TestCase
             && $request->hasHeader('Authorization', 'OAuth test-token'));
     }
 
+    public function test_yandex_email_is_verified_without_sending_a_letter(): void
+    {
+        Notification::fake();
+        Event::fake([Verified::class]);
+        $this->fakeYandex();
+        $this->get(route('auth.yandex'));
+
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))
+            ->assertRedirect(route('account'));
+
+        $customer = Customer::query()->sole();
+        $this->assertTrue($customer->hasVerifiedEmail());
+        Event::assertDispatched(Verified::class, fn (Verified $event): bool => $event->user->is($customer));
+        Notification::assertNothingSent();
+        $this->get(route('account'))->assertSee('Почта подтверждена')->assertDontSee('Отправить письмо ещё раз');
+    }
+
+    public function test_yandex_login_verifies_matching_email_on_existing_customer(): void
+    {
+        $customer = Customer::factory()->create(['email' => 'user@example.com', 'yandex_id' => '12345']);
+        $this->fakeYandex();
+        $this->get(route('auth.yandex'));
+
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))
+            ->assertRedirect(route('account'));
+
+        $this->assertTrue($customer->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_yandex_link_does_not_verify_different_shop_email(): void
+    {
+        $customer = Customer::factory()->create(['email' => 'different@example.com']);
+        $this->fakeYandex();
+        $this->actingAs($customer)->post(route('auth.yandex.link'));
+
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))
+            ->assertRedirect(route('account'));
+
+        $this->assertSame('12345', $customer->fresh()->yandex_id);
+        $this->assertFalse($customer->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_yandex_link_verifies_matching_shop_email(): void
+    {
+        $customer = Customer::factory()->create(['email' => 'user@example.com']);
+        $this->fakeYandex();
+        $this->actingAs($customer)->post(route('auth.yandex.link'));
+
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))
+            ->assertRedirect(route('account'));
+
+        $this->assertTrue($customer->fresh()->hasVerifiedEmail());
+    }
+
     public function test_previously_linked_user_can_sign_in_without_an_email(): void
     {
         $customer = Customer::factory()->create();
@@ -63,6 +120,7 @@ class YandexAuthTest extends TestCase
         $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))->assertRedirect(route('account'));
 
         $this->assertAuthenticatedAs($customer);
+        $this->assertFalse($customer->fresh()->hasVerifiedEmail());
     }
 
     public function test_invalid_state_does_not_authenticate_or_call_yandex(): void
@@ -238,15 +296,21 @@ class YandexAuthTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_new_customer_needs_email_from_yandex(): void
+    public function test_new_yandex_customer_without_email_can_sign_in_without_verification(): void
     {
+        Notification::fake();
         $this->fakeYandex(['id' => '12345', 'client_id' => 'test-client']);
         $this->get(route('auth.yandex'));
 
-        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))->assertSessionHasErrors('yandex');
+        $this->get(route('auth.yandex.callback', ['state' => session('yandex_oauth.state'), 'code' => 'code']))
+            ->assertRedirect(route('account'));
 
-        $this->assertGuest();
-        $this->assertSame(0, Customer::count());
+        $customer = Customer::query()->sole();
+        $this->assertAuthenticatedAs($customer);
+        $this->assertNull($customer->email);
+        $this->assertFalse($customer->hasVerifiedEmail());
+        Notification::assertNothingSent();
+        $this->get(route('account'))->assertOk()->assertDontSee('Подтвердите адрес электронной почты');
     }
 
     public function test_yandex_error_does_not_authenticate_customer(): void

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\MergeSocialCustomer;
 use App\Models\Customer;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -109,17 +110,17 @@ class YandexAuthController extends Controller
                 return redirect()->route('account')->withErrors(['yandex' => 'К аккаунту уже привязан другой Яндекс ID.']);
             }
 
+            $this->verifyMatchingEmail($request->user(), $profile['default_email'] ?? null);
+
             return redirect()->route('account')->with('status', 'Яндекс ID привязан к вашему аккаунту.');
         }
 
         if (! $linkedCustomer) {
             $email = $profile['default_email'] ?? null;
-            if (! is_string($email) || mb_strlen($email) > 255 || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return redirect()->route('login')->withErrors(['yandex' => 'Разрешите Яндексу передать адрес электронной почты.']);
-            }
-
-            $email = mb_strtolower($email);
-            $emailIsTaken = Customer::query()->where('email', $email)->exists();
+            $email = is_string($email) && mb_strlen($email) <= 255 && filter_var($email, FILTER_VALIDATE_EMAIL)
+                ? mb_strtolower($email)
+                : null;
+            $emailIsTaken = $email !== null && Customer::query()->where('email', $email)->exists();
 
             $name = $profile['real_name'] ?? $profile['display_name'] ?? $profile['login'] ?? '';
             $name = is_string($name) && trim($name) !== '' ? Str::limit(trim($name), 255, '') : 'Покупатель';
@@ -134,10 +135,29 @@ class YandexAuthController extends Controller
             }
         }
 
+        $this->verifyMatchingEmail($linkedCustomer, $profile['default_email'] ?? null);
+
         Auth::guard('web')->login($linkedCustomer);
         $request->session()->regenerate();
 
         return redirect()->intended(route('account'));
+    }
+
+    /**
+     * Доверяем только основному адресу из свежего ответа Яндекса,
+     * совпадающему с адресом магазина; сохранённый yandex_email не является доказательством.
+     */
+    private function verifyMatchingEmail(Customer $customer, mixed $email): void
+    {
+        if (! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)
+            || $customer->email === null || $customer->hasVerifiedEmail()
+            || mb_strtolower($customer->email) !== mb_strtolower($email)) {
+            return;
+        }
+
+        if ($customer->markEmailAsVerified()) {
+            event(new Verified($customer));
+        }
     }
 
     /**
