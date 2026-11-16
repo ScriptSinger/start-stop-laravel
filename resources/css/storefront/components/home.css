@@ -27,6 +27,10 @@
 .imageblock h3 {transition: all 0.7s ease 0s; color: #fff; font-size: 36px; margin: 10px 0; font-weight: 500}
 .imageblock:hover h3 {color: #c82a00}
 
+@media (max-width: 767px) {
+    .imageblock .header-phones__callback {display: table; margin: 16px 0 0}
+}
+
 /* «О нас»: текст из визуального редактора старой админки; там это были
    style у каждого абзаца, поэтому селектор сильнее правил темы для .html-module. */
 .home-page .html-module.home-about :is(h2, h3, p, li) {padding: 0; margin-bottom: 16px; margin-left: 25px; line-height: inherit; font-feature-settings: "liga", "kern"; font-kerning: normal}
