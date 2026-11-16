@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('body_class', 'menu-expanded')
+
 @section('robots', 'noindex, nofollow')
 
 @push('page-styles')
@@ -8,8 +10,8 @@
 
 {{-- Разметка — как account/order_list.twig темы UniShop2 старого сайта. --}}
 @section('content')
-    <div id="account-order" class="container">
-        <div class="breadcrumb-h1">
+    <div id="account-order" class="container account-layout">
+        <div class="breadcrumb-h1 col-md-offset-3 col-lg-offset-3 col-xxl-offset-4">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ route('account') }}">Личный кабинет</a></li>
@@ -18,7 +20,8 @@
             <h1>История заказов</h1>
         </div>
         <div class="row">
-            <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
+            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs hidden-sm"></aside>
+            <div id="content" class="col-sm-12 col-md-9 col-lg-9 col-xxl-16">
                 <div class="uni-wrapper">
                     @if ($orders->isEmpty())
                         <div class="div-text-empty">Вы ещё не делали заказов.</div>
@@ -53,7 +56,6 @@
                     @endif
                 </div>
             </div>
-            @include('partials.account-menu')
         </div>
     </div>
 @endsection

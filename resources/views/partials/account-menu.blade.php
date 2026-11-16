@@ -8,7 +8,7 @@
         @else
             <a href="{{ route('account') }}" class="list-group-item">Личный кабинет</a>
             <a href="{{ route('account.orders') }}" class="list-group-item">История заказов</a>
-            <a href="{{ route('wishlist.index') }}" class="list-group-item">Закладки</a>
+            <a href="{{ route('wishlist.index') }}" class="list-group-item">Избранное</a>
             <form method="post" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="list-group-item">Выход</button>

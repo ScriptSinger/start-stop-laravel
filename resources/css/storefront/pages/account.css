@@ -14,7 +14,7 @@
 .account-index__email-verification form {margin:0}
 
 /* Личный кабинет: стили ограничены главной страницей кабинета. */
-#account-account .account-index__profile,
+#account-account .account-index__purchases,
 #account-account .account-index__connections {
     padding: 24px;
     margin-bottom: 24px;
@@ -22,7 +22,9 @@
     border-radius: 8px;
     background: #fff;
 }
+#account-account .account-index__profile { margin-bottom: 24px; }
 #account-account .account-index__profile h2,
+#account-account .account-index__purchases h2,
 #account-account .account-index__connections h2 {
     margin: 0 0 12px;
     font-size: 20px;
@@ -36,7 +38,7 @@
 }
 #account-account .account-index__verified {
     display: inline-block;
-    margin: 16px 0 0;
+    margin: 8px 0 0;
     padding: 6px 12px;
     border-radius: 4px;
     background: #edf7ef;
@@ -44,7 +46,8 @@
     font-size: 13px;
 }
 #account-account .account-index__verified i { margin-right: 6px; }
-#account-account .account-index__connections > p { margin: 0 0 18px; color: #666; }
+#account-account .account-index__connections > p { margin: 0 0 12px; color: #666; }
+#account-account .account-index__connections { padding: 20px 24px; }
 #account-account .account-index__connection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 #account-account .account-index__connection,
 #account-account .account-index__connection-status { margin: 0; }
@@ -63,21 +66,22 @@
 #account-account .account-index__button:hover { border-color: #bd2b00; color: #bd2b00; background: #fff7f3; }
 #account-account .account-index__button--primary { border-color: #bd2b00; background: #bd2b00; color: #fff; }
 #account-account .account-index__button--primary:hover { background: #9c2300; color: #fff; }
-#account-account .account-index__email-verification { padding: 24px; border-color: #eed9b5; border-radius: 8px; background: #fffaf0; color: #594421; }
+#account-account .account-index__email-verification { padding: 18px 24px; border-color: #eed9b5; border-radius: 8px; background: #fffaf0; color: #594421; }
 #account-account .account-index__email-verification p { overflow-wrap: anywhere; }
-#account-account .account-index__email-verification form { margin-top: 16px; }
-#account-account .account-index__item { min-height: 136px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fafafa; color: #333; }
-#account-account a.account-index__item:hover { border-color: #bd2b00; color: #bd2b00; background: #fff7f3; }
-#account-account .account-index__icon { font-size: 28px; }
-#account-account .account-index__logout { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-#account-account .account-index__logout:hover { color: #bd2b00; }
+#account-account .account-index__email-verification form { margin-top: 12px; }
+#account-account .account-index__purchase-links a { display: flex; align-items: center; gap: 14px; min-height: 52px; border-top: 1px solid #e5e5e5; color: #333; font-weight: 600; }
+#account-account .account-index__purchase-links a:hover { color: #bd2b00; }
+#account-account .account-index__purchase-links a > i:first-child { width: 20px; text-align: center; font-size: 18px; }
+#account-account .account-index__purchase-links a > i:last-child { margin-left: auto; font-size: 12px; }
+#account-account .account-index__logout { display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid #ccc; border-radius: 5px; background: #fff; color: #555; font: inherit; cursor: pointer; }
+#account-account .account-index__logout i { display: inline-block; width: auto; margin: 0; font-size: 14px; line-height: 1; }
+#account-account .account-index__logout:hover { border-color: #bd2b00; color: #bd2b00; background: #fff7f3; }
 #account-account button:focus-visible,
 #account-account a:focus-visible { outline: 2px solid #bd2b00; outline-offset: 4px; }
 @media (max-width: 767px) {
-    #account-account .account-index__profile,
+    #account-account .account-index__purchases,
     #account-account .account-index__connections,
     #account-account .account-index__email-verification { padding: 18px; margin-bottom: 18px; }
     #account-account .account-index__connection,
     #account-account .account-index__button { width: 100%; }
-    #account-account .account-index__item { min-height: 108px; }
 }

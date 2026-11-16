@@ -29,7 +29,7 @@ class SavedProductsTest extends TestCase
         $this->get(route('home'))->assertSee('data-wishlist-ids="['.$product->id.']"', false);
 
         $this->deleteJson(route('wishlist.destroy', $product))->assertJson(['count' => 0, 'ids' => []]);
-        $this->get(route('wishlist.index'))->assertSee('Ваши закладки пусты.');
+        $this->get(route('wishlist.index'))->assertSee('В избранном пока нет товаров.');
     }
 
     public function test_compare_keeps_four_latest_products(): void
@@ -86,7 +86,7 @@ class SavedProductsTest extends TestCase
         $this->post(route('wishlist.store', $product));
         $product->update(['status' => false]);
 
-        $this->get(route('wishlist.index'))->assertSee('Ваши закладки пусты.');
+        $this->get(route('wishlist.index'))->assertSee('В избранном пока нет товаров.');
         $this->post(route('compare.store', $product))->assertNotFound();
     }
 
