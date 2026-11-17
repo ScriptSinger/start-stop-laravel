@@ -32,6 +32,9 @@
                 <div class="footer__column-heading footer__column-heading-addr">Наш адрес</div>
                 <ul class="footer__column-ul footer__contacts list-unstyled">
                     <li class="footer__column-li footer__contacts-li"><i class="footer__contacts-icon fa fa-map-marker fa-fw"></i><a class="footer__column-a" href="{{ route('contact') }}">{{ config('shop.address') }}</a></li>
+                    @foreach (config('shop.opening_hours') as $hours)
+                        <li class="footer__column-li footer__contacts-li"><i class="footer__contacts-icon far fa-clock fa-fw"></i><span>{{ $hours['days'] }}: {{ $hours['from'] }}–{{ $hours['to'] }}</span></li>
+                    @endforeach
                 </ul>
             </div>
         </div>

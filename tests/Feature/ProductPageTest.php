@@ -57,7 +57,7 @@ class ProductPageTest extends TestCase
 
         $this->assertSame('Product', $productData['@type']);
         $this->assertSame('306', $productData['sku']);
-        $this->assertSame(['@type' => 'Offer', 'url' => route('product.show', $product), 'price' => '7000.00', 'priceCurrency' => 'RUB', 'availability' => 'https://schema.org/InStock'], $productData['offers']);
+        $this->assertSame(['@type' => 'Offer', 'url' => route('product.show', $product), 'price' => '7000.00', 'priceCurrency' => 'RUB', 'priceValidUntil' => now()->addMonth()->toDateString(), 'itemCondition' => 'https://schema.org/NewCondition', 'availability' => 'https://schema.org/InStock'], $productData['offers']);
         $this->assertSame('BreadcrumbList', $breadcrumbs['@type']);
         $this->assertSame(['Старт-Стоп', 'Аккумуляторы', 'ZUBR 60 Ah'], array_column($breadcrumbs['itemListElement'], 'name'));
     }

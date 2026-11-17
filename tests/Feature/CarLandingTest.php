@@ -67,6 +67,22 @@ class CarLandingTest extends TestCase
             ->assertSee('<a href="'.route('car-landing.index').'">По марке авто</a>', false);
     }
 
+    public function test_landings_have_breadcrumb_structured_data(): void
+    {
+        $names = function (string $url): array {
+            // Фасад JsonLdMulti живёт весь тест, поэтому берём крошки последнего запроса.
+            preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $this->get($url)->assertOk()->getContent(), $matches);
+            $breadcrumbs = collect($matches[1])->map(fn (string $json): array => json_decode($json, true))->where('@type', 'BreadcrumbList')->last();
+
+            return array_column($breadcrumbs['itemListElement'], 'name');
+        };
+
+        $this->assertSame(['Старт-Стоп', 'По марке авто'], $names(route('car-landing.index')));
+        $this->assertSame(['Старт-Стоп', 'По марке авто', 'Аккумуляторы для Lada'], $names(route('car-landing.brand', 'lada')));
+        $this->assertSame(['Старт-Стоп', 'По марке авто', 'Аккумуляторы для Lada', 'Vesta'], $names(route('car-landing.model', ['lada', 'vesta'])));
+        $this->assertSame(['Старт-Стоп', 'По марке авто', 'Аккумуляторы для Lada', '2131 (4x4)', 'I 1993 - 2019'], $names(route('car-landing.generation', ['lada', '2131-4x4', 'i-1993-2019'])));
+    }
+
     public function test_generation_page_offers_engines_when_they_need_different_batteries(): void
     {
         $this->fitment('2131 (4x4)', 'I 1993 - 2019', 'Прямая', '60 Ач', engine: '1.7 бензин');

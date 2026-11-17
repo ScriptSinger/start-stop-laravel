@@ -7,15 +7,17 @@ use App\Enums\ProductSelection;
 use App\Models\Banner;
 use App\Models\Product;
 use App\Services\Catalog\CategoryWall;
+use App\Services\Seo\ShopSeo;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(CategoryWall $categoryWall): View
+    public function index(CategoryWall $categoryWall, ShopSeo $shopSeo): View
     {
         SEOTools::setTitle(config('shop.home_meta.title'), false);
         SEOTools::setDescription(config('shop.home_meta.description'));
+        $shopSeo->apply(config('shop.home_meta.description'));
 
         return view('home', [
             'sliderBanners' => Banner::query()->shownAt(BannerPosition::HomeSlider)->get(),

@@ -27,6 +27,9 @@
                                         <div class="contacts__heading">Адрес</div>
                                         <ul class="contact-list__address list-unstyled">
                                             <li class="contact-list__item">{{ config('shop.address') }}</li>
+                                            @foreach (config('shop.opening_hours') as $hours)
+                                                <li class="contact-list__item"><i class="contact-list__icon far fa-clock fa-fw"></i><span>{{ $hours['days'] }}: {{ $hours['from'] }}–{{ $hours['to'] }}</span></li>
+                                            @endforeach
                                         </ul>
                                     </div>
                                     <div class="contacts__contacts">

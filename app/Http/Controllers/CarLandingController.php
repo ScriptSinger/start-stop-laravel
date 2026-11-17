@@ -10,6 +10,7 @@ use App\Services\CarLanding\CarBrand;
 use App\Services\CarLanding\CarGeneration;
 use App\Services\CarLanding\CarLandingCatalog;
 use App\Services\CarLanding\CarModel;
+use App\Services\Seo\BreadcrumbsSeo;
 use Artesaos\SEOTools\Facades\SEOMeta;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -23,12 +24,15 @@ use Illuminate\View\View;
  */
 class CarLandingController extends Controller
 {
+    public function __construct(private BreadcrumbsSeo $breadcrumbs) {}
+
     public function index(CarLandingCatalog $catalog, BatterySelection $selection): View
     {
         $brands = $catalog->brandsWithModels();
 
         SEOTools::setTitle('Аккумуляторы для автомобилей всех марок — купить в Уфе | '.config('shop.name'), false);
         SEOTools::setDescription('Подбор аккумулятора по марке и модели автомобиля: '.$brands->count().' марок, ёмкость, полярность и размеры, цены и наличие в Уфе. Доставка по городу, трейд-ин.');
+        $this->breadcrumbs([]);
 
         return view('car-landing.index', [
             'brands' => $brands,
@@ -46,6 +50,7 @@ class CarLandingController extends Controller
 
         SEOTools::setTitle("Аккумуляторы для {$carBrand->name} — купить в Уфе | ".config('shop.name'), false);
         SEOTools::setDescription("Аккумуляторы для всех моделей {$carBrand->name} в Уфе: подбор по ёмкости, полярности и размерам, цены и наличие. Доставка по городу, трейд-ин старого АКБ.");
+        $this->breadcrumbs([['name' => "Аккумуляторы для {$carBrand->name}", 'url' => route('car-landing.brand', $carBrand->slug)]]);
 
         return view('car-landing.brand', [
             'brand' => $carBrand,
@@ -79,6 +84,12 @@ class CarLandingController extends Controller
 
         $this->describe($subject, $products, $priceFrom);
 
+        $this->breadcrumbs(array_values(array_filter([
+            ['name' => "Аккумуляторы для {$model->brand->name}", 'url' => route('car-landing.brand', $model->brand->slug)],
+            ['name' => $model->name, 'url' => $model->url()],
+            $generation ? ['name' => $generation->label, 'url' => $generation->url()] : null,
+        ])));
+
         // Поколение с тем же набором аккумуляторов, что у всей модели, —
         // копия её страницы: поисковику показываем страницу модели.
         if ($generation !== null && ! $catalog->hasOwnProducts($generation)) {
@@ -98,6 +109,20 @@ class CarLandingController extends Controller
             'otherModels' => $catalog->models($model->brand)->reject(fn (CarModel $other): bool => $other->slug === $model->slug),
             'sort' => $request->sort(),
             'perPage' => $request->perPage(),
+        ]);
+    }
+
+    /**
+     * Крошки как в шаблонах: главная, «По марке авто» и страницы ниже по уровню.
+     *
+     * @param  list<array{name: string, url: string}>  $crumbs
+     */
+    private function breadcrumbs(array $crumbs): void
+    {
+        $this->breadcrumbs->apply([
+            ['name' => config('shop.name'), 'url' => route('home')],
+            ['name' => 'По марке авто', 'url' => route('car-landing.index')],
+            ...$crumbs,
         ]);
     }
 

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\Catalog\CatalogFacets;
 use App\Services\Catalog\CatalogFilter;
 use App\Services\Catalog\CategoryMenu;
+use App\Services\Seo\BreadcrumbsSeo;
 use Artesaos\SEOTools\Facades\SEOMeta;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,7 +18,7 @@ use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
-    public function show(CatalogFilterRequest $request, Category $category, CatalogFacets $facets, CategoryMenu $categoryMenu): View
+    public function show(CatalogFilterRequest $request, Category $category, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs): View
     {
         $filter = $request->toFilter();
         $priceBounds = $facets->priceBounds($category);
@@ -28,7 +29,7 @@ class CategoryController extends Controller
             ->paginate($request->perPage())
             ->withQueryString();
 
-        $this->describe($category, $products);
+        $this->describe($category, $products, $breadcrumbs);
 
         return view('category', [
             'category' => $category,
@@ -61,16 +62,21 @@ class CategoryController extends Controller
      * неё саму (как на старом сайте). Страницы пагинации — самостоятельные,
      * со ссылками prev/next без фильтров.
      */
-    private function describe(Category $category, LengthAwarePaginator $products): void
+    private function describe(Category $category, LengthAwarePaginator $products, BreadcrumbsSeo $breadcrumbs): void
     {
-        SEOTools::setTitle($category->meta_title ?: $category->name, appendDefault: ! $category->meta_title);
+        $page = $products->currentPage();
+        $title = $category->meta_title ?: $category->name;
 
-        if (filled($category->meta_description)) {
-            SEOTools::setDescription($category->meta_description);
-        }
+        SEOTools::setTitle($page > 1 ? "{$title} — страница {$page}" : $title, appendDefault: ! $category->meta_title);
+        SEOTools::setDescription($category->meta_description ?: "{$category->name} — купить в Уфе в магазине ".config('shop.name').'. Цены, характеристики, наличие. Доставка по городу, гарантия.');
+
+        $breadcrumbs->apply(array_values(array_filter([
+            ['name' => config('shop.name'), 'url' => route('home')],
+            $category->parent ? ['name' => $category->parent->name, 'url' => route('category.show', $category->parent)] : null,
+            ['name' => $category->name, 'url' => route('category.show', $category)],
+        ])));
 
         $pageUrl = fn (int $page): string => route('category.show', $page > 1 ? [$category, 'page' => $page] : $category);
-        $page = $products->currentPage();
 
         SEOMeta::setCanonical($pageUrl($page));
 
