@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Actions\MergeSocialCustomer;
 use App\Enums\OrderStatus;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,6 +81,100 @@ class CartCheckoutTest extends TestCase
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertJsonPath('count', 2)
             ->assertJsonPath('products', [$this->battery->id]);
+    }
+
+    public function test_authenticated_cart_survives_a_new_session_and_is_private(): void
+    {
+        $customer = Customer::factory()->create();
+        $other = Customer::factory()->create();
+
+        $this->actingAs($customer)->post(route('cart.store', $this->battery), ['quantity' => 2]);
+        $this->flushSession();
+        $this->actingAs($other)->getJson(route('cart.state'))->assertJsonPath('count', 0);
+        $this->flushSession();
+        $this->actingAs($customer)->getJson(route('cart.state'))->assertJsonPath('count', 2);
+    }
+
+    public function test_guest_cart_is_merged_once_when_customer_signs_in(): void
+    {
+        $customer = Customer::factory()->create();
+        $this->actingAs($customer)->post(route('cart.store', $this->battery), ['quantity' => 2]);
+        $this->flushSession();
+        auth('web')->logout();
+        $this->post(route('cart.store', $this->battery), ['quantity' => 3, 'trade_in' => 1]);
+        $this->actingAs($customer)->getJson(route('cart.state'))->assertJsonPath('count', 5);
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 5);
+        $this->get(route('cart.index'))->assertSee('name="trade_in" value="1" checked', false);
+    }
+
+    public function test_replayed_guest_session_does_not_merge_twice(): void
+    {
+        $customer = Customer::factory()->create();
+        $guestSession = [
+            'cart_guest_token' => 'same-guest-session',
+            'cart' => [$this->battery->id => ['quantity' => 3, 'trade_in' => false]],
+        ];
+
+        $this->actingAs($customer)->withSession($guestSession)->getJson(route('cart.state'))->assertJsonPath('count', 3);
+        $this->withSession($guestSession)->getJson(route('cart.state'))->assertJsonPath('count', 3);
+    }
+
+    public function test_guest_merge_caps_quantity_at_the_cart_limit(): void
+    {
+        $customer = Customer::factory()->create();
+        $this->actingAs($customer)->post(route('cart.store', $this->battery), ['quantity' => 70]);
+        $this->flushSession();
+        auth('web')->logout();
+        $this->post(route('cart.store', $this->battery), ['quantity' => 70]);
+        $this->actingAs($customer)->getJson(route('cart.state'))->assertJsonPath('count', 99);
+    }
+
+    public function test_checkout_clears_only_the_authenticated_customers_cart(): void
+    {
+        $first = Customer::factory()->create();
+        $second = Customer::factory()->create();
+        $this->actingAs($first)->post(route('cart.store', $this->battery));
+        $this->flushSession();
+        $this->actingAs($second)->post(route('cart.store', $this->terminal));
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 0);
+        $this->flushSession();
+        $this->actingAs($first)->getJson(route('cart.state'))->assertJsonPath('count', 1);
+    }
+
+    public function test_guest_cart_stays_empty_after_customer_logs_out(): void
+    {
+        $customer = Customer::factory()->create();
+        $this->actingAs($customer)->post(route('cart.store', $this->battery));
+        $this->post(route('logout'))->assertRedirect();
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 0);
+        $this->actingAs($customer)->getJson(route('cart.state'))->assertJsonPath('count', 1);
+    }
+
+    public function test_social_account_merge_preserves_both_customer_carts(): void
+    {
+        $original = Customer::factory()->create(['email' => 'old-cart@example.com', 'password' => 'password']);
+        $social = Customer::factory()->create(['email' => null, 'yandex_id' => 'cart-yandex', 'yandex_email' => 'old-cart@example.com']);
+        $this->actingAs($original)->post(route('cart.store', $this->battery), ['quantity' => 2]);
+        $this->flushSession();
+        $this->actingAs($social)->post(route('cart.store', $this->battery), ['quantity' => 3, 'trade_in' => 1]);
+
+        $merged = app(MergeSocialCustomer::class)->yandex($social, 'password');
+
+        $this->assertNotNull($merged);
+        $this->flushSession();
+        $this->actingAs($original)->getJson(route('cart.state'))->assertJsonPath('count', 5);
+        $this->get(route('cart.index'))->assertSee('name="trade_in" value="1" checked', false);
+    }
+
+    public function test_customer_cannot_overwrite_another_devices_newer_cart_line(): void
+    {
+        $customer = Customer::factory()->create();
+        $this->actingAs($customer)->post(route('cart.store', $this->battery));
+        $this->patchJson(route('cart.update', $this->battery), ['quantity' => 2, 'expected_state' => '1:0'])->assertOk();
+        $this->flushSession();
+        $this->actingAs($customer)->patchJson(route('cart.update', $this->battery), ['quantity' => 3, 'expected_state' => '1:0'])->assertStatus(409);
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 2);
     }
 
     public function test_stale_cart_line_cannot_overwrite_or_remove_a_newer_change(): void

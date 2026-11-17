@@ -26,7 +26,7 @@
             <h1>Оформление заказа</h1>
         </div>
 
-        <div id="content">
+        <div id="content" data-cart-page>
             <div class="uni-wrapper">
                 @if ($unavailableCount > 0)
                     <div class="alert alert-warning" role="alert" data-cart-unavailable>Некоторые товары из корзины больше недоступны и не будут включены в заказ.</div>

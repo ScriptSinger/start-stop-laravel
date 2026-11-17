@@ -3,11 +3,14 @@
 namespace App\Actions;
 
 use App\Models\Customer;
+use App\Services\Cart\CustomerCartStore;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class MergeSocialCustomer
 {
+    public function __construct(private readonly CustomerCartStore $carts) {}
+
     public function yandex(Customer $customer, string $password): ?Customer
     {
         return $this->merge($customer, $password, 'yandex', 'vk');
@@ -37,6 +40,7 @@ class MergeSocialCustomer
             }
 
             DB::table('orders')->where('customer_id', $source->id)->update(['customer_id' => $destination->id]);
+            $this->carts->mergeAccounts($source->id, $destination->id);
             $source->delete();
             $destination->forceFill([
                 $providerId => $source->{$providerId},

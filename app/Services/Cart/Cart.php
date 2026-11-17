@@ -5,6 +5,8 @@ namespace App\Services\Cart;
 use App\Models\Product;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 /**
  * Корзина в сессии хранит количество, трейд-ин и снимок цен для предупреждения.
@@ -16,56 +18,60 @@ class Cart
 
     public const MAX_QUANTITY = 99;
 
-    public function __construct(private readonly Session $session) {}
+    public function __construct(private readonly Session $session, private readonly CustomerCartStore $customerCarts) {}
 
     public function add(Product $product, int $quantity = 1, bool $tradeIn = false): void
     {
-        $items = $this->rawItems();
-        $current = $items[$product->id]['quantity'] ?? 0;
-
-        $items[$product->id] = [
-            'quantity' => $this->clampQuantity($current + $quantity),
-            'trade_in' => $tradeIn && $product->hasTradeIn(),
-            'prices' => $items[$product->id]['prices'] ?? $this->prices($product),
-        ];
-
-        $this->save($items);
+        $this->mutate(function (array &$items) use ($product, $quantity, $tradeIn): void {
+            $current = $items[$product->id]['quantity'] ?? 0;
+            $items[$product->id] = [
+                'quantity' => $this->clampQuantity($current + $quantity),
+                'trade_in' => $tradeIn && $product->hasTradeIn(),
+                'prices' => $items[$product->id]['prices'] ?? $this->prices($product),
+            ];
+        });
     }
 
-    public function update(Product $product, int $quantity, bool $tradeIn): void
+    public function update(Product $product, int $quantity, bool $tradeIn, ?string $expected = null): bool
     {
         if ($quantity <= 0) {
-            $this->remove($product);
-
-            return;
+            return $this->remove($product, $expected);
         }
 
-        $items = $this->rawItems();
+        return $this->mutate(function (array &$items) use ($product, $quantity, $tradeIn, $expected): bool {
+            if (! $this->matchesItem($items[$product->id] ?? null, $expected)) {
+                return false;
+            }
+            if (! isset($items[$product->id])) {
+                return true;
+            }
+            $items[$product->id] = [
+                'quantity' => $this->clampQuantity($quantity),
+                'trade_in' => $tradeIn && $product->hasTradeIn(),
+                'prices' => $items[$product->id]['prices'] ?? $this->prices($product),
+            ];
 
-        if (! isset($items[$product->id])) {
-            return;
-        }
-
-        $items[$product->id] = [
-            'quantity' => $this->clampQuantity($quantity),
-            'trade_in' => $tradeIn && $product->hasTradeIn(),
-            'prices' => $items[$product->id]['prices'] ?? $this->prices($product),
-        ];
-
-        $this->save($items);
+            return true;
+        });
     }
 
-    public function remove(Product $product): void
+    public function remove(Product $product, ?string $expected = null): bool
     {
-        $items = $this->rawItems();
-        unset($items[$product->id]);
+        return $this->mutate(function (array &$items) use ($product, $expected): bool {
+            if (! $this->matchesItem($items[$product->id] ?? null, $expected)) {
+                return false;
+            }
+            unset($items[$product->id]);
 
-        $this->save($items);
+            return true;
+        });
     }
 
     public function clear(): void
     {
-        $this->session->forget(self::SESSION_KEY);
+        $this->mutate(function (array &$items): void {
+            $items = [];
+        });
     }
 
     /**
@@ -110,11 +116,9 @@ class Cart
         return $this->rawItems() === [];
     }
 
-    public function matchesLineState(Product $product, string $expected): bool
+    private function matchesItem(?array $item, ?string $expected): bool
     {
-        $item = $this->rawItems()[$product->id] ?? null;
-
-        return $item !== null && $expected === $item['quantity'].':'.(int) $item['trade_in'];
+        return $expected === null || ($item !== null && $expected === $item['quantity'].':'.(int) $item['trade_in']);
     }
 
     /**
@@ -125,13 +129,12 @@ class Cart
         return max(0, count($this->rawItems()) - $lines->count());
     }
 
-    /**
-     * @param  Collection<int, CartLine>  $lines
-     */
-    public function discardUnavailable(Collection $lines): void
+    public function discardUnavailable(): void
     {
-        $ids = $lines->mapWithKeys(fn (CartLine $line): array => [$line->product->id => true])->all();
-        $this->save(array_intersect_key($this->rawItems(), $ids));
+        $this->mutate(function (array &$items): void {
+            $ids = Product::query()->whereIn('id', array_keys($items))->where('status', true)->pluck('id')->all();
+            $items = array_intersect_key($items, array_fill_keys($ids, true));
+        });
     }
 
     /**
@@ -157,11 +160,13 @@ class Cart
      */
     public function rememberPrices(Collection $lines): void
     {
-        $items = $this->rawItems();
-        foreach ($lines as $line) {
-            $items[$line->product->id]['prices'] = $this->prices($line->product);
-        }
-        $this->save($items);
+        $this->mutate(function (array &$items) use ($lines): void {
+            foreach ($lines as $line) {
+                if (isset($items[$line->product->id])) {
+                    $items[$line->product->id]['prices'] = $this->prices($line->product);
+                }
+            }
+        });
     }
 
     /** @return array{regular: string, trade_in: string} */
@@ -196,6 +201,10 @@ class Cart
      */
     private function rawItems(): array
     {
+        $customerId = Auth::guard('web')->id();
+        if ($customerId !== null) {
+            return $this->customerCarts->transact((int) $customerId, fn (array &$items): array => $items);
+        }
         $items = $this->session->get(self::SESSION_KEY, []);
 
         return is_array($items) ? $items : [];
@@ -207,6 +216,22 @@ class Cart
     private function save(array $items): void
     {
         $this->session->put(self::SESSION_KEY, $items);
+        if (! $this->session->has('cart_guest_token')) {
+            $this->session->put('cart_guest_token', (string) Str::uuid());
+        }
+    }
+
+    private function mutate(callable $callback): mixed
+    {
+        $customerId = Auth::guard('web')->id();
+        if ($customerId !== null) {
+            return $this->customerCarts->transact((int) $customerId, $callback);
+        }
+        $items = $this->rawItems();
+        $result = $callback($items);
+        $this->save($items);
+
+        return $result;
     }
 
     private function clampQuantity(int $quantity): int

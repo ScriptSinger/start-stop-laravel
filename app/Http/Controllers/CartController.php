@@ -24,7 +24,7 @@ class CartController extends Controller
         $unavailableCount = $cart->unavailableCount($lines);
         $priceChanged = $cart->hasPriceChanges($lines);
         if ($unavailableCount > 0) {
-            $cart->discardUnavailable($lines);
+            $cart->discardUnavailable();
         }
         $cart->rememberPrices($lines);
 
@@ -64,20 +64,20 @@ class CartController extends Controller
 
     public function update(Request $request, Cart $cart, Product $product): RedirectResponse|JsonResponse
     {
-        if ($request->has('expected_state') && (! is_string($request->input('expected_state')) || ! $cart->matchesLineState($product, $request->input('expected_state')))) {
+        if (($request->has('expected_state') && ! is_string($request->input('expected_state')))
+            || ! $cart->update($product, $this->quantity($request, min: 0), $request->boolean('trade_in'), $request->input('expected_state'))) {
             return $this->staleLine($request);
         }
-        $cart->update($product, $this->quantity($request, min: 0), $request->boolean('trade_in'));
 
         return $request->expectsJson() ? $this->miniCart($cart) : redirect()->route('cart.index');
     }
 
     public function destroy(Request $request, Cart $cart, Product $product): RedirectResponse|JsonResponse
     {
-        if ($request->has('expected_state') && (! is_string($request->input('expected_state')) || ! $cart->matchesLineState($product, $request->input('expected_state')))) {
+        if (($request->has('expected_state') && ! is_string($request->input('expected_state')))
+            || ! $cart->remove($product, $request->input('expected_state'))) {
             return $this->staleLine($request);
         }
-        $cart->remove($product);
 
         return $request->expectsJson() ? $this->miniCart($cart) : redirect()->route('cart.index');
     }

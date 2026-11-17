@@ -106,7 +106,7 @@
                         <span id="cart-total" class="header-cart__total-items" x-text="$store.cart.count" x-show="$store.cart.count > 0">{{ $cartCount }}</span>
                         <span class="header-action__label">Корзина</span>
                     </a>
-                    <div class="header-cart__dropdown" data-mini-cart-html data-state-url="{{ route('cart.state') }}" data-count="{{ $cartCount }}" data-products="{{ $cartLines->map(fn ($line) => $line->product->id)->values()->toJson() }}" x-html="$store.cart.html">
+                    <div class="header-cart__dropdown" data-mini-cart-html data-state-url="{{ route('cart.state') }}" data-customer="{{ auth('web')->check() ? '1' : '0' }}" data-count="{{ $cartCount }}" data-products="{{ $cartLines->map(fn ($line) => $line->product->id)->values()->toJson() }}" x-html="$store.cart.html">
                         @include('partials.mini-cart')
                     </div>
                 </div>

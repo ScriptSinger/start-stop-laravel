@@ -30,6 +30,11 @@ export default {
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') this.syncFromServer();
         });
+        if (dropdown?.dataset.customer === '1') {
+            window.setInterval(() => {
+                if (document.visibilityState === 'visible' && !this.busy) this.syncFromServer();
+            }, 30000);
+        }
 
         this.html = dropdown?.innerHTML ?? '';
         this.count = Number(dropdown?.dataset.count ?? 0);
@@ -149,8 +154,14 @@ export default {
         try {
             const response = await fetch(this.stateUrl, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
             if (!response.ok) throw new Error('Cart sync failed');
-            this.update(await response.json());
-            if (document.querySelector('[data-checkout]')) await this.refreshCheckout();
+            const state = await response.json();
+            const changed = state.html !== this.html;
+            this.update(state);
+            if (document.querySelector('[data-checkout]') && (changed || document.querySelector('#confirm_checkout[data-cart-error]'))) {
+                await this.refreshCheckout();
+            } else if (changed && state.count > 0 && document.querySelector('[data-cart-page]') && !document.querySelector('[data-checkout]')) {
+                location.reload();
+            }
         } catch {
             const confirm = document.querySelector('#confirm_checkout');
             if (confirm) {
