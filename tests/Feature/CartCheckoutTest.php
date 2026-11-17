@@ -81,6 +81,18 @@ class CartCheckoutTest extends TestCase
             ->assertJsonPath('products', [$this->battery->id]);
     }
 
+    public function test_stale_cart_line_cannot_overwrite_or_remove_a_newer_change(): void
+    {
+        $this->post(route('cart.store', $this->battery));
+        $this->patchJson(route('cart.update', $this->battery), ['quantity' => 2, 'expected_state' => '1:0'])->assertOk();
+
+        $this->patchJson(route('cart.update', $this->battery), ['quantity' => 3, 'expected_state' => '1:0'])->assertStatus(409);
+        $this->deleteJson(route('cart.destroy', $this->battery), ['expected_state' => '1:0'])->assertStatus(409);
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 2);
+        $this->deleteJson(route('cart.destroy', $this->battery), ['expected_state' => '2:0'])->assertOk();
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 0);
+    }
+
     public function test_header_contains_mini_cart(): void
     {
         $this->post(route('cart.store', $this->battery));

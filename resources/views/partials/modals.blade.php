@@ -6,7 +6,10 @@
                 <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">&times;</button>
                 <h4 class="modal-title" id="modal-cart-title">Корзина</h4>
             </div>
-            <div class="modal-body" x-html="$store.cart.html"></div>
+            <div class="modal-body">
+                <p style="display: none" role="status" data-cart-progress>Обновляем корзину…</p>
+                <div x-html="$store.cart.html"></div>
+            </div>
         </div>
     </div>
 </div>

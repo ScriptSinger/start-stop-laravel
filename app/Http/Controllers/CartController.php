@@ -64,6 +64,9 @@ class CartController extends Controller
 
     public function update(Request $request, Cart $cart, Product $product): RedirectResponse|JsonResponse
     {
+        if ($request->has('expected_state') && (! is_string($request->input('expected_state')) || ! $cart->matchesLineState($product, $request->input('expected_state')))) {
+            return $this->staleLine($request);
+        }
         $cart->update($product, $this->quantity($request, min: 0), $request->boolean('trade_in'));
 
         return $request->expectsJson() ? $this->miniCart($cart) : redirect()->route('cart.index');
@@ -71,9 +74,21 @@ class CartController extends Controller
 
     public function destroy(Request $request, Cart $cart, Product $product): RedirectResponse|JsonResponse
     {
+        if ($request->has('expected_state') && (! is_string($request->input('expected_state')) || ! $cart->matchesLineState($product, $request->input('expected_state')))) {
+            return $this->staleLine($request);
+        }
         $cart->remove($product);
 
         return $request->expectsJson() ? $this->miniCart($cart) : redirect()->route('cart.index');
+    }
+
+    private function staleLine(Request $request): RedirectResponse|JsonResponse
+    {
+        $message = 'Корзина изменилась в другой вкладке. Проверьте количество и повторите действие.';
+
+        return $request->expectsJson()
+            ? response()->json(['message' => $message], 409)
+            : redirect()->route('cart.index')->with('status', $message);
     }
 
     /**

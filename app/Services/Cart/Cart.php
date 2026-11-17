@@ -110,6 +110,13 @@ class Cart
         return $this->rawItems() === [];
     }
 
+    public function matchesLineState(Product $product, string $expected): bool
+    {
+        $item = $this->rawItems()[$product->id] ?? null;
+
+        return $item !== null && $expected === $item['quantity'].':'.(int) $item['trade_in'];
+    }
+
     /**
      * @param  Collection<int, CartLine>  $lines
      */

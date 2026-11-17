@@ -13,6 +13,7 @@
                 <form method="post" action="{{ route('cart.update', $line->product) }}" class="header-cart__item-wrapper" @submit.prevent="$store.cart.change($el)">
                     @csrf
                     @method('PATCH')
+                    <input type="hidden" name="expected_state" value="{{ $line->quantity }}:{{ (int) $line->tradeIn }}" />
                     @if ($line->tradeIn)
                         <input type="hidden" name="trade_in" value="1" />
                     @endif
@@ -35,6 +36,7 @@
                 <form method="post" action="{{ route('cart.destroy', $line->product) }}" class="header-cart__remove" @submit.prevent="$store.cart.change($el)">
                     @csrf
                     @method('DELETE')
+                    <input type="hidden" name="expected_state" value="{{ $line->quantity }}:{{ (int) $line->tradeIn }}" />
                     <button type="submit" title="Удалить" aria-label="Удалить" class="header-cart__remove-btn"><i class="far fa-trash-alt"></i></button>
                 </form>
             </div>

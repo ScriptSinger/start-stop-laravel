@@ -44,6 +44,7 @@
                 @else
                     <div class="unicheckout__wrapper row">
                         <div class="unicheckout__forms col-sm-12 col-md-9 col-lg-9 col-xxl-15">
+                            <p style="display: none" role="status" data-cart-progress>Обновляем корзину…</p>
                             <div id="unicart" data-pickup-only="{{ $isPickupOnly ? '1' : '0' }}">
                                 @if ($errors->any())
                                     <div class="alert alert-danger">
@@ -64,6 +65,7 @@
                                                 <form method="post" action="{{ route('cart.update', $line->product) }}" class="checkout-cart__item-wrapper" @submit.prevent="$store.cart.change($el)">
                                                     @csrf
                                                     @method('PATCH')
+                                                    <input type="hidden" name="expected_state" value="{{ $line->quantity }}:{{ (int) $line->tradeIn }}" />
                                                     <div class="checkout-cart__name">
                                                         <a href="{{ $productUrl }}">{{ $line->product->name }}</a>
                                                         @if ($line->availability() !== 'in_stock')
@@ -92,6 +94,7 @@
                                                 <form method="post" action="{{ route('cart.destroy', $line->product) }}" class="checkout-cart__remove" @submit.prevent="$store.cart.change($el)">
                                                     @csrf
                                                     @method('DELETE')
+                                                    <input type="hidden" name="expected_state" value="{{ $line->quantity }}:{{ (int) $line->tradeIn }}" />
                                                     <button type="submit" title="Удалить" aria-label="Удалить" class="checkout-cart__remove-btn"><i class="checkout-cart__remove-icon far fa-trash-alt"></i></button>
                                                 </form>
                                             </div>

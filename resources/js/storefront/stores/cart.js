@@ -40,6 +40,13 @@ export default {
         return this.products.includes(productId);
     },
 
+    setBusy(busy) {
+        this.busy = busy;
+        document.querySelectorAll('[data-cart-progress]').forEach((element) => {
+            element.style.display = busy ? '' : 'none';
+        });
+    },
+
     open() {
         if (!$('#modal-cart').hasClass('in') && !this.opener) {
             this.opener = document.activeElement;
@@ -52,7 +59,7 @@ export default {
         if (this.busy) return;
 
         this.opener = document.activeElement;
-        this.busy = true;
+        this.setBusy(true);
         const buttons = [...form.querySelectorAll('button[type="submit"]')];
         buttons.forEach((button) => { button.disabled = true; });
         try {
@@ -61,9 +68,11 @@ export default {
             if (document.querySelector('[data-checkout]')) await this.refreshCheckout();
             this.open();
         } catch {
-            Alpine.store('alerts').show('danger', 'Не получилось добавить в корзину. Попробуйте ещё раз.');
+            this.notifyOtherTabs();
+            this.syncPending = true;
+            Alpine.store('alerts').show('danger', 'Не удалось подтвердить добавление. Проверьте корзину перед повторной попыткой.');
         } finally {
-            this.busy = false;
+            this.setBusy(false);
             buttons.forEach((button) => { button.disabled = false; });
             if (this.syncPending) this.syncFromServer();
         }
@@ -74,7 +83,7 @@ export default {
         if (this.busy) return;
 
         const body = new FormData(form);
-        this.busy = true;
+        this.setBusy(true);
         const controls = [...document.querySelectorAll('#modal-cart .header-cart__item button, #modal-cart .header-cart__item input, #unicart button, #unicart input, #confirm_checkout')];
         controls.forEach((control) => { control.disabled = true; });
         let saved = false;
@@ -84,8 +93,10 @@ export default {
             this.update(json);
             this.notifyOtherTabs();
             if (document.querySelector('[data-checkout]')) await this.refreshCheckout();
-        } catch {
+        } catch (error) {
             if (!saved) {
+                this.notifyOtherTabs();
+                this.syncPending = true;
                 const previous = this.html;
                 this.html = '';
                 await Alpine.nextTick();
@@ -98,9 +109,10 @@ export default {
                     }
                 }
             }
-            Alpine.store('alerts').show('danger', saved
+            Alpine.store('alerts').show('danger', error.response?.status === 409
+                ? 'Корзина изменилась в другой вкладке. Проверьте количество и повторите действие.' : saved
                 ? 'Корзина изменена, но обновить оформление не удалось. Обновите страницу перед заказом.'
-                : 'Не получилось изменить корзину. Проверьте соединение и попробуйте ещё раз.');
+                : 'Не удалось подтвердить изменение. Проверьте актуальное состояние корзины перед повторной попыткой.');
             if (saved) {
                 const confirm = document.querySelector('#confirm_checkout');
                 if (confirm) {
@@ -109,7 +121,7 @@ export default {
                 }
             }
         } finally {
-            this.busy = false;
+            this.setBusy(false);
             controls.forEach((control) => { if (control.id !== 'confirm_checkout' || !control.hasAttribute('data-cart-error')) control.disabled = false; });
             if (this.syncPending) this.syncFromServer();
         }
@@ -131,7 +143,7 @@ export default {
         if (!this.stateUrl) return;
 
         this.syncPending = false;
-        this.busy = true;
+        this.setBusy(true);
         const controls = [...document.querySelectorAll('#modal-cart .header-cart__item button, #modal-cart .header-cart__item input, #unicart button, #unicart input, #confirm_checkout')];
         controls.forEach((control) => { control.disabled = true; });
         try {
@@ -147,7 +159,7 @@ export default {
             }
             Alpine.store('alerts').show('danger', 'Не удалось обновить корзину после изменений в другой вкладке. Обновите страницу.');
         } finally {
-            this.busy = false;
+            this.setBusy(false);
             controls.forEach((control) => { if (control.id !== 'confirm_checkout' || !control.hasAttribute('data-cart-error')) control.disabled = false; });
             if (this.syncPending) this.syncFromServer();
         }
