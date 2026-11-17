@@ -7,3 +7,23 @@
 
 .order-summary {max-width: 720px}
 .order-summary__price {white-space: nowrap}
+
+.header-cart__quantity .qty-switch__btn.fa, .checkout-cart__quantity .qty-switch__btn.fa {width: 44px; height: 44px; line-height: 44px; font-size: 12px}
+.header-cart__quantity .qty-switch__input, .checkout-cart__quantity .qty-switch__input {height: 44px !important}
+.header-cart__remove-btn, .checkout-cart__remove-btn {min-width: 44px; min-height: 44px}
+
+@media (max-width: 767px) {
+    #modal-cart .modal-dialog {width: auto; margin: 10px}
+    #modal-cart .modal-content {max-height: calc(100dvh - 20px); display: flex; flex-direction: column}
+    #modal-cart .modal-body {overflow-y: auto; overscroll-behavior: contain}
+    .header-cart__buttons {flex-direction: column; gap: 10px}
+    .header-cart__buttons .btn-default {display: block}
+    .header-cart__buttons .btn {width: 100%; white-space: normal}
+    .header-cart__wrapper {max-height: none; overflow: visible}
+    .header-cart__item-wrapper, .checkout-cart__item-wrapper {flex-wrap: wrap; min-width: 0}
+    .header-cart__name, .checkout-cart__name {flex: 1 1 100%; min-width: 0; margin-bottom: 10px}
+    .header-cart__quantity, .checkout-cart__quantity {flex: 1 1 100%; padding: 0 0 10px}
+    .header-cart__price, .checkout-cart__price {flex: 1 1 50%; padding: 0 8px 0 0}
+    .header-cart__total, .checkout-cart__total {flex: 1 1 50%}
+    .checkout-cart__total-text {display: block}
+}

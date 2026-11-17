@@ -3,9 +3,17 @@
  * оплата картой — только при самовывозе. Сервер проверяет то же самое
  * (CheckoutRequest), здесь — только удобство.
  */
-export default ({delivery, payment, pickup, cardOnlyPayments}) => ({
+export default ({delivery, payment, pickup, pickupOnly, cardOnlyPayments}) => ({
     delivery,
     payment,
+    pickupOnly,
+
+    updateAvailability({pickupOnly}) {
+        this.pickupOnly = pickupOnly;
+        if (pickupOnly && this.delivery !== pickup) {
+            this.delivery = pickup;
+        }
+    },
 
     init() {
         this.$watch('delivery', () => {

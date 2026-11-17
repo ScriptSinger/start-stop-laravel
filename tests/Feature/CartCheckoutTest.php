@@ -206,7 +206,8 @@ class CartCheckoutTest extends TestCase
 
         $this->get(route('cart.index'))
             ->assertOk()
-            ->assertDontSee('data-delivery="city"', false);
+            ->assertSee('data-pickup-only="1"', false)
+            ->assertSee('x-show="!pickupOnly"', false);
 
         $this->checkout(['delivery' => 'city', 'address' => 'ул. Ленина, 1', 'payment' => 'cash'])
             ->assertSessionHasErrors(['delivery' => 'В корзине есть товар, который можно забрать только самовывозом.']);

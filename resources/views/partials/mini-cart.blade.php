@@ -24,13 +24,13 @@
                     </div>
                     <div class="header-cart__quantity">
                         <div class="qty-switch qty-switch__cart" x-data="qtySwitch({value: {{ $line->quantity }}, max: {{ \App\Services\Cart\Cart::MAX_QUANTITY }}, autosubmit: true})">
-                            <i class="qty-switch__btn fa fa-minus" @click="step(-1)"></i>
+                            <button type="button" class="qty-switch__btn fa fa-minus" aria-label="Уменьшить количество" @click="step(-1)"></button>
                             <input type="text" name="quantity" value="{{ $line->quantity }}" :value="value" @change="set($event.target.value)" class="qty-switch__input form-control" aria-label="Количество" inputmode="numeric" />
-                            <i class="qty-switch__btn fa fa-plus" @click="step(1)"></i>
+                            <button type="button" class="qty-switch__btn fa fa-plus" aria-label="Увеличить количество" @click="step(1)"></button>
                         </div>
                     </div>
-                    <div class="header-cart__price hidden-xs"><div class="header-cart__price-text">Цена за шт</div>{{ number_format($line->unitPrice(), 0, '', '') }}р.</div>
-                    <div class="header-cart__total"><div class="header-cart__total-text hidden-xs">Всего</div>{{ number_format($line->total(), 0, '', '') }}р.</div>
+                    <div class="header-cart__price"><div class="header-cart__price-text">Цена за шт</div>{{ number_format($line->unitPrice(), 0, '', '') }}р.</div>
+                    <div class="header-cart__total"><div class="header-cart__total-text">Всего</div>{{ number_format($line->total(), 0, '', '') }}р.</div>
                 </form>
                 <form method="post" action="{{ route('cart.destroy', $line->product) }}" class="header-cart__remove" @submit.prevent="$store.cart.change($el)">
                     @csrf
