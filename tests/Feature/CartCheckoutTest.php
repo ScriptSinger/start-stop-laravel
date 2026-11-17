@@ -58,6 +58,20 @@ class CartCheckoutTest extends TestCase
         $this->get(route('home'))->assertSeeInOrder(['title="Корзина"', '>2</span>'], false);
     }
 
+    public function test_trade_in_cannot_discount_a_product_without_a_trade_in_offer(): void
+    {
+        $this->post(route('cart.store', $this->terminal), ['quantity' => 2, 'trade_in' => 1]);
+
+        $this->get(route('cart.index'))
+            ->assertSee('1000р.')
+            ->assertDontSee('name="trade_in" value="1" checked', false);
+
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
+        $order = Order::query()->with('items')->sole();
+        $this->assertEquals(1000, $order->total);
+        $this->assertNull($order->items->sole()->trade_in_discount);
+    }
+
     public function test_ajax_add_returns_mini_cart_for_modal(): void
     {
         $this->postJson(route('cart.store', $this->battery), ['quantity' => 2])
@@ -129,6 +143,18 @@ class CartCheckoutTest extends TestCase
         $this->actingAs($customer)->getJson(route('cart.state'))->assertJsonPath('count', 99);
     }
 
+    public function test_password_login_merges_guest_cart_with_account_cart(): void
+    {
+        $customer = Customer::factory()->create(['email' => 'cart-login@example.com', 'password' => 'password']);
+        $this->actingAs($customer)->post(route('cart.store', $this->battery), ['quantity' => 2]);
+        $this->post(route('logout'))->assertRedirect();
+        $this->post(route('cart.store', $this->battery), ['quantity' => 3, 'trade_in' => 1]);
+
+        $this->post(route('login'), ['email' => 'cart-login@example.com', 'password' => 'password'])->assertRedirect();
+        $this->getJson(route('cart.state'))->assertJsonPath('count', 5);
+        $this->get(route('cart.index'))->assertSee('name="trade_in" value="1" checked', false);
+    }
+
     public function test_checkout_clears_only_the_authenticated_customers_cart(): void
     {
         $first = Customer::factory()->create();
@@ -175,6 +201,31 @@ class CartCheckoutTest extends TestCase
         $this->flushSession();
         $this->actingAs($customer)->patchJson(route('cart.update', $this->battery), ['quantity' => 3, 'expected_state' => '1:0'])->assertStatus(409);
         $this->getJson(route('cart.state'))->assertJsonPath('count', 2);
+    }
+
+    public function test_second_session_cannot_place_an_order_after_first_session_clears_cart(): void
+    {
+        $customer = Customer::factory()->create();
+        $this->actingAs($customer)->post(route('cart.store', $this->battery));
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
+
+        $this->flushSession();
+        $this->actingAs($customer);
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('cart.index'));
+        $this->assertDatabaseCount('orders', 1);
+    }
+
+    public function test_vk_account_merge_preserves_both_customer_carts(): void
+    {
+        $original = Customer::factory()->create(['email' => 'old-vk-cart@example.com', 'password' => 'password']);
+        $social = Customer::factory()->create(['email' => null, 'vk_id' => 'cart-vk', 'vk_email' => 'old-vk-cart@example.com']);
+        $this->actingAs($original)->post(route('cart.store', $this->battery), ['quantity' => 2]);
+        $this->flushSession();
+        $this->actingAs($social)->post(route('cart.store', $this->terminal));
+
+        $this->assertNotNull(app(MergeSocialCustomer::class)->vk($social, 'password'));
+        $this->flushSession();
+        $this->actingAs($original)->getJson(route('cart.state'))->assertJsonPath('count', 3);
     }
 
     public function test_stale_cart_line_cannot_overwrite_or_remove_a_newer_change(): void
