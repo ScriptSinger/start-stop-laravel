@@ -24,6 +24,18 @@ class CheckoutController extends Controller
     {
         $lines = $cart->lines();
 
+        if ($cart->unavailableCount($lines) > 0) {
+            return redirect()->route('cart.index')
+                ->withInput()
+                ->with('status', 'Некоторые товары больше недоступны. Проверьте состав корзины перед оформлением.');
+        }
+
+        if ($cart->hasPriceChanges($lines)) {
+            return redirect()->route('cart.index')
+                ->withInput()
+                ->with('status', 'Цена товара изменилась. Проверьте сумму заказа перед оформлением.');
+        }
+
         if ($lines->isEmpty()) {
             return redirect()->route('cart.index')
                 ->with('status', 'Корзина пуста — возможно, товары сняли с продажи.');

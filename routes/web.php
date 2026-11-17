@@ -49,10 +49,11 @@ Route::middleware(['auth', 'noindex'])->group(function () {
     Route::get('/order-history/{order}', [AccountController::class, 'order'])->whereNumber('order')->name('account.order');
 });
 
-Route::get('/cart', [CartController::class, 'index'])->middleware('noindex')->name('cart.index');
-Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.store');
-Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/{product}', [CartController::class, 'destroy'])->name('cart.destroy');
+Route::get('/cart', [CartController::class, 'index'])->middleware('noindex')->name('cart.index')->block();
+Route::get('/cart/state', [CartController::class, 'state'])->middleware('noindex')->name('cart.state')->block();
+Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.store')->block();
+Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update')->block();
+Route::delete('/cart/{product}', [CartController::class, 'destroy'])->name('cart.destroy')->block();
 
 Route::get('/wishlist', [WishlistController::class, 'index'])->middleware('noindex')->name('wishlist.index');
 Route::post('/wishlist/{product}', [WishlistController::class, 'store'])->name('wishlist.store');
@@ -64,7 +65,7 @@ Route::post('/compare-products/{product}', [CompareController::class, 'store'])-
 Route::delete('/compare-products/{product}', [CompareController::class, 'destroy'])->name('compare.destroy');
 
 Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
-Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
+Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store')->block();
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->middleware('noindex')->name('checkout.success');
 
 Route::get('/callback', [CallbackRequestController::class, 'create'])->middleware('noindex')->name('callback.create');

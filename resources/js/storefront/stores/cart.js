@@ -13,6 +13,8 @@ export default {
     html: '',
     opener: null,
     busy: false,
+    syncPending: false,
+    stateUrl: '',
 
     init() {
         $('#modal-cart').on('hidden.bs.modal', () => {
@@ -20,6 +22,14 @@ export default {
             this.opener = null;
         });
         const dropdown = document.querySelector('[data-mini-cart-html]');
+
+        this.stateUrl = dropdown?.dataset.stateUrl ?? '';
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'storefront-cart-changed') this.syncFromServer();
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') this.syncFromServer();
+        });
 
         this.html = dropdown?.innerHTML ?? '';
         this.count = Number(dropdown?.dataset.count ?? 0);
@@ -47,6 +57,7 @@ export default {
         buttons.forEach((button) => { button.disabled = true; });
         try {
             this.update(await postJson(form.action, new FormData(form)));
+            this.notifyOtherTabs();
             if (document.querySelector('[data-checkout]')) await this.refreshCheckout();
             this.open();
         } catch {
@@ -54,6 +65,7 @@ export default {
         } finally {
             this.busy = false;
             buttons.forEach((button) => { button.disabled = false; });
+            if (this.syncPending) this.syncFromServer();
         }
     },
 
@@ -70,6 +82,7 @@ export default {
             const json = await postJson(form.action, body);
             saved = true;
             this.update(json);
+            this.notifyOtherTabs();
             if (document.querySelector('[data-checkout]')) await this.refreshCheckout();
         } catch {
             if (!saved) {
@@ -98,6 +111,45 @@ export default {
         } finally {
             this.busy = false;
             controls.forEach((control) => { if (control.id !== 'confirm_checkout' || !control.hasAttribute('data-cart-error')) control.disabled = false; });
+            if (this.syncPending) this.syncFromServer();
+        }
+    },
+
+    notifyOtherTabs() {
+        try {
+            localStorage.setItem('storefront-cart-changed', `${Date.now()}-${Math.random()}`);
+        } catch {
+            // The cart remains usable when browser storage is unavailable.
+        }
+    },
+
+    async syncFromServer() {
+        if (this.busy) {
+            this.syncPending = true;
+            return;
+        }
+        if (!this.stateUrl) return;
+
+        this.syncPending = false;
+        this.busy = true;
+        const controls = [...document.querySelectorAll('#modal-cart .header-cart__item button, #modal-cart .header-cart__item input, #unicart button, #unicart input, #confirm_checkout')];
+        controls.forEach((control) => { control.disabled = true; });
+        try {
+            const response = await fetch(this.stateUrl, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
+            if (!response.ok) throw new Error('Cart sync failed');
+            this.update(await response.json());
+            if (document.querySelector('[data-checkout]')) await this.refreshCheckout();
+        } catch {
+            const confirm = document.querySelector('#confirm_checkout');
+            if (confirm) {
+                confirm.dataset.cartError = '1';
+                confirm.disabled = true;
+            }
+            Alpine.store('alerts').show('danger', 'Не удалось обновить корзину после изменений в другой вкладке. Обновите страницу.');
+        } finally {
+            this.busy = false;
+            controls.forEach((control) => { if (control.id !== 'confirm_checkout' || !control.hasAttribute('data-cart-error')) control.disabled = false; });
+            if (this.syncPending) this.syncFromServer();
         }
     },
 
@@ -105,18 +157,25 @@ export default {
         const response = await fetch(window.location.pathname, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
         if (!response.ok) throw new Error('Checkout refresh failed');
         const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const warnings = [...page.querySelectorAll('[data-cart-unavailable], [data-cart-price-changed]')]
+            .map((element) => element.textContent.trim());
+        if (warnings.length) Alpine.store('alerts').show('warning', warnings.join(' '));
         const updated = page.querySelector('#unicart');
         if (!updated) {
             const wrapper = document.querySelector('.unicheckout__wrapper');
             if (wrapper) wrapper.style.display = 'none';
             const notice = document.createElement('div');
             notice.className = 'alert alert-info';
+            notice.dataset.cartEmpty = '1';
             notice.textContent = 'Корзина пуста. Добавьте товар, чтобы оформить заказ.';
             document.querySelector('#content .uni-wrapper')?.prepend(notice);
             return;
         }
         const current = document.querySelector('#unicart');
         current.replaceWith(updated);
+        const wrapper = document.querySelector('.unicheckout__wrapper');
+        if (wrapper) wrapper.style.display = '';
+        document.querySelector('[data-cart-empty]')?.remove();
         const confirm = document.querySelector('#confirm_checkout');
         if (confirm) delete confirm.dataset.cartError;
         for (const selector of ['.product-total .unicheckout-sticky__total-text', '.sub_total .unicheckout-sticky__total-text', '.total .unicheckout-sticky__total-text']) {

@@ -70,6 +70,17 @@ class CartCheckoutTest extends TestCase
             ->assertJsonPath('html', fn (string $html): bool => str_contains($html, 'Ваша корзина пуста!'));
     }
 
+    public function test_cart_state_returns_current_contents_without_caching(): void
+    {
+        $this->post(route('cart.store', $this->battery), ['quantity' => 2]);
+
+        $this->getJson(route('cart.state'))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertJsonPath('count', 2)
+            ->assertJsonPath('products', [$this->battery->id]);
+    }
+
     public function test_header_contains_mini_cart(): void
     {
         $this->post(route('cart.store', $this->battery));
@@ -116,6 +127,37 @@ class CartCheckoutTest extends TestCase
             ->assertDontSee(route('product.show', $this->battery), false)
             ->assertSeeInOrder(['title="Корзина"', '>0</span>'], false);
         $this->post(route('cart.store', $this->battery))->assertNotFound();
+    }
+
+    public function test_checkout_requires_review_if_a_product_becomes_unavailable(): void
+    {
+        $this->post(route('cart.store', $this->battery));
+        $this->post(route('cart.store', $this->terminal));
+        $this->battery->update(['status' => false]);
+
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])
+            ->assertRedirect(route('cart.index'))
+            ->assertSessionHas('status', 'Некоторые товары больше недоступны. Проверьте состав корзины перед оформлением.');
+
+        $this->assertDatabaseCount('orders', 0);
+        $this->get(route('cart.index'))->assertSee('Некоторые товары из корзины больше недоступны');
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
+        $this->assertDatabaseCount('orders', 1);
+    }
+
+    public function test_checkout_requires_review_when_the_price_changes(): void
+    {
+        $this->post(route('cart.store', $this->battery));
+        $this->get(route('cart.index'))->assertOk();
+        $this->battery->update(['price' => 8000]);
+
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])
+            ->assertRedirect(route('cart.index'))
+            ->assertSessionHas('status', 'Цена товара изменилась. Проверьте сумму заказа перед оформлением.');
+        $this->assertDatabaseCount('orders', 0);
+        $this->get(route('cart.index'))->assertSee('Цена товара изменилась')->assertSee('8000р.');
+        $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
+        $this->assertEquals(8000, Order::query()->sole()->total);
     }
 
     public function test_checkout_creates_order_with_server_side_prices(): void

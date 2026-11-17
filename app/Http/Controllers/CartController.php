@@ -13,9 +13,20 @@ use Illuminate\View\View;
 
 class CartController extends Controller
 {
+    public function state(Cart $cart): JsonResponse
+    {
+        return $this->miniCart($cart)->header('Cache-Control', 'no-store');
+    }
+
     public function index(Cart $cart): View
     {
         $lines = $cart->lines();
+        $unavailableCount = $cart->unavailableCount($lines);
+        $priceChanged = $cart->hasPriceChanges($lines);
+        if ($unavailableCount > 0) {
+            $cart->discardUnavailable($lines);
+        }
+        $cart->rememberPrices($lines);
 
         SEOTools::setTitle('Оформление заказа');
 
@@ -23,6 +34,8 @@ class CartController extends Controller
             'lines' => $lines,
             'total' => $cart->total($lines),
             'isPickupOnly' => $cart->isPickupOnly($lines),
+            'unavailableCount' => $unavailableCount,
+            'priceChanged' => $priceChanged,
         ]);
     }
 

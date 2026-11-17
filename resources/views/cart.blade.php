@@ -28,6 +28,12 @@
 
         <div id="content">
             <div class="uni-wrapper">
+                @if ($unavailableCount > 0)
+                    <div class="alert alert-warning" role="alert" data-cart-unavailable>Некоторые товары из корзины больше недоступны и не будут включены в заказ.</div>
+                @endif
+                @if ($priceChanged)
+                    <div class="alert alert-warning" role="alert" data-cart-price-changed>Цена товара изменилась. Проверьте сумму заказа перед оформлением.</div>
+                @endif
                 @if (session('status'))
                     <div class="alert alert-success">{{ session('status') }}</div>
                 @endif

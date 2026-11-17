@@ -7,8 +7,8 @@ use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Collection;
 
 /**
- * Корзина в сессии: только id товара, количество и галочка трейд-ина.
- * Цены всегда берутся из товара — подменить их через сессию нельзя.
+ * Корзина в сессии хранит количество, трейд-ин и снимок цен для предупреждения.
+ * Сумма заказа всегда рассчитывается по текущим данным товара.
  */
 class Cart
 {
@@ -26,6 +26,7 @@ class Cart
         $items[$product->id] = [
             'quantity' => $this->clampQuantity($current + $quantity),
             'trade_in' => $tradeIn && $product->hasTradeIn(),
+            'prices' => $items[$product->id]['prices'] ?? $this->prices($product),
         ];
 
         $this->save($items);
@@ -48,6 +49,7 @@ class Cart
         $items[$product->id] = [
             'quantity' => $this->clampQuantity($quantity),
             'trade_in' => $tradeIn && $product->hasTradeIn(),
+            'prices' => $items[$product->id]['prices'] ?? $this->prices($product),
         ];
 
         $this->save($items);
@@ -68,7 +70,7 @@ class Cart
 
     /**
      * Строки корзины. Товары, которые сняли с продажи или удалили, пока они
-     * лежали в корзине, молча выпадают.
+     * лежали в корзине, не включаются в строки.
      *
      * @return Collection<int, CartLine>
      */
@@ -109,6 +111,62 @@ class Cart
     }
 
     /**
+     * @param  Collection<int, CartLine>  $lines
+     */
+    public function unavailableCount(Collection $lines): int
+    {
+        return max(0, count($this->rawItems()) - $lines->count());
+    }
+
+    /**
+     * @param  Collection<int, CartLine>  $lines
+     */
+    public function discardUnavailable(Collection $lines): void
+    {
+        $ids = $lines->mapWithKeys(fn (CartLine $line): array => [$line->product->id => true])->all();
+        $this->save(array_intersect_key($this->rawItems(), $ids));
+    }
+
+    /**
+     * @param  Collection<int, CartLine>  $lines
+     */
+    public function hasPriceChanges(Collection $lines): bool
+    {
+        $items = $this->rawItems();
+
+        foreach ($lines as $line) {
+            $previous = $items[$line->product->id]['prices'] ?? null;
+            $key = $line->tradeIn ? 'trade_in' : 'regular';
+            if (is_array($previous) && isset($previous[$key]) && $previous[$key] !== $this->prices($line->product)[$key]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  Collection<int, CartLine>  $lines
+     */
+    public function rememberPrices(Collection $lines): void
+    {
+        $items = $this->rawItems();
+        foreach ($lines as $line) {
+            $items[$line->product->id]['prices'] = $this->prices($line->product);
+        }
+        $this->save($items);
+    }
+
+    /** @return array{regular: string, trade_in: string} */
+    private function prices(Product $product): array
+    {
+        return [
+            'regular' => number_format($product->priceFor(false), 2, '.', ''),
+            'trade_in' => number_format($product->priceFor(true), 2, '.', ''),
+        ];
+    }
+
+    /**
      * @param  Collection<int, CartLine>|null  $lines
      */
     public function total(?Collection $lines = null): float
@@ -127,7 +185,7 @@ class Cart
     }
 
     /**
-     * @return array<int, array{quantity: int, trade_in: bool}>
+     * @return array<int, array{quantity: int, trade_in: bool, prices?: array{regular: string, trade_in: string}}>
      */
     private function rawItems(): array
     {
@@ -137,7 +195,7 @@ class Cart
     }
 
     /**
-     * @param  array<int, array{quantity: int, trade_in: bool}>  $items
+     * @param  array<int, array{quantity: int, trade_in: bool, prices?: array{regular: string, trade_in: string}}>  $items
      */
     private function save(array $items): void
     {
