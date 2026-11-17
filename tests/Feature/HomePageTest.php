@@ -26,9 +26,25 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertSee('catalog/banners/trade-in.png', false)
             ->assertSee('href="'.url('/page/trade-in').'"', false)
-            ->assertSee('aria-label="Условия трейд-ин"', false)
+            ->assertSee('alt="Условия трейд-ин"', false)
+            // Баннер без подписи и без ссылки получает alt по названию магазина.
+            ->assertSee('catalog/banners/delivery.png" alt="Старт-Стоп"', false)
             ->assertSee('catalog/banners/delivery.png', false)
             ->assertDontSee('catalog/banners/old.png', false);
+    }
+
+    public function test_first_banner_is_preloaded_and_not_lazy(): void
+    {
+        Banner::query()->create(['position' => BannerPosition::HomeSlider, 'image' => 'catalog/banners/first.png']);
+        Banner::query()->create(['position' => BannerPosition::HomeSlider, 'image' => 'catalog/banners/second.png']);
+
+        $html = $this->get(route('home'))->assertOk()
+            ->assertSee('<link rel="preload" as="image" href="'.url('/storage/catalog/banners/first.png').'" fetchpriority="high">', false)
+            ->assertDontSee('rel="preload" as="image" href="'.url('/storage/catalog/banners/second.png'), false)
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('#first\.png"[^>]*fetchpriority="high"#', $html);
+        $this->assertMatchesRegularExpression('#second\.png"[^>]*loading="lazy"#', $html);
     }
 
     public function test_jivo_chat_widget_is_configurable(): void

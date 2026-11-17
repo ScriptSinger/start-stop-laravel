@@ -32,6 +32,19 @@ class CarLandingCatalog
     private const VERSION_KEY = 'car-landings:version';
 
     /**
+     * Ссылки со страницы товара на посадочные. Ключ без версии: правка подбора
+     * в админке не должна на сутки убирать блок со всех товаров, а устаревшая
+     * ссылка живёт не дольше ночного пересчёта.
+     */
+    private const PRODUCT_LINKS_KEY = 'car-landings:product-links:';
+
+    private const PRODUCT_LINKS_HOURS = 48;
+
+    private const PRODUCT_LINKS_BRANDS_WITH_MODELS = 6;
+
+    private const PRODUCT_LINKS_MODELS_PER_BRAND = 2;
+
+    /**
      * @var array<string, list<int>>
      */
     private array $productIdsCache = [];
@@ -145,14 +158,84 @@ class CarLandingCatalog
     {
         $this->invalidate();
 
-        return $this->brands()->sum(function (CarBrand $brand): int {
-            $pages = $this->models($brand)->sum(fn (CarModel $model): int => 1 + $this->generations($model)->count());
+        // товар → марка → сколько моделей ему подходит и первые из них
+        $links = [];
+
+        $pages = $this->brands()->sum(function (CarBrand $brand) use (&$links): int {
+            $models = $this->models($brand);
+
+            foreach ($models as $model) {
+                foreach ($this->productIds($model) as $productId) {
+                    $entry = $links[$productId][$brand->slug] ?? ['name' => $brand->name, 'count' => 0, 'models' => []];
+                    $entry['count']++;
+
+                    if (count($entry['models']) < self::PRODUCT_LINKS_MODELS_PER_BRAND) {
+                        $entry['models'][] = ['slug' => $model->slug, 'name' => $model->fullName()];
+                    }
+
+                    $links[$productId][$brand->slug] = $entry;
+                }
+            }
+
+            $pages = $models->sum(fn (CarModel $model): int => 1 + $this->generations($model)->count());
 
             // Всё уже в кеше — в памяти процесса держать незачем.
             $this->releaseMemory();
 
             return $pages;
         });
+
+        foreach ($links as $productId => $byBrand) {
+            Cache::put(self::PRODUCT_LINKS_KEY.$productId, $this->productLinks($byBrand), now()->addHours(self::PRODUCT_LINKS_HOURS));
+        }
+
+        return $pages;
+    }
+
+    /**
+     * Марки и модели, которым подходит товар, — для блока «Подходит для
+     * автомобилей» на его странице. Берёт готовое из кеша (его наполняет
+     * refresh()): считать это на лету слишком долго. Нет в кеше — блока нет.
+     *
+     * @return array{brands: list<array{name: string, url: string}>, models: list<array{name: string, url: string}>}
+     */
+    public function linksForProduct(int $productId): array
+    {
+        $links = Cache::get(self::PRODUCT_LINKS_KEY.$productId);
+
+        if (! is_array($links)) {
+            return ['brands' => [], 'models' => []];
+        }
+
+        return [
+            'brands' => array_map(fn (array $brand): array => ['name' => $brand['name'], 'url' => route('car-landing.brand', $brand['slug'])], $links['brands']),
+            'models' => array_map(fn (array $model): array => ['name' => $model['name'], 'url' => route('car-landing.model', [$model['brand'], $model['slug']])], $links['models']),
+        ];
+    }
+
+    /**
+     * Марки — все, по убыванию числа подходящих моделей. Модели — по нескольку
+     * у самых «ёмких» марок: ссылками на все модели страница бы не обошлась.
+     *
+     * @param  array<string, array{name: string, count: int, models: list<array{slug: string, name: string}>}>  $byBrand
+     * @return array{brands: list<array{name: string, slug: string}>, models: list<array{name: string, slug: string, brand: string}>}
+     */
+    private function productLinks(array $byBrand): array
+    {
+        uasort($byBrand, fn (array $a, array $b): int => $b['count'] <=> $a['count']);
+
+        $models = [];
+
+        foreach (array_slice($byBrand, 0, self::PRODUCT_LINKS_BRANDS_WITH_MODELS, true) as $brandSlug => $entry) {
+            foreach ($entry['models'] as $model) {
+                $models[] = ['name' => $model['name'], 'slug' => $model['slug'], 'brand' => (string) $brandSlug];
+            }
+        }
+
+        return [
+            'brands' => array_map(fn (string $slug, array $entry): array => ['name' => $entry['name'], 'slug' => $slug], array_keys($byBrand), $byBrand),
+            'models' => $models,
+        ];
     }
 
     /**

@@ -4,6 +4,16 @@
     @vite('resources/css/storefront/pages/product.css')
 @endpush
 
+{{-- Цена в превью ссылки (Open Graph product): у SEOTools для product:* метода нет. --}}
+@push('page-meta')
+    <meta property="product:price:amount" content="{{ number_format($product->displayPrice(), 2, '.', '') }}">
+    <meta property="product:price:currency" content="RUB">
+    @if ($product->image)
+        {{-- Главное фото — самый крупный элемент страницы: грузим его раньше стилей и скриптов. --}}
+        <link rel="preload" as="image" href="{{ App\Services\Catalog\ProductMedia::url($product->image) }}" fetchpriority="high">
+    @endif
+@endpush
+
 {{-- Разметка — 1:1 с product/product.twig темы UniShop2 старого сайта. --}}
 @php($category = $product->categories->first())
 @php($image = App\Services\Catalog\ProductMedia::url($product->image ?: 'no_image.png'))
@@ -56,7 +66,7 @@
                                         @endif
                                         <div class="product-page__image-main-carousel">
                                             <button type="button" class="product-image-zoom" aria-label="Увеличить фотографию товара" @click="$refs.photoDialog.showModal()">
-                                                <img src="{{ $image }}" :src="image" alt="{{ $heading }}" title="Увеличить фотографию" width="500" height="400" class="product-page__image-main-img img-responsive" />
+                                                <img src="{{ $image }}" :src="image" alt="{{ $heading }}" title="Увеличить фотографию" width="500" height="400" fetchpriority="high" class="product-page__image-main-img img-responsive" />
                                             </button>
                                             <dialog x-ref="photoDialog" class="product-image-dialog" aria-label="Фотография товара" @click.self="$el.close()">
                                                 <button type="button" class="product-image-dialog__close" aria-label="Закрыть фотографию" @click="$refs.photoDialog.close()">&times;</button>
@@ -206,6 +216,20 @@
                         </div>
                     </div>
                 </div>
+
+                @if ($carLinks['brands'] !== [])
+                    <section class="car-landing__section product-page__fits">
+                        <h2 class="car-landing__title">Подходит для автомобилей</h2>
+                        @if ($carLinks['models'] !== [])
+                            <ul class="car-landing__chips">
+                                @foreach ($carLinks['models'] as $model)
+                                    <li><a href="{{ $model['url'] }}" class="car-landing__chip">{{ $model['name'] }}</a></li>
+                                @endforeach
+                            </ul>
+                        @endif
+                        <p class="product-page__fits-brands">Все марки: @foreach ($carLinks['brands'] as $brand)<a href="{{ $brand['url'] }}">{{ $brand['name'] }}</a>@unless ($loop->last), @endunless @endforeach</p>
+                    </section>
+                @endif
 
                 @if ($similarProducts->isNotEmpty())
                     <div class="heading">Похожие товары</div>

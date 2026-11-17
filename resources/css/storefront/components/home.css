@@ -20,9 +20,10 @@
 .iconblock-8 h3 {transition: all 0.7s ease 0s; color: #000; font-size: 18px; margin: 10px 0; font-weight: 500}
 .iconblock-8:hover h3 {color: #c82a00}
 
-/* «Обратный звонок». */
+/* «Обратный звонок»: баннер без серой подложки модуля — рамка вокруг него лишняя. */
+.home-page .html-module.home-callback {padding: 0; background: none}
 .imageblock .header-phones__callback {display: inline-block; background: #c82a00; border: none; border-radius: 12px; color: white !important; text-decoration: none; margin-left: 30px; padding: 6px 12px}
-.imageblock {border-radius: 25px; background-image: url('../../../images/home/callback.jpg'); background-size: cover; background-repeat: no-repeat; background-position: 50% 30%}
+.imageblock {border-radius: 25px; background-image: url('../../../images/home/callback.webp'); background-size: cover; background-repeat: no-repeat; background-position: 50% 30%}
 .blocktxt {background: rgb(0, 0, 0, 0.7); padding: 20px; border-radius: 25px; color: #fff !important}
 .imageblock h3 {transition: all 0.7s ease 0s; color: #fff; font-size: 36px; margin: 10px 0; font-weight: 500}
 .imageblock:hover h3 {color: #c82a00}

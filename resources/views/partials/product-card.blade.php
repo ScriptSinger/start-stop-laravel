@@ -27,7 +27,7 @@
             </div>
         @endif
         <a href="{{ route('product.show', $product) }}" title="{{ $product->name }}">
-            <img src="{{ $image }}" @if ($image !== $originalImage) data-original-src="{{ $originalImage }}" onerror="if(this.dataset.originalSrc){this.src=this.dataset.originalSrc;delete this.dataset.originalSrc}" @endif alt="{{ $product->name }}" class="img-responsive" width="220" height="230" loading="lazy" />
+            <img src="{{ $image }}" @if ($image !== $originalImage) data-original-src="{{ $originalImage }}" onerror="if(this.dataset.originalSrc){this.src=this.dataset.originalSrc;delete this.dataset.originalSrc}" @endif alt="{{ $product->name }}" class="img-responsive" width="220" height="230" @if ($eager ?? false) fetchpriority="high" @else loading="lazy" @endif />
         </a>
     </div>
     <div class="product-thumb__caption">

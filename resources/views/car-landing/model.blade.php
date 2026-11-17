@@ -85,5 +85,15 @@
                 </ul>
             </section>
         @endif
+
+        <section class="car-landing__section">
+            <h2 class="car-landing__title">Другие аккумуляторы в каталоге</h2>
+            <ul class="car-landing__chips">
+                @if ($batteryCategory)
+                    <li><a href="{{ route('category.show', $batteryCategory) }}" class="car-landing__chip">{{ $batteryCategory->name }}</a></li>
+                @endif
+                <li><a href="{{ route('battery-selection') }}" class="car-landing__chip">Подбор по параметрам</a></li>
+            </ul>
+        </section>
     </div>
 @endsection

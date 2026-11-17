@@ -4,7 +4,7 @@
     <div class="products-block row row-flex" x-ref="products">
         @foreach ($products as $product)
             <div class="product-layout product-grid grid-view {{ $columnClass }}">
-                @include('partials.product-card', ['product' => $product])
+                @include('partials.product-card', ['product' => $product, 'eager' => $loop->index < 4])
             </div>
         @endforeach
     </div>

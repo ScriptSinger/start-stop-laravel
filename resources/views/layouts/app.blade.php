@@ -8,6 +8,7 @@
     {{-- title, description, canonical, Open Graph и JSON-LD задаёт контроллер
          страницы через SEOTools (config/seotools.php). --}}
     {!! Artesaos\SEOTools\Facades\SEOTools::generate() !!}
+    @stack('page-meta')
     <meta name="theme-color" content="{{ config('shop.theme_color') }}" />
     <meta name="format-detection" content="telephone=no" />
     <script>document.documentElement.classList.toggle('cookie-notice-accepted', document.cookie.split(';').some(cookie => cookie.trim().startsWith('notificationOffTime=')));</script>

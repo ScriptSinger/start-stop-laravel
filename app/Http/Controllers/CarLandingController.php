@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CatalogFilterRequest;
 use App\Models\BatteryFitment;
+use App\Models\Category;
 use App\Models\Product;
 use App\Services\BatterySelection;
 use App\Services\CarLanding\CarBrand;
@@ -109,6 +110,7 @@ class CarLandingController extends Controller
             'otherModels' => $catalog->models($model->brand)->reject(fn (CarModel $other): bool => $other->slug === $model->slug),
             'sort' => $request->sort(),
             'perPage' => $request->perPage(),
+            'batteryCategory' => Category::query()->where('status', true)->find(config('shop.battery_fitment.category_ids')[0] ?? null),
         ]);
     }
 

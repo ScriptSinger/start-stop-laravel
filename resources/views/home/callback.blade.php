@@ -1,5 +1,5 @@
 {{-- Модуль html «Обратный звонок» старого сайта (oc_module 60): HTML и стиль как есть. --}}
-<div class="html-module">
+<div class="html-module home-callback">
     <div class="imageblock">
         <div class="blocktxt">
             <h3>Не знаете какой аккумулятор выбрать?</h3>

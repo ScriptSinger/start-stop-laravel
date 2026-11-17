@@ -67,6 +67,33 @@ class CarLandingTest extends TestCase
             ->assertSee('<a href="'.route('car-landing.index').'">По марке авто</a>', false);
     }
 
+    public function test_product_page_links_to_car_landings_after_nightly_refresh(): void
+    {
+        $product = Product::query()->where('name', 'TITAN 60Ah О.П.')->sole();
+
+        // До пересчёта блока нет: считать «товар → автомобили» на лету слишком долго.
+        $this->get(route('product.show', $product))->assertOk()->assertDontSee('Подходит для автомобилей');
+
+        $this->artisan('car-landings:refresh')->assertSuccessful();
+
+        $this->get(route('product.show', $product))
+            ->assertOk()
+            ->assertSee('Подходит для автомобилей')
+            ->assertSee('<a href="'.route('car-landing.brand', 'lada').'">Lada</a>', false)
+            ->assertSee('<a href="'.route('car-landing.model', ['lada', 'vesta']).'" class="car-landing__chip">Lada Vesta</a>', false)
+            // У 2107 полярность прямая, а у этой батареи обратная — страницы 2107 в блоке нет.
+            ->assertDontSee(route('car-landing.model', ['lada', '2107']), false);
+    }
+
+    public function test_model_page_links_to_battery_category_and_selection(): void
+    {
+        $this->get(route('car-landing.model', ['lada', 'vesta']))
+            ->assertOk()
+            ->assertSee('Другие аккумуляторы в каталоге')
+            ->assertSee('<a href="'.route('category.show', $this->batteries).'" class="car-landing__chip">Аккумуляторы</a>', false)
+            ->assertSee('<a href="'.route('battery-selection').'" class="car-landing__chip">Подбор по параметрам</a>', false);
+    }
+
     public function test_landing_variants_point_canonical_to_the_clean_address(): void
     {
         $this->get(route('car-landing.model', ['lada', 'vesta', 'sort' => 'price_asc', 'limit' => 50]))

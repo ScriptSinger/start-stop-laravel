@@ -32,7 +32,7 @@ class SeoMarkupTest extends TestCase
 
     public function test_opening_hours_are_shown_on_contacts_and_footer_and_in_markup(): void
     {
-        $this->get(route('contact'))->assertSee('Ежедневно: 10:00–20:00');
+        $this->get(route('contact'))->assertSee('Режим работы')->assertSee('Ежедневно: 10:00–20:00');
         $this->get(route('home'))->assertSee('Ежедневно: 10:00–20:00');
         $this->assertSame(['Mo-Su 10:00-20:00'], $this->structuredData(route('home'))[0]['openingHours']);
     }
@@ -55,6 +55,21 @@ class SeoMarkupTest extends TestCase
         $this->assertStringStartsWith('ZUBR 60 Ah — купить в Уфе за 7 000 ₽.', $data['description']);
         $this->assertSame('https://schema.org/NewCondition', $data['offers']['itemCondition']);
         $this->assertSame(now()->addMonth()->toDateString(), $data['offers']['priceValidUntil']);
+    }
+
+    public function test_open_graph_has_locale_site_name_and_default_image(): void
+    {
+        $this->get(route('home'))
+            ->assertSee('<meta property="og:locale" content="ru_RU">', false)
+            ->assertSee('<meta property="og:site_name" content="Старт-Стоп">', false)
+            ->assertSee('<meta property="og:image" content="'.url('/storage/'.config('shop.logo')).'">', false);
+    }
+
+    public function test_product_open_graph_has_price(): void
+    {
+        $this->get(route('product.show', $this->product('ZUBR 60 Ah')))
+            ->assertSee('<meta property="product:price:amount" content="7000.00">', false)
+            ->assertSee('<meta property="product:price:currency" content="RUB">', false);
     }
 
     public function test_product_without_photo_has_no_image_in_data(): void

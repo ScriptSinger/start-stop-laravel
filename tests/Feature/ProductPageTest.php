@@ -62,6 +62,17 @@ class ProductPageTest extends TestCase
         $this->assertSame(['Старт-Стоп', 'Аккумуляторы', 'ZUBR 60 Ah'], array_column($breadcrumbs['itemListElement'], 'name'));
     }
 
+    public function test_main_photo_is_preloaded_with_high_priority(): void
+    {
+        $product = $this->product(10, 'ZUBR 60 Ah', ['image' => 'catalog/zubr.jpg']);
+
+        $this->get(route('product.show', $product))
+            ->assertSee('<link rel="preload" as="image" href="'.url('/storage/catalog/zubr.jpg').'" fetchpriority="high">', false)
+            ->assertSee('fetchpriority="high" class="product-page__image-main-img', false);
+
+        $this->get(route('product.show', $this->product(11, 'Без фото')))->assertDontSee('rel="preload"', false);
+    }
+
     public function test_inactive_product_page_is_not_found(): void
     {
         $product = $this->product(10, 'Архивный', ['status' => false]);

@@ -49,4 +49,25 @@ class Banner extends Model
 
         return str_starts_with($this->url, 'http') ? $this->url : url($this->url);
     }
+
+    /**
+     * Текст для alt картинки (и имя ссылки для скринридера): подпись из админки,
+     * иначе — по адресу, куда ведёт баннер. Пустой alt поисковик не берёт
+     * в «Картинки».
+     */
+    public function label(): string
+    {
+        $title = trim((string) $this->title);
+
+        if ($title !== '') {
+            return $title;
+        }
+
+        return match (parse_url((string) $this->href(), PHP_URL_PATH)) {
+            '/page/trade-in' => 'Условия трейд-ин',
+            '/page/dostavka-i-oplata' => 'Доставка и оплата',
+            '/category/akkumulyatori' => 'Каталог аккумуляторов',
+            default => $this->href() === null ? config('shop.name') : 'Подробнее о предложении',
+        };
+    }
 }

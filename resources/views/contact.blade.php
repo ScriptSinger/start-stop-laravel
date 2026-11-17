@@ -26,11 +26,16 @@
                                     <div class="contacts__address">
                                         <div class="contacts__heading">Адрес</div>
                                         <ul class="contact-list__address list-unstyled">
-                                            <li class="contact-list__item">{{ config('shop.address') }}</li>
-                                            @foreach (config('shop.opening_hours') as $hours)
-                                                <li class="contact-list__item"><i class="contact-list__icon far fa-clock fa-fw"></i><span>{{ $hours['days'] }}: {{ $hours['from'] }}–{{ $hours['to'] }}</span></li>
-                                            @endforeach
+                                            <li class="contact-list__item"><i class="contact-list__icon fas fa-map-marker-alt fa-fw"></i><span>{{ config('shop.address') }}</span></li>
                                         </ul>
+                                        @if (config('shop.opening_hours') !== [])
+                                            <div class="contacts__heading">Режим работы</div>
+                                            <ul class="contact-list__open list-unstyled">
+                                                @foreach (config('shop.opening_hours') as $hours)
+                                                    <li class="contact-list__item"><i class="contact-list__icon far fa-clock fa-fw"></i><span>{{ $hours['days'] }}: {{ $hours['from'] }}–{{ $hours['to'] }}</span></li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
                                     </div>
                                     <div class="contacts__contacts">
                                         <div class="contacts__heading">Контакты</div>

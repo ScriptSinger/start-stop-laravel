@@ -6,6 +6,13 @@
     @vite('resources/css/storefront/pages/home.css')
 @endpush
 
+{{-- Первый баннер — самая крупная картинка экрана: грузим его раньше стилей и скриптов. --}}
+@if ($sliderBanners->isNotEmpty())
+    @push('page-meta')
+        <link rel="preload" as="image" href="{{ $sliderBanners->first()->imageUrl() }}" fetchpriority="high">
+    @endpush
+@endif
+
 {{-- Сетка — как common/home.twig темы UniShop2: слева пустая колонка (её
      занимает раскрытое меню категорий из шапки), справа баннеры (content-top),
      ниже на всю ширину — блоки главной (content-bottom). --}}
