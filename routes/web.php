@@ -11,6 +11,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegacyUrlController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductQuestionController;
@@ -91,3 +92,6 @@ Route::prefix('battery-filter')->name('battery-filter.')->group(function () {
     Route::get('/engines', [BatteryFilterController::class, 'getEngines'])->name('engines');
     Route::get('/result', [BatteryFilterController::class, 'getResult'])->name('result');
 });
+
+// Адреса старого сайта (OpenCart) — 301 на новые; всё остальное — 404.
+Route::fallback(LegacyUrlController::class);
