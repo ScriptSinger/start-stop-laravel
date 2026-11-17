@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Page;
 use App\Models\Product;
@@ -12,13 +13,16 @@ use App\Services\CarLanding\CarModel;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\SitemapIndex;
+use Spatie\Sitemap\Tags\Sitemap as SitemapTag;
 use Spatie\Sitemap\Tags\Url;
 
-#[Signature('sitemap:generate {--path= : Куда записать файл (по умолчанию public/sitemap.xml)}')]
-#[Description('Собрать sitemap.xml из базы: только включённые товары, страницы и разделы с товарами')]
+#[Signature('sitemap:generate {--path= : Куда записать индекс (по умолчанию public/sitemap.xml); файлы по типам лягут рядом}')]
+#[Description('Собрать sitemap.xml из базы: индекс и файлы по типам — только включённые товары, страницы и разделы с товарами')]
 class GenerateSitemap extends Command
 {
     /**
@@ -26,19 +30,67 @@ class GenerateSitemap extends Command
      * поэтому выключенный товар уходит из неё не позже чем через сутки.
      * На старом сайте файл выгрузили один раз в 2024 году — к 2026-му
      * половина адресов в нём отдавала 404.
+     *
+     * sitemap.xml — индекс, сами адреса лежат в sitemap-categories.xml,
+     * sitemap-products.xml, sitemap-pages.xml и sitemap-cars.xml: так в
+     * Вебмастере и Search Console видно, какой тип страниц не индексируется.
      */
     public function handle(CarLandingCatalog $carLandings): int
     {
-        $sitemap = Sitemap::create()
-            ->add(Url::create(route('home')))
-            ->add(Url::create(route('contact')));
+        $path = $this->option('path') ?: public_path('sitemap.xml');
+        $directory = dirname($path);
 
+        // Дата свежего товара — «изменение» главной, подбора и посадочных по авто:
+        // их содержимое (цены, наличие, список аккумуляторов) собирается из товаров.
+        $catalogChangedAt = $this->catalogChangedAt();
+
+        [$categorySitemap, $categories] = $this->categorySitemap();
+        [$productSitemap, $products] = $this->productSitemap();
+        [$pageSitemap, $pages] = $this->pageSitemap($catalogChangedAt);
+        [$carSitemap, $carPages] = $this->carSitemap($carLandings, $catalogChangedAt);
+
+        $index = SitemapIndex::create();
+
+        foreach ([
+            'sitemap-categories.xml' => $categorySitemap,
+            'sitemap-products.xml' => $productSitemap,
+            'sitemap-pages.xml' => $pageSitemap,
+            'sitemap-cars.xml' => $carSitemap,
+        ] as $file => $sitemap) {
+            $sitemap->writeToFile("{$directory}/{$file}");
+            $index->add(SitemapTag::create(url($file))->setLastModificationDate(now()));
+        }
+
+        $index->writeToFile($path);
+
+        $this->info("sitemap.xml: разделов {$categories}, товаров {$products}, страниц {$pages}, подбор по авто {$carPages} → {$path}");
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @return array{Sitemap, int}
+     */
+    private function categorySitemap(): array
+    {
+        $sitemap = Sitemap::create();
         $categories = $this->categoriesWithProducts();
+
         $categories->each(fn (Category $category) => $sitemap->add(
             Url::create(route('category.show', $category))->setLastModificationDate($category->updated_at),
         ));
 
+        return [$sitemap, $categories->count()];
+    }
+
+    /**
+     * @return array{Sitemap, int}
+     */
+    private function productSitemap(): array
+    {
+        $sitemap = Sitemap::create();
         $products = 0;
+
         Product::query()
             ->where('status', true)
             ->select(['id', 'slug', 'updated_at'])
@@ -50,33 +102,63 @@ class GenerateSitemap extends Command
                 $products += $chunk->count();
             });
 
+        return [$sitemap, $products];
+    }
+
+    /**
+     * Главная, контакты, страница для организаций и инфостраницы.
+     *
+     * @return array{Sitemap, int}
+     */
+    private function pageSitemap(?Carbon $catalogChangedAt): array
+    {
+        $sitemap = Sitemap::create()
+            ->add($this->url(route('home'), $catalogChangedAt))
+            ->add(Url::create(route('contact')))
+            ->add(Url::create(route('business')));
+
         $pages = Page::query()->where('status', true)->orderBy('sort_order')->get();
         $pages->each(fn (Page $page) => $sitemap->add(
             Url::create(route('page.show', $page))->setLastModificationDate($page->updated_at),
         ));
 
-        // Посадочные «Аккумулятор для …» — только включённые марки и модели с товарами.
-        $carPages = 1;
-        $sitemap->add(Url::create(route('car-landing.index')));
-        $carLandings->brands()->each(function (CarBrand $brand) use ($sitemap, $carLandings, &$carPages): void {
+        return [$sitemap, $pages->count() + 3];
+    }
+
+    /**
+     * Подбор АКБ и посадочные «Аккумулятор для …» — только включённые марки
+     * и модели с товарами.
+     *
+     * @return array{Sitemap, int}
+     */
+    private function carSitemap(CarLandingCatalog $carLandings, ?Carbon $catalogChangedAt): array
+    {
+        $changedAt = $this->latest($catalogChangedAt, BatteryFitment::query()->max('updated_at'));
+
+        $sitemap = Sitemap::create()
+            ->add($this->url(route('battery-selection'), $changedAt))
+            ->add($this->url(route('car-landing.index'), $changedAt));
+        $carPages = 2;
+
+        $carLandings->brands()->each(function (CarBrand $brand) use ($sitemap, $carLandings, $changedAt, &$carPages): void {
             $models = $carLandings->models($brand);
 
             if ($models->isEmpty()) {
                 return;
             }
 
-            $sitemap->add(Url::create(route('car-landing.brand', $brand->slug)));
+            $sitemap->add($this->url(route('car-landing.brand', $brand->slug), $changedAt));
             $carPages++;
 
-            $models->each(function (CarModel $model) use ($sitemap, $carLandings, &$carPages): void {
-                $sitemap->add(Url::create($model->url()));
+            $models->each(function (CarModel $model) use ($sitemap, $carLandings, $changedAt, &$carPages): void {
+                $sitemap->add($this->url($model->url(), $changedAt));
                 $carPages++;
 
                 // Поколения — только со своим набором аккумуляторов, иначе это копии страницы модели.
                 $carLandings->generations($model)
                     ->filter(fn (CarGeneration $generation): bool => $carLandings->hasOwnProducts($generation))
-                    ->each(function (CarGeneration $generation) use ($sitemap, &$carPages): void {
-                        $sitemap->add(Url::create($generation->url()));
+                    ->each(function (CarGeneration $generation) use ($sitemap, $changedAt, &$carPages): void {
+                        $sitemap->add($this->url($generation->url(), $changedAt));
                         $carPages++;
                     });
             });
@@ -84,12 +166,26 @@ class GenerateSitemap extends Command
             $carLandings->releaseMemory();
         });
 
-        $path = $this->option('path') ?: public_path('sitemap.xml');
-        $sitemap->writeToFile($path);
+        return [$sitemap, $carPages];
+    }
 
-        $this->info("sitemap.xml: разделов {$categories->count()}, товаров {$products}, страниц {$pages->count()}, подбор по авто {$carPages} → {$path}");
+    private function url(string $location, ?Carbon $changedAt): Url
+    {
+        $url = Url::create($location);
 
-        return self::SUCCESS;
+        return $changedAt === null ? $url : $url->setLastModificationDate($changedAt);
+    }
+
+    private function catalogChangedAt(): ?Carbon
+    {
+        return $this->latest(Product::query()->where('status', true)->max('updated_at'));
+    }
+
+    private function latest(mixed ...$dates): ?Carbon
+    {
+        $dates = array_map(fn (mixed $date): ?Carbon => $date === null ? null : Carbon::parse($date), $dates);
+
+        return collect($dates)->filter()->max();
     }
 
     /**

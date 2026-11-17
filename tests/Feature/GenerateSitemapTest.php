@@ -25,7 +25,7 @@ class GenerateSitemapTest extends TestCase
 
     protected function tearDown(): void
     {
-        @unlink($this->path);
+        array_map('unlink', glob(dirname($this->path).'/sitemap*.xml'));
 
         parent::tearDown();
     }
@@ -44,7 +44,7 @@ class GenerateSitemapTest extends TestCase
 
         $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
 
-        $xml = file_get_contents($this->path);
+        $xml = $this->allSitemaps();
 
         $this->assertStringContainsString('<loc>'.route('product.show', 'kompressor').'</loc>', $xml);
         $this->assertStringContainsString('<loc>'.route('category.show', $compressors).'</loc>', $xml);
@@ -58,6 +58,44 @@ class GenerateSitemapTest extends TestCase
         $this->assertStringNotContainsString('chernovik', $xml);
     }
 
+    public function test_index_lists_files_by_type(): void
+    {
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
+
+        $index = file_get_contents($this->path);
+
+        foreach (['categories', 'products', 'pages', 'cars'] as $type) {
+            $this->assertStringContainsString('<loc>'.url("sitemap-{$type}.xml").'</loc>', $index);
+            $this->assertFileExists(dirname($this->path)."/sitemap-{$type}.xml");
+        }
+
+        // Адреса страниц лежат в файлах по типам, а не в индексе.
+        $this->assertStringNotContainsString(route('home'), str_replace(url('sitemap-'), '', $index));
+    }
+
+    public function test_pages_file_has_main_pages_and_lastmod_follows_catalog(): void
+    {
+        Product::query()->create(['name' => 'Товар', 'slug' => 'tovar', 'price' => 1, 'status' => true]);
+        $this->travelTo(now()->addDays(3)->startOfSecond());
+        Product::query()->where('slug', 'tovar')->update(['price' => 2]);
+        $changedAt = Product::query()->where('slug', 'tovar')->sole()->updated_at;
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
+
+        $pages = file_get_contents(dirname($this->path).'/sitemap-pages.xml');
+        $cars = file_get_contents(dirname($this->path).'/sitemap-cars.xml');
+
+        foreach ([route('home'), route('contact'), route('business')] as $location) {
+            $this->assertStringContainsString("<loc>{$location}</loc>", $pages);
+        }
+
+        $this->assertMatchesRegularExpression('#<loc>'.preg_quote(route('home'), '#').'</loc>\s*<lastmod>'.preg_quote($changedAt->toAtomString(), '#').'</lastmod>#', $pages);
+        $this->assertStringContainsString('<loc>'.route('battery-selection').'</loc>', $cars);
+        $this->assertStringContainsString('<loc>'.route('car-landing.index').'</loc>', $cars);
+        // У контактов своей даты изменения нет — не выдумываем.
+        $this->assertDoesNotMatchRegularExpression('#<loc>'.preg_quote(route('contact'), '#').'</loc>\s*<lastmod>#', $pages);
+    }
+
     public function test_rebuilt_every_night(): void
     {
         $event = collect($this->app->make(Schedule::class)->events())
@@ -66,5 +104,10 @@ class GenerateSitemapTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame('15 3 * * *', $event->expression);
         $this->assertSame('Asia/Yekaterinburg', $event->timezone);
+    }
+
+    private function allSitemaps(): string
+    {
+        return collect(glob(dirname($this->path).'/sitemap*.xml'))->map(file_get_contents(...))->implode("\n");
     }
 }

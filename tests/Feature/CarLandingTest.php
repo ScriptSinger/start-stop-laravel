@@ -67,6 +67,13 @@ class CarLandingTest extends TestCase
             ->assertSee('<a href="'.route('car-landing.index').'">По марке авто</a>', false);
     }
 
+    public function test_landing_variants_point_canonical_to_the_clean_address(): void
+    {
+        $this->get(route('car-landing.model', ['lada', 'vesta', 'sort' => 'price_asc', 'limit' => 50]))
+            ->assertOk()
+            ->assertSee('<link rel="canonical" href="'.route('car-landing.model', ['lada', 'vesta']).'">', false);
+    }
+
     public function test_landings_have_breadcrumb_structured_data(): void
     {
         $names = function (string $url): array {
@@ -257,12 +264,14 @@ class CarLandingTest extends TestCase
 
     public function test_sitemap_includes_landing_pages(): void
     {
-        $path = storage_path('framework/testing/sitemap-car.xml');
+        $directory = storage_path('framework/testing/sitemap-car');
+        @mkdir($directory, 0777, true);
 
-        $this->artisan('sitemap:generate', ['--path' => $path])->assertSuccessful();
+        $this->artisan('sitemap:generate', ['--path' => "{$directory}/sitemap.xml"])->assertSuccessful();
 
-        $xml = file_get_contents($path);
-        unlink($path);
+        $xml = file_get_contents("{$directory}/sitemap-cars.xml");
+        array_map('unlink', glob("{$directory}/*.xml"));
+        rmdir($directory);
 
         $this->assertStringContainsString('<loc>'.route('car-landing.brand', 'lada').'</loc>', $xml);
         $this->assertStringContainsString('<loc>'.route('car-landing.model', ['lada', 'vesta']).'</loc>', $xml);

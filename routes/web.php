@@ -64,7 +64,7 @@ Route::get('/compare-products', [CompareController::class, 'index'])->middleware
 Route::post('/compare-products/{product}', [CompareController::class, 'store'])->name('compare.store');
 Route::delete('/compare-products/{product}', [CompareController::class, 'destroy'])->name('compare.destroy');
 
-Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
+Route::get('/checkout', [CheckoutController::class, 'create'])->middleware('noindex')->name('checkout.create');
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store')->block();
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->middleware('noindex')->name('checkout.success');
 
