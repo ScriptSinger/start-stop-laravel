@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Customer\Pages;
 
 use App\Enums\OrderStatus;
-use App\Models\Customer;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Order\OrderResource;
@@ -20,7 +19,7 @@ use MoonShine\UI\Fields\Email;
 use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Phone;
-use MoonShine\UI\Fields\Preview;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -39,7 +38,7 @@ class CustomerDetailPage extends DetailPage
             Text::make('Имя', 'name'),
             Email::make('Email', 'email'),
             Phone::make('Телефон', 'phone'),
-            Preview::make('Статус', 'last_seen_at', static fn (Customer $customer): string => $customer->last_seen_at === null ? 'Нет данных' : ($customer->isOnline() ? 'Онлайн' : 'Не в сети')),
+            Switcher::make('Онлайн', 'is_online'),
             Date::make('Последний визит', 'last_seen_at')->format('d.m.Y H:i'),
             Date::make('Регистрация', 'created_at')->format('d.m.Y'),
             HasMany::make('Заказы', 'orders', resource: OrderResource::class)

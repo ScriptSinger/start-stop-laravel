@@ -53,9 +53,23 @@ class CustomerActivityTest extends TestCase
         Customer::factory()->create(['name' => 'Клиент без посещений']);
 
         $this->actingAs($admin, 'moonshine')->get('/admin/component/customer-index-page/customer-resource?_component_name=index-table-customer-resource')
-            ->assertOk()->assertSee('Последний визит')->assertSee('Онлайн')->assertSee('Не в сети')->assertSee('Нет данных')
+            ->assertOk()->assertSee('Последний визит')->assertSee('Онлайн')
             ->assertSee(now()->subMinutes(5)->format('d.m.Y H:i'));
         $this->get("/admin/resource/customer-resource/customer-detail-page/{$online->id}")
             ->assertOk()->assertSee('Последний визит')->assertSee('Онлайн');
+    }
+
+    public function test_admin_presence_is_tracked_and_listed(): void
+    {
+        $this->travelTo(now()->startOfMinute());
+        $admin = MoonshineUser::query()->create(['moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID, 'email' => 'admin@example.com', 'name' => 'Admin', 'password' => bcrypt('secret')]);
+
+        $this->actingAs($admin, 'moonshine')->get('/admin/resource/moon-shine-user-resource/moon-shine-user-index-page')
+            ->assertOk()->assertSee('Последний визит')->assertSee('Онлайн');
+
+        $tracked = \App\Models\MoonshineUser::query()->findOrFail($admin->id);
+
+        $this->assertSame(now()->toDateTimeString(), $tracked->last_seen_at->toDateTimeString());
+        $this->assertTrue($tracked->is_online);
     }
 }

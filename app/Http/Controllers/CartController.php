@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use App\Models\Product;
 use App\Services\Cart\Cart;
 use App\Services\Cart\CartLine;
 use Artesaos\SEOTools\Facades\SEOTools;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ class CartController extends Controller
         return $this->miniCart($cart)->header('Cache-Control', 'no-store');
     }
 
-    public function index(Cart $cart): View
+    public function index(Request $request, Cart $cart): View
     {
         $lines = $cart->lines();
         $unavailableCount = $cart->unavailableCount($lines);
@@ -36,7 +38,31 @@ class CartController extends Controller
             'isPickupOnly' => $cart->isPickupOnly($lines),
             'unavailableCount' => $unavailableCount,
             'priceChanged' => $priceChanged,
+            'contact' => $this->checkoutContact($request->user()),
         ]);
+    }
+
+    /**
+     * Контактные данные вошедшего покупателя для формы оформления: чтобы не
+     * вводить заново то, что он уже указал при регистрации. Имя в профиле одной
+     * строкой — делим по первому пробелу на имя и фамилию, как в форме.
+     *
+     * @return array{name: string, lastname: string, phone: string, email: string}
+     */
+    private function checkoutContact(?Authenticatable $user): array
+    {
+        if (! $user instanceof Customer) {
+            return ['name' => '', 'lastname' => '', 'phone' => '', 'email' => ''];
+        }
+
+        [$name, $lastname] = array_pad(explode(' ', trim((string) $user->name), 2), 2, '');
+
+        return [
+            'name' => $name,
+            'lastname' => trim($lastname),
+            'phone' => (string) $user->phone,
+            'email' => (string) $user->email,
+        ];
     }
 
     /**

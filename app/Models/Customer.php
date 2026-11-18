@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasOnlineStatus;
 use App\Notifications\ResetPasswordNotification;
 use Database\Factories\CustomerFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -16,11 +17,10 @@ use Illuminate\Notifications\Notifiable;
  */
 class Customer extends Authenticatable implements MustVerifyEmail
 {
-    public const ONLINE_MINUTES = 5;
-
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
 
+    use HasOnlineStatus;
     use Notifiable;
 
     protected $fillable = [
@@ -44,11 +44,6 @@ class Customer extends Authenticatable implements MustVerifyEmail
             'last_seen_at' => 'datetime',
             'email_verified_at' => 'datetime',
         ];
-    }
-
-    public function isOnline(): bool
-    {
-        return $this->last_seen_at?->greaterThanOrEqualTo(now()->subMinutes(self::ONLINE_MINUTES)) ?? false;
     }
 
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void

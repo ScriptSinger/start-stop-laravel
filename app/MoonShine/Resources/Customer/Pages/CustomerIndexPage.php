@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Customer\Pages;
 
-use App\Models\Customer;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Concerns\HasTextFilters;
 use App\MoonShine\Resources\Customer\CustomerResource;
@@ -22,8 +21,8 @@ use MoonShine\UI\Fields\Email;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Phone;
-use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -46,7 +45,7 @@ class CustomerIndexPage extends IndexPage
             Text::make('Имя', 'name')->sortable(),
             Email::make('Email', 'email')->sortable(),
             Phone::make('Телефон', 'phone')->sortable(),
-            Preview::make('Статус', 'last_seen_at', static fn (Customer $customer): string => $customer->last_seen_at === null ? 'Нет данных' : ($customer->isOnline() ? 'Онлайн' : 'Не в сети')),
+            Switcher::make('Онлайн', 'is_online'),
             Date::make('Последний визит', 'last_seen_at')->format('d.m.Y H:i')->sortable(),
             Number::make('Заказов', 'orders_count')->sortable(),
             Money::make('Купил на', 'orders_sum_total')->sortable(),

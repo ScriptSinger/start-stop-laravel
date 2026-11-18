@@ -22,6 +22,14 @@ class ImportLegacyOrders extends LegacyImportCommand
         return self::SUCCESS;
     }
 
+    /**
+     * Имя покупателя из OpenCart: там оно хранится с HTML-сущностями (&#39; вместо апострофа).
+     */
+    private function legacyName(object $row): string
+    {
+        return trim(html_entity_decode("{$row->firstname} {$row->lastname}", ENT_QUOTES | ENT_HTML5));
+    }
+
     private function importCustomers(): void
     {
         $rows = DB::connection('legacy')->table('oc_customer')->get();
@@ -32,7 +40,7 @@ class ImportLegacyOrders extends LegacyImportCommand
             DB::table('customers')->updateOrInsert(
                 ['id' => $row->customer_id],
                 [
-                    'name' => trim("{$row->firstname} {$row->lastname}"),
+                    'name' => $this->legacyName($row),
                     'email' => $row->email ? mb_strtolower(trim($row->email)) : "customer-{$row->customer_id}@legacy.invalid",
                     'phone' => $row->telephone ?: null,
                     'updated_at' => now(),
@@ -81,7 +89,7 @@ class ImportLegacyOrders extends LegacyImportCommand
                 ['id' => $row->order_id],
                 [
                     'customer_id' => $customerId,
-                    'customer_name' => trim("{$row->firstname} {$row->lastname}"),
+                    'customer_name' => $this->legacyName($row),
                     'customer_phone' => $row->telephone ?: null,
                     'customer_email' => $row->email ?: null,
                     'status' => OrderStatus::fromLegacy($statusNames[$row->order_status_id] ?? null)->value,

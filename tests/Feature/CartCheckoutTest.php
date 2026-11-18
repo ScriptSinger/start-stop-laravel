@@ -72,6 +72,32 @@ class CartCheckoutTest extends TestCase
         $this->assertNull($order->items->sole()->trade_in_discount);
     }
 
+    public function test_checkout_form_is_prefilled_for_a_signed_in_customer(): void
+    {
+        $customer = Customer::factory()->create(['name' => 'Иван Петров Сергеевич', 'phone' => '+7 (987) 000-11-22', 'email' => 'ivan@example.com']);
+        $this->post(route('cart.store', $this->battery), ['quantity' => 1]);
+
+        $this->actingAs($customer)->get(route('cart.index'))
+            ->assertSee('name="name" value="Иван"', false)
+            ->assertSee('name="lastname" value="Петров Сергеевич"', false)
+            ->assertSee('name="phone" value="+7 (987) 000-11-22"', false)
+            ->assertSee('name="email" value="ivan@example.com"', false);
+    }
+
+    public function test_checkout_form_stays_empty_for_a_guest_and_keeps_what_was_typed(): void
+    {
+        $this->post(route('cart.store', $this->battery), ['quantity' => 1]);
+
+        $this->get(route('cart.index'))
+            ->assertSee('name="name" value=""', false)
+            ->assertSee('name="phone" value=""', false);
+
+        // После ошибки валидации остаётся введённое, а не данные профиля.
+        $customer = Customer::factory()->create(['name' => 'Иван Петров']);
+        $this->actingAs($customer)->withSession(['_old_input' => ['name' => 'Пётр']])->get(route('cart.index'))
+            ->assertSee('name="name" value="Пётр"', false);
+    }
+
     public function test_ajax_add_returns_mini_cart_for_modal(): void
     {
         $this->postJson(route('cart.store', $this->battery), ['quantity' => 2])

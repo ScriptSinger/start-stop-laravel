@@ -123,7 +123,7 @@
                                                 ['phone', 'tel', 'Контактный телефон *', 'tel'],
                                                 ['email', 'email', 'Ваш e-mail', 'email'],
                                             ] as [$field, $type, $placeholder, $autocomplete])
-                                                <input type="{{ $type }}" name="{{ $field }}" value="{{ old($field) }}" placeholder="{{ $placeholder }}" aria-label="{{ trim($placeholder, ' *') }}" autocomplete="{{ $autocomplete }}" class="checkout-customer__input form-control @error($field) input-warning @enderror" @if ($type === 'tel') x-phone-mask @endif />
+                                                <input type="{{ $type }}" name="{{ $field }}" value="{{ old($field, $contact[$field]) }}" placeholder="{{ $placeholder }}" aria-label="{{ trim($placeholder, ' *') }}" autocomplete="{{ $autocomplete }}" class="checkout-customer__input form-control @error($field) input-warning @enderror" @if ($type === 'tel') x-phone-mask @endif />
                                             @endforeach
                                         </div>
                                     </div>

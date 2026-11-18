@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Http\Middleware\AccessLogMiddleware;
 use App\Http\Middleware\RequestIdMiddleware;
+use App\Http\Middleware\TrackAdminActivity;
+use App\Models\MoonshineUser;
 use App\MoonShine\Layouts\MoonShineLayout;
 use App\MoonShine\Pages\Dashboard;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -20,7 +22,6 @@ use MoonShine\Crud\Forms\LoginForm;
 use MoonShine\Laravel\Exceptions\MoonShineNotFoundException;
 use MoonShine\Laravel\Http\Middleware\Authenticate;
 use MoonShine\Laravel\Http\Middleware\ChangeLocale;
-use MoonShine\Laravel\Models\MoonshineUser;
 use MoonShine\Laravel\Pages\ErrorPage;
 use MoonShine\Laravel\Pages\LoginPage;
 use MoonShine\Laravel\Pages\ProfilePage;
@@ -81,6 +82,7 @@ return [
         'model' => MoonshineUser::class,
         'middleware' => [
             Authenticate::class,
+            TrackAdminActivity::class,
         ],
         'pipelines' => [],
     ],
