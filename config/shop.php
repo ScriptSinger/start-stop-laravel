@@ -22,8 +22,6 @@ return [
         ['days' => 'Ежедневно', 'schema_days' => 'Mo-Su', 'from' => '10:00', 'to' => '20:00'],
     ],
     'email' => 'mail@start-stop.su',
-    // Второй номер со страницы «Контакты» старого сайта.
-    'phone_alt' => '89872500026',
     // Путь на диске public (как у фото товаров).
     'logo' => 'catalog/startstoplogofullmini.png',
     // Соцсети в подвале: у Telegram и WhatsApp на старом сайте не было

@@ -14,13 +14,13 @@
 						<h3 class="infobanner-title">Контакты</h3>
 						<div class="info-block">
 							<span class="info-block-title">Наш адрес:</span>
-							<span class="info-block-adres"><i class="fa fa-map-marker fa-fw"></i> {{ config('shop.address') }}</span>
+							<span class="info-block-adres"><i class="fas fa-map-marker-alt fa-fw"></i> {{ config('shop.address') }}</span>
 						</div>
 						<div class="info-block">
 							<span class="info-block-title">Телефон:</span>
-							<span class="info-block-adres"><i class="fa-fw fas fa-phone"></i> <a class="phnumb" href="tel:+{{ preg_replace('/\D/', '', config('shop.phone')) }}">{{ config('shop.phone') }}</a></span>
+							<span class="info-block-adres"><i class="fas fa-phone-alt fa-fw"></i> <a class="phnumb" href="tel:+{{ preg_replace('/\D/', '', config('shop.phone')) }}">{{ config('shop.phone') }}</a></span>
 						</div>
-						<div class="info-block"><span class="info-block-title">Email:</span> <span class="info-block-adres"><i class="fa fa-envelope fa-fw"></i> {{ config('shop.email') }}</span>
+						<div class="info-block"><span class="info-block-title">Email:</span> <span class="info-block-adres"><i class="fas fa-envelope fa-fw"></i> {{ config('shop.email') }}</span>
 						</div>
 					</div>
 					<span class="infobanner-overlay"></span>

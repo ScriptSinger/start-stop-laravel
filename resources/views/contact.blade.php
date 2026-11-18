@@ -32,7 +32,7 @@
                                             <div class="contacts__heading">Режим работы</div>
                                             <ul class="contact-list__open list-unstyled">
                                                 @foreach (config('shop.opening_hours') as $hours)
-                                                    <li class="contact-list__item"><i class="contact-list__icon far fa-clock fa-fw"></i><span>{{ $hours['days'] }}: {{ $hours['from'] }}–{{ $hours['to'] }}</span></li>
+                                                    <li class="contact-list__item"><i class="contact-list__icon fas fa-clock fa-fw"></i><span>{{ $hours['days'] }}: {{ $hours['from'] }}–{{ $hours['to'] }}</span></li>
                                                 @endforeach
                                             </ul>
                                         @endif
@@ -40,9 +40,8 @@
                                     <div class="contacts__contacts">
                                         <div class="contacts__heading">Контакты</div>
                                         <ul class="contact-list list-unstyled">
-                                            <li class="contact-list__item uni-href" data-href="tel:{{ config('shop.phone_alt') }}"><i class="contact-list__icon fa fa-phone-alt fa-fw"></i><span>{{ config('shop.phone_alt') }}</span></li>
-                                            <li class="contact-list__item uni-href" data-href="tel:+{{ preg_replace('/\D/', '', config('shop.phone')) }}"><i class="contact-list__icon fas fa-phone fa-fw"></i><span>{{ config('shop.phone') }}</span></li>
-                                            <li class="contact-list__item uni-href" data-href="mailto:{{ config('shop.email') }}"><i class="contact-list__icon far fa-envelope fa-fw" aria-hidden="true"></i><span>{{ config('shop.email') }}</span></li>
+                                            <li class="contact-list__item uni-href" data-href="tel:+{{ preg_replace('/\D/', '', config('shop.phone')) }}"><i class="contact-list__icon fas fa-phone-alt fa-fw"></i><span>{{ config('shop.phone') }}</span></li>
+                                            <li class="contact-list__item uni-href" data-href="mailto:{{ config('shop.email') }}"><i class="contact-list__icon fas fa-envelope fa-fw" aria-hidden="true"></i><span>{{ config('shop.email') }}</span></li>
                                         </ul>
                                     </div>
                                 </div>

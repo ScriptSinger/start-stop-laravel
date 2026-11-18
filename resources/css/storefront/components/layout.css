@@ -157,3 +157,7 @@ body.modal-open jdiv, body.modal-open .fly-block {visibility: hidden !important}
 @media (max-width: 991px) {
     body:has(header .menu-wrapper.show) jdiv {visibility: hidden !important}
 }
+
+/* Иконки контактов: один размер, тема уменьшает fa-phone-alt. */
+#contact-page .contact-list__icon.fa-phone-alt,
+ul.footer__contacts .footer__contacts-icon.fa-phone-alt {font-size: inherit}
