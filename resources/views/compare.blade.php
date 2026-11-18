@@ -39,9 +39,9 @@
                                             <div class="compare-page__price">
                                                 <div class="price">
                                                     @if ($product->hasSpecial())
-                                                        <span class="price-old">{{ number_format((float) $product->price, 0, '', '') }}р.</span> <span class="price-new">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
+                                                        <span class="price-old">{{ App\Support\Price::format((float) $product->price) }}</span> <span class="price-new">{{ App\Support\Price::format($product->displayPrice()) }}</span>
                                                     @else
-                                                        {{ number_format($product->displayPrice(), 0, '', '') }}р.
+                                                        {{ App\Support\Price::format($product->displayPrice()) }}
                                                     @endif
                                                 </div>
                                                 <form method="post" action="{{ route('cart.store', $product) }}" @submit.prevent="$store.cart.add($el)">

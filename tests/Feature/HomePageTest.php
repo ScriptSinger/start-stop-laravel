@@ -100,13 +100,13 @@ class HomePageTest extends TestCase
             ->assertSee('Акции')
             ->assertSee('ТЮМЕНЬ ASIA 40 Ah')
             ->assertDontSee('Архивный АКБ')
-            ->assertSee('Ваша скидка: 500р.')
-            ->assertSee('Трейд-ин 500 руб.')
+            ->assertSee('Ваша скидка: 500 ₽')
+            ->assertSee('Трейд-ин 500 ₽')
             ->assertSee('Только самовывоз')
-            ->assertSee('<span class="price-old" x-text="format(shownPrice)">5400р.</span> <span class="price-new" x-text="format(shownSpecial)">4900р.</span>', false)
+            ->assertSee('<span class="price-old" x-text="format(shownPrice)">5 400 ₽</span> <span class="price-new" x-text="format(shownSpecial)">4 900 ₽</span>', false)
             // Галочка трейд-ина — часть формы «В корзину» этой карточки; цена 4900 − 500.
             ->assertSee('form="add-to-cart-'.$promo->id.'"', false)
-            ->assertSee('4400р.');
+            ->assertSee('4 400 ₽');
     }
 
     public function test_special_price_is_charged_in_cart(): void
@@ -115,7 +115,7 @@ class HomePageTest extends TestCase
 
         $this->post(route('cart.store', $product), ['trade_in' => 1]);
 
-        $this->get(route('cart.index'))->assertSee('4400р.');
+        $this->get(route('cart.index'))->assertSee('4 400 ₽');
     }
 
     /**

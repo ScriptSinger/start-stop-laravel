@@ -1,6 +1,6 @@
 {{-- Карточка товара — разметка 1:1 с product-thumb темы UniShop2 старого сайта.
      Ожидает загруженную связь attributeValues.attribute (Product::withCardData()).
-     Цены в формате старого сайта: «7300р.». --}}
+     Цены в формате «7 300 ₽». --}}
 @php($cardFormId = 'add-to-cart-'.$product->id)
 @php($image = App\Services\Catalog\ProductMedia::thumbnailUrl($product->image, $product->thumbnail_path))
 @php($originalImage = App\Services\Catalog\ProductMedia::url($product->image))
@@ -16,10 +16,10 @@
         @if ($product->hasSpecial() || $product->hasTradeIn() || $product->is_pickup_only)
             <div class="sticker">
                 @if ($product->hasSpecial())
-                    <div class="sticker__item special">Ваша скидка: {{ number_format($product->specialDiscount(), 0, '', '') }}р.</div>
+                    <div class="sticker__item special">Ваша скидка: {{ App\Support\Price::format($product->specialDiscount()) }}</div>
                 @endif
                 @if ($product->hasTradeIn())
-                    <div class="sticker__item ean">Трейд-ин {{ number_format((float) $product->trade_in_discount, 0, '', '') }} руб.</div>
+                    <div class="sticker__item ean">Трейд-ин {{ App\Support\Price::format((float) $product->trade_in_discount) }}</div>
                 @endif
                 @if ($product->is_pickup_only)
                     <div class="sticker__item jan">Только самовывоз</div>
@@ -46,9 +46,9 @@
                  старого АКБ учитывается уже при добавлении из каталога. --}}
             <div class="product-thumb__option option">
                 <div class="option__group">
-                    <label class="option__item" data-toggle="tooltip" title="- {{ number_format((float) $product->trade_in_discount, 0, '', '') }}р.">
+                    <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format((float) $product->trade_in_discount) }}">
                         <input type="checkbox" name="trade_in" value="1" form="{{ $cardFormId }}" x-model="tradeIn" />
-                        <span class="option__name"><i class="fa fa-recycle fa-fw" aria-hidden="true"></i> <span class="option__tit">С обменом</span> <span class="option__val"> {{ number_format($product->priceFor(true), 0, '', '') }}р. </span></span>
+                        <span class="option__name"><i class="fa fa-recycle fa-fw" aria-hidden="true"></i> <span class="option__tit">С обменом</span> <span class="option__val"> {{ App\Support\Price::format($product->priceFor(true)) }} </span></span>
                     </label>
                 </div>
             </div>
@@ -60,9 +60,9 @@
 
         <div class="product-thumb__price price">
             @if ($product->hasSpecial())
-                <span class="price-old" x-text="format(shownPrice)">{{ number_format((float) $product->price, 0, '', '') }}р.</span> <span class="price-new" x-text="format(shownSpecial)">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
+                <span class="price-old" x-text="format(shownPrice)">{{ App\Support\Price::format((float) $product->price) }}</span> <span class="price-new" x-text="format(shownSpecial)">{{ App\Support\Price::format($product->displayPrice()) }}</span>
             @else
-                <span x-text="format(shownPrice)">{{ number_format($product->displayPrice(), 0, '', '') }}р.</span>
+                <span x-text="format(shownPrice)">{{ App\Support\Price::format($product->displayPrice()) }}</span>
             @endif
         </div>
 

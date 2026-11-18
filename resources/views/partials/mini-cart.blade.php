@@ -30,8 +30,8 @@
                             <button type="button" class="qty-switch__btn fa fa-plus" aria-label="Увеличить количество" @click="step(1)"></button>
                         </div>
                     </div>
-                    <div class="header-cart__price"><div class="header-cart__price-text">Цена за шт</div>{{ number_format($line->unitPrice(), 0, '', '') }}р.</div>
-                    <div class="header-cart__total"><div class="header-cart__total-text">Всего</div>{{ number_format($line->total(), 0, '', '') }}р.</div>
+                    <div class="header-cart__price"><div class="header-cart__price-text">Цена за шт</div>{{ App\Support\Price::format($line->unitPrice()) }}</div>
+                    <div class="header-cart__total"><div class="header-cart__total-text">Всего</div>{{ App\Support\Price::format($line->total()) }}</div>
                 </form>
                 <form method="post" action="{{ route('cart.destroy', $line->product) }}" class="header-cart__remove" @submit.prevent="$store.cart.change($el)">
                     @csrf
@@ -45,11 +45,11 @@
     <div class="header-cart__totals">
         <div class="header-cart__totals-item">
             <div class="header-cart__totals-title">Итого:</div>
-            <div class="header-cart__totals-text">{{ number_format($cartTotal, 0, '', '') }}р.</div>
+            <div class="header-cart__totals-text">{{ App\Support\Price::format($cartTotal) }}</div>
         </div>
         <div class="header-cart__totals-item">
             <div class="header-cart__totals-title">Всего:</div>
-            <div class="header-cart__totals-text">{{ number_format($cartTotal, 0, '', '') }}р.</div>
+            <div class="header-cart__totals-text">{{ App\Support\Price::format($cartTotal) }}</div>
         </div>
     </div>
     <div class="header-cart__buttons">

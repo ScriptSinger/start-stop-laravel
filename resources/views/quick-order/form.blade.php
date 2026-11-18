@@ -4,12 +4,12 @@
     <div class="alert alert-success" x-show="message" x-text="message" x-cloak></div>
     <div x-show="!message">
         <div class="help-block text-danger" x-show="error('_form')" x-text="error('_form')" x-cloak></div>
-        <p><strong>{{ $product->name }}</strong> — {{ number_format($product->displayPrice(), 0, '', '') }}р.</p>
+        <p><strong>{{ $product->name }}</strong> — {{ App\Support\Price::format($product->displayPrice()) }}</p>
         @if ($product->hasTradeIn())
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="trade_in" value="1" @checked(old('trade_in'))>
-                    Сдаю старый аккумулятор: −{{ number_format((float) $product->trade_in_discount, 0, '', '') }}р. (цена {{ number_format($product->priceFor(true), 0, '', '') }}р.)
+                    Сдаю старый аккумулятор: −{{ App\Support\Price::format((float) $product->trade_in_discount) }} (цена {{ App\Support\Price::format($product->priceFor(true)) }})
                 </label>
             </div>
         @endif

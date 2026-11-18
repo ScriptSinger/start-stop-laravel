@@ -69,7 +69,7 @@ class CheckoutController extends Controller
      */
     public function success(): View|RedirectResponse
     {
-        $order = Order::query()->with('items')->find(session('placed_order_id'));
+        $order = Order::query()->with('items.product')->find(session('placed_order_id'));
 
         if (! $order) {
             return redirect()->route('home');

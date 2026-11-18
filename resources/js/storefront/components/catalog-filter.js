@@ -167,7 +167,7 @@ export default ({countUrl, priceMin, priceMax}) => ({
         this.version;
 
         if (key === 'price') {
-            return this.priceFrom > this.priceMin || this.priceTo < this.priceMax ? `${this.priceFrom} – ${this.priceTo} р.` : '';
+            return this.priceFrom > this.priceMin || this.priceTo < this.priceMax ? `${this.priceFrom} – ${this.priceTo} ₽` : '';
         }
 
         const group = this.$refs.form.querySelector(`[data-group="${key}"]`);

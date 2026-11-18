@@ -46,8 +46,8 @@ export default ({price, special = null, tradeInDiscount = 0}) => ({
         requestAnimationFrame(step);
     },
 
-    /** Формат цен старого сайта: «4400р.». */
+    /** Формат цен витрины: «21 800 ₽» (неразрывные пробелы, как App\Support\Price). */
     format(value) {
-        return `${Math.round(value)}р.`;
+        return `${String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')}\u00a0₽`;
     },
 });

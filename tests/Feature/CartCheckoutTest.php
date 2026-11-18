@@ -51,8 +51,8 @@ class CartCheckoutTest extends TestCase
         $this->get(route('cart.index'))
             ->assertOk()
             ->assertSee('TITAN 60Ah О.П.')
-            ->assertSee('6000р.')   // 7000 − 1000 за единицу
-            ->assertSee('12000р.')  // × 2
+            ->assertSee('6 000 ₽')   // 7000 − 1000 за единицу
+            ->assertSee('12 000 ₽')  // × 2
             ->assertSee('name="trade_in" value="1" checked', false);
 
         $this->get(route('home'))->assertSeeInOrder(['title="Корзина"', '>2</span>'], false);
@@ -63,7 +63,7 @@ class CartCheckoutTest extends TestCase
         $this->post(route('cart.store', $this->terminal), ['quantity' => 2, 'trade_in' => 1]);
 
         $this->get(route('cart.index'))
-            ->assertSee('1000р.')
+            ->assertSee('1 000 ₽')
             ->assertDontSee('name="trade_in" value="1" checked', false);
 
         $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
@@ -264,7 +264,7 @@ class CartCheckoutTest extends TestCase
         $this->patch(route('cart.update', $this->battery), ['quantity' => 3])->assertRedirect();
         $this->get(route('cart.index'))
             ->assertSee('value="3"', false)
-            ->assertSee('21000р.'); // галочку сняли — без скидки
+            ->assertSee('21 000 ₽'); // галочку сняли — без скидки
 
         $this->patch(route('cart.update', $this->battery), ['quantity' => 'много'])->assertRedirect();
         $this->get(route('cart.index'))->assertSee('value="1"', false);
@@ -314,7 +314,7 @@ class CartCheckoutTest extends TestCase
             ->assertRedirect(route('cart.index'))
             ->assertSessionHas('status', 'Цена товара изменилась. Проверьте сумму заказа перед оформлением.');
         $this->assertDatabaseCount('orders', 0);
-        $this->get(route('cart.index'))->assertSee('Цена товара изменилась')->assertSee('8000р.');
+        $this->get(route('cart.index'))->assertSee('Цена товара изменилась')->assertSee('8 000 ₽');
         $this->checkout(['delivery' => 'pickup', 'payment' => 'cash'])->assertRedirect(route('checkout.success'));
         $this->assertEquals(8000, Order::query()->sole()->total);
     }

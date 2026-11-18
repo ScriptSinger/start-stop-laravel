@@ -24,7 +24,7 @@
             </div>
         @include('partials.catalog-filter-group-foot')
 
-        @include('partials.catalog-filter-group-head', ['key' => 'price', 'title' => 'Цена, р.'])
+        @include('partials.catalog-filter-group-head', ['key' => 'price', 'title' => 'Цена, ₽'])
             <div class="input-group input-group-sm catalog-filter__price">
                 <input type="number" min="0" name="price_from" class="form-control" aria-label="Цена от"
                        value="{{ $filter->priceFrom !== null ? (int) $filter->priceFrom : '' }}" placeholder="{{ $priceMin }}"
@@ -33,7 +33,7 @@
                 <input type="number" min="0" name="price_to" class="form-control" aria-label="Цена до"
                        value="{{ $filter->priceTo !== null ? (int) $filter->priceTo : '' }}" placeholder="{{ $priceMax }}"
                        :value="priceTo" @change="typePrice('to', $event.target.value)">
-                <span class="input-group-addon">р.</span>
+                <span class="input-group-addon">₽</span>
             </div>
             {{-- Шкала с двумя ползунками (noUiSlider в OCFilter): обычные range без
                  name — в адрес идут только поля выше. --}}

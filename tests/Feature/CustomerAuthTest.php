@@ -166,9 +166,9 @@ class CustomerAuthTest extends TestCase
             ->assertOk()
             ->assertSee('#'.$own->id)
             ->assertSee('В обработке')
-            ->assertSee('7000р.')
-            ->assertDontSee('1111р.')
-            ->assertDontSee('2222р.');
+            ->assertSee('7 000 ₽')
+            ->assertDontSee('1 111 ₽')
+            ->assertDontSee('2 222 ₽');
 
         $this->get(route('account.order', $own->id))->assertOk()->assertSee('Заказ #'.$own->id)->assertSee('TITAN 60');
         $this->get(route('account.order', $abandoned->id))->assertNotFound();

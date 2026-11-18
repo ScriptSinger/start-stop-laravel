@@ -54,7 +54,7 @@ class ProductSupplierOrderTest extends TestCase
         $this->get(route('product.show', $product))
             ->assertOk()
             ->assertSee('Заказать')
-            ->assertSee('10900р.')
+            ->assertSee('10 900 ₽')
             ->assertDontSee('В корзину');
     }
 

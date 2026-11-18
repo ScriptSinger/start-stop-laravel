@@ -47,13 +47,13 @@
                                             @endif
                                         </td>
                                         <td class="text-right">{{ $item->quantity }}</td>
-                                        <td class="text-right order-summary__price">{{ number_format((float) $item->price, 0, '', '') }}р.</td>
-                                        <td class="text-right order-summary__price">{{ number_format((float) $item->total, 0, '', '') }}р.</td>
+                                        <td class="text-right order-summary__price">{{ App\Support\Price::format((float) $item->price) }}</td>
+                                        <td class="text-right order-summary__price">{{ App\Support\Price::format((float) $item->total) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                             <tfoot>
-                                <tr><td colspan="3" class="text-right"><b>Всего</b></td><td class="text-right order-summary__price"><b>{{ number_format((float) $order->total, 0, '', '') }}р.</b></td></tr>
+                                <tr><td colspan="3" class="text-right"><b>Всего</b></td><td class="text-right order-summary__price"><b>{{ App\Support\Price::format((float) $order->total) }}</b></td></tr>
                             </tfoot>
                         </table>
                     </div>

@@ -77,7 +77,7 @@
                                                         @if ($line->product->hasTradeIn())
                                                             <label class="checkout-cart__option checkout-cart__trade-in">
                                                                 <input type="checkbox" name="trade_in" value="1" @checked($line->tradeIn) @change="$el.form.requestSubmit()" />
-                                                                Трейд-ин: сдаю старый АКБ (−{{ number_format((float) $line->product->trade_in_discount, 0, '', '') }}р.)
+                                                                Трейд-ин: сдаю старый АКБ (−{{ App\Support\Price::format((float) $line->product->trade_in_discount) }})
                                                             </label>
                                                         @endif
                                                     </div>
@@ -88,8 +88,8 @@
                                                             <button type="button" class="qty-switch__btn fa fa-plus" aria-label="Увеличить количество" @click="step(1)"></button>
                                                         </div>
                                                     </div>
-                                                    <div class="checkout-cart__price"><div class="checkout-cart__price-text">Цена за шт</div>{{ number_format($line->unitPrice(), 0, '', '') }}р.</div>
-                                                    <div class="checkout-cart__total"><div class="checkout-cart__total-text">Всего</div>{{ number_format($line->total(), 0, '', '') }}р.</div>
+                                                    <div class="checkout-cart__price"><div class="checkout-cart__price-text">Цена за шт</div>{{ App\Support\Price::format($line->unitPrice()) }}</div>
+                                                    <div class="checkout-cart__total"><div class="checkout-cart__total-text">Всего</div>{{ App\Support\Price::format($line->total()) }}</div>
                                                 </form>
                                                 <form method="post" action="{{ route('cart.destroy', $line->product) }}" class="checkout-cart__remove" @submit.prevent="$store.cart.change($el)">
                                                     @csrf
@@ -200,11 +200,11 @@
                                     </div>
                                     <div class="unicheckout-sticky__total-item sub_total">
                                         <div class="unicheckout-sticky__total-title">Итого</div>
-                                        <div class="unicheckout-sticky__total-text">{{ number_format($total, 0, '', '') }}р.</div>
+                                        <div class="unicheckout-sticky__total-text">{{ App\Support\Price::format($total) }}</div>
                                     </div>
                                     <div class="unicheckout-sticky__total-item total">
                                         <div class="unicheckout-sticky__total-title">Всего</div>
-                                        <div class="unicheckout-sticky__total-text">{{ number_format($total, 0, '', '') }}р.</div>
+                                        <div class="unicheckout-sticky__total-text">{{ App\Support\Price::format($total) }}</div>
                                     </div>
                                 </div>
                                 <div class="unicheckout-sticky__confirm">
