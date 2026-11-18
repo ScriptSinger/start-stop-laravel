@@ -15,6 +15,7 @@ use App\MoonShine\Resources\Order\Pages\OrderIndexPage;
 use App\MoonShine\Resources\Product\Pages\ProductIndexPage;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\Services\Catalog\AssortmentGaps;
+use App\Services\Catalog\PhotoSummary;
 use App\Services\Catalog\StockSummary;
 use Illuminate\Support\Facades\DB;
 use MoonShine\Apexcharts\Components\DonutChartMetric;
@@ -78,6 +79,15 @@ class Dashboard extends Page
                     ]),
                     Fragment::make([$this->catalogChart($this->catalogCategoryIds())->withoutWrapper()])->name('catalog-chart'),
                 ])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
+                Column::make([Box::make([
+                    FormBuilder::make()->hideSubmit()->fields([
+                        Select::make('Категория', 'photo_scope')
+                            ->options($this->catalogCategoryOptions())
+                            ->default('all')
+                            ->onChangeEvent(AlpineJs::event(JsEvent::FRAGMENT_UPDATED, 'photo-chart')),
+                    ]),
+                    Fragment::make([$this->photoChart($this->catalogCategoryIds('photo_scope'))->withoutWrapper()])->name('photo-chart'),
+                ])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
                 Column::make([Box::make([$this->ordersChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
             ])])->open(),
             Grid::make([
@@ -137,9 +147,9 @@ class Dashboard extends Page
     }
 
     /** @return list<int>|null */
-    private function catalogCategoryIds(): ?array
+    private function catalogCategoryIds(string $field = 'catalog_scope'): ?array
     {
-        $scope = request()->input('_data.catalog_scope', request()->input('catalog_scope'));
+        $scope = request()->input('_data.'.$field, request()->input($field));
         if ($scope === 'batteries') {
             $rootIds = (array) config('shop.battery_fitment.category_ids');
         } elseif (is_string($scope) && preg_match('/^category_([1-9][0-9]*)$/D', $scope, $matches)) {
@@ -182,6 +192,22 @@ class Dashboard extends Page
                 'Активные, под заказ — '.$stock['on_order'] => $stock['on_order'],
             ])
             ->colors(['#9ca3af', '#d97706', '#2563eb', '#9333ea'])
+            ->height(260)
+            ->decimals(0);
+    }
+
+    /** @param list<int>|null $categoryIds */
+    private function photoChart(?array $categoryIds = null): DonutChartMetric
+    {
+        $photos = app(PhotoSummary::class)->overall($categoryIds);
+
+        return DonutChartMetric::make('Фото у товаров')
+            ->values([
+                'С фото — '.$photos['with_photo'] => $photos['with_photo'],
+                'Активные без фото — '.$photos['active_without_photo'] => $photos['active_without_photo'],
+                'Неактивные без фото — '.$photos['inactive_without_photo'] => $photos['inactive_without_photo'],
+            ])
+            ->colors(['#16a34a', '#dc2626', '#9ca3af'])
             ->height(260)
             ->decimals(0);
     }

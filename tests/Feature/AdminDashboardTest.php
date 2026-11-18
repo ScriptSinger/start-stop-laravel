@@ -100,7 +100,29 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Активные, нет в наличии — 0')
             ->assertSee('Активные, на складе магазина — 1')
             ->assertSee('Активные, под заказ — 1')
+            ->assertSee('Фото у товаров')
+            ->assertSee('С фото — 0')
+            ->assertSee('Активные без фото — 2')
+            ->assertSee('Неактивные без фото — 1')
             ->assertSee('Заказы и заявки за 30 дней');
+    }
+
+    public function test_photo_chart_fragment_has_its_own_category_filter(): void
+    {
+        $batteryCategory = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'batteries']);
+        Product::query()->create(['name' => 'АКБ', 'slug' => 'battery', 'price' => 100, 'quantity' => 1, 'status' => true])->categories()->attach($batteryCategory);
+        Product::query()->create(['name' => 'Другое', 'slug' => 'other', 'price' => 100, 'quantity' => 1, 'status' => true, 'image' => 'catalog/a.jpg']);
+        config(['shop.battery_fitment.category_ids' => [$batteryCategory->id]]);
+
+        $this->get('/admin/page/dashboard?_fragment-load=photo-chart&_data%5Bphoto_scope%5D=batteries')
+            ->assertOk()
+            ->assertSee('С фото — 0')
+            ->assertSee('Активные без фото — 1');
+
+        $this->get('/admin/page/dashboard?_fragment-load=photo-chart&_data%5Bphoto_scope%5D=all&_data%5Bcatalog_scope%5D=batteries')
+            ->assertOk()
+            ->assertSee('С фото — 1')
+            ->assertSee('Активные без фото — 1');
     }
 
     public function test_catalog_chart_fragment_filters_batteries_and_rejects_unknown_scope(): void
