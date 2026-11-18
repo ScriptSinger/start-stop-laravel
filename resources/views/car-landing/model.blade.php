@@ -92,7 +92,6 @@
                 @if ($batteryCategory)
                     <li><a href="{{ route('category.show', $batteryCategory) }}" class="car-landing__chip">{{ $batteryCategory->name }}</a></li>
                 @endif
-                <li><a href="{{ route('battery-selection') }}" class="car-landing__chip">Подбор по параметрам</a></li>
             </ul>
         </section>
     </div>

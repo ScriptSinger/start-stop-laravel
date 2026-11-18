@@ -110,13 +110,14 @@ class CarLandingTest extends TestCase
         $this->assertSame('Lada Vesta', $models[0]['name']);
     }
 
-    public function test_model_page_links_to_battery_category_and_selection(): void
+    public function test_model_page_links_to_battery_category_but_not_to_the_bare_selection_page(): void
     {
         $this->get(route('car-landing.model', ['lada', 'vesta']))
             ->assertOk()
             ->assertSee('Другие аккумуляторы в каталоге')
             ->assertSee('<a href="'.route('category.show', $this->batteries).'" class="car-landing__chip">Аккумуляторы</a>', false)
-            ->assertSee('<a href="'.route('battery-selection').'" class="car-landing__chip">Подбор по параметрам</a>', false);
+            // Подбор без параметров машины отдаёт 404 — ссылаться на него нельзя.
+            ->assertDontSee(route('battery-selection'), false);
     }
 
     public function test_landing_variants_point_canonical_to_the_clean_address(): void

@@ -126,8 +126,8 @@ class GenerateSitemap extends Command
     }
 
     /**
-     * Подбор АКБ и посадочные «Аккумулятор для …» — только включённые марки
-     * и модели с товарами.
+     * Посадочные «Аккумулятор для …» — только включённые марки и модели
+     * с товарами.
      *
      * @return array{Sitemap, int}
      */
@@ -135,10 +135,11 @@ class GenerateSitemap extends Command
     {
         $changedAt = $this->latest($catalogChangedAt, BatteryFitment::query()->max('updated_at'));
 
+        // /podbor-akb сюда не входит: без параметров машины он отдаёт 404 —
+        // это страница результата подбора, а не общая страница.
         $sitemap = Sitemap::create()
-            ->add($this->url(route('battery-selection'), $changedAt))
             ->add($this->url(route('car-landing.index'), $changedAt));
-        $carPages = 2;
+        $carPages = 1;
 
         $carLandings->brands()->each(function (CarBrand $brand) use ($sitemap, $carLandings, $changedAt, &$carPages): void {
             $models = $carLandings->models($brand);

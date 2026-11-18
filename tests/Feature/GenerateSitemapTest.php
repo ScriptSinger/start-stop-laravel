@@ -90,7 +90,8 @@ class GenerateSitemapTest extends TestCase
         }
 
         $this->assertMatchesRegularExpression('#<loc>'.preg_quote(route('home'), '#').'</loc>\s*<lastmod>'.preg_quote($changedAt->toAtomString(), '#').'</lastmod>#', $pages);
-        $this->assertStringContainsString('<loc>'.route('battery-selection').'</loc>', $cars);
+        // Без параметров машины подбор отдаёт 404 — в карте ему не место.
+        $this->assertStringNotContainsString('podbor-akb', $cars);
         $this->assertStringContainsString('<loc>'.route('car-landing.index').'</loc>', $cars);
         // У контактов своей даты изменения нет — не выдумываем.
         $this->assertDoesNotMatchRegularExpression('#<loc>'.preg_quote(route('contact'), '#').'</loc>\s*<lastmod>#', $pages);
