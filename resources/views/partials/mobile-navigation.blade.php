@@ -16,6 +16,6 @@
     @guest
         <a class="mobile-navigation__item" href="{{ route('login') }}" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="far fa-user" aria-hidden="true"></i><span>Войти</span></a>
     @else
-        <a class="mobile-navigation__item {{ request()->routeIs('account*') ? 'is-active' : '' }}" href="{{ route('account') }}" @if (request()->routeIs('account*')) aria-current="page" @endif><i class="far fa-user" aria-hidden="true"></i><span>Личный кабинет</span></a>
+        <a class="mobile-navigation__item {{ request()->routeIs('account*') ? 'is-active' : '' }}" href="{{ route('account') }}" aria-label="Личный кабинет" @if (request()->routeIs('account*')) aria-current="page" @endif><i class="far fa-user" aria-hidden="true"></i><span>Кабинет</span></a>
     @endguest
 </nav>

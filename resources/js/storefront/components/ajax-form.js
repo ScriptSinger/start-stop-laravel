@@ -4,6 +4,7 @@
  * reload, страница обновляется — например, после входа), ошибки — под полями.
  * На отдельной странице (/callback, /login и т.п.) форма отправляется как обычно.
  */
+import { reachGoal } from '../embeds';
 import { postJson } from '../utils';
 
 export default ({reload = false} = {}) => ({
@@ -30,6 +31,11 @@ export default ({reload = false} = {}) => ({
             }
 
             this.message = json.message;
+
+            // Цель Метрики: data-metrika-goal на форме (callback, quick_order, product_question).
+            if (this.$el.dataset.metrikaGoal) {
+                reachGoal(this.$el.dataset.metrikaGoal);
+            }
         } catch (error) {
             this.errors = error.data?.errors
                 ?? {_form: [error.data?.message || 'Не получилось отправить. Попробуйте ещё раз или позвоните нам.']};

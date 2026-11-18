@@ -1,5 +1,5 @@
 {{-- Форма «Задать вопрос» о товаре: в окне ($store.modal) и на странице /product-question/{товар}. --}}
-<form method="post" action="{{ route('product-question.store', $product) }}" class="uni-form" x-data="ajaxForm" @submit="submit">
+<form method="post" action="{{ route('product-question.store', $product) }}" class="uni-form" x-data="ajaxForm" data-metrika-goal="product_question" @submit="submit">
     @csrf
     <div class="alert alert-success" x-show="message" x-text="message" x-cloak></div>
     <div x-show="!message">

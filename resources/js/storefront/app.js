@@ -14,7 +14,7 @@ import { initBannerSliders } from './theme/carousels';
 import { initUniHref, scrollBreadcrumbs } from './theme/links';
 import { touchSupport } from './theme/settings';
 import { initShare } from './share';
-import { initJivoChat, initMetrika, initReviewsWidget, initYandexMaps } from './embeds';
+import { initJivoChat, initMetrika, initReviewsWidget, initYandexMaps, trackPlacedOrder } from './embeds';
 import { scrollToElement } from './utils';
 
 import alerts from './stores/alerts';
@@ -87,6 +87,7 @@ initReviewsWidget();
 initYandexMaps();
 initJivoChat();
 initMetrika();
+trackPlacedOrder();
 scrollBreadcrumbs();
 
 Alpine.start();

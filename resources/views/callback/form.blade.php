@@ -1,5 +1,5 @@
 {{-- Форма «Заказать звонок»: в окне ($store.modal) и на странице /callback. --}}
-<form method="post" action="{{ route('callback.store') }}" class="uni-form" x-data="ajaxForm" @submit="submit">
+<form method="post" action="{{ route('callback.store') }}" class="uni-form" x-data="ajaxForm" data-metrika-goal="callback" @submit="submit">
     @csrf
     <div class="alert alert-success" x-show="message" x-text="message" x-cloak></div>
     <div x-show="!message">

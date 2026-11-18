@@ -9,7 +9,17 @@
             <li>Заказ сформирован</li>
         </ul>
         <div class="row">
-            <div id="content" class="col-sm-12">
+            {{-- Данные для Метрики: цель «order» и покупка (см. trackPlacedOrder в embeds.js). --}}
+            <div id="content" class="col-sm-12" data-metrika-purchase="{{ json_encode([
+                'id' => $order->id,
+                'revenue' => (float) $order->total,
+                'products' => $order->items->map(fn ($item): array => [
+                    'id' => (string) $item->product_id,
+                    'name' => $item->name,
+                    'price' => (float) $item->price,
+                    'quantity' => (int) $item->quantity,
+                ])->all(),
+            ], JSON_UNESCAPED_UNICODE) }}">
                 <div class="order-success__head">
                     <h1 class="order-success__heading">
                         <i class="fa fa-check-circle order-success__icon" aria-hidden="true"></i>

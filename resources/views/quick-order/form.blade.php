@@ -1,5 +1,5 @@
 {{-- Форма «Быстрый заказ» одного товара: в окне ($store.modal) и на странице /quick-order/{товар}. --}}
-<form method="post" action="{{ route('quick-order.store', $product) }}" class="uni-form" x-data="ajaxForm" @submit="submit">
+<form method="post" action="{{ route('quick-order.store', $product) }}" class="uni-form" x-data="ajaxForm" data-metrika-goal="quick_order" @submit="submit">
     @csrf
     <div class="alert alert-success" x-show="message" x-text="message" x-cloak></div>
     <div x-show="!message">

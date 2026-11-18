@@ -77,9 +77,67 @@ export function initYandexMaps() {
     });
 }
 
+function metrikaCounterId() {
+    return Number(document.querySelector('meta[name="metrika-counter"]')?.content) || null;
+}
+
+/**
+ * Достижение цели Метрики (тип цели «JavaScript-событие», идентификатор — имя
+ * цели). Без счётчика — локально, в тестах — ничего не делает.
+ */
+export function reachGoal(goal, params = {}) {
+    const counterId = metrikaCounterId();
+
+    if (counterId && typeof window.ym === 'function') {
+        window.ym(counterId, 'reachGoal', goal, params);
+    }
+}
+
+/**
+ * Страница «Заказ сформирован»: цель «order» и покупка для электронной
+ * коммерции (<div data-metrika-purchase='{"id":…,"revenue":…,"products":[…]}'>).
+ * Один раз на заказ: перезагрузка страницы не должна удваивать конверсию.
+ */
+export function trackPlacedOrder() {
+    const element = document.querySelector('[data-metrika-purchase]');
+
+    if (!element) {
+        return;
+    }
+
+    let purchase;
+
+    try {
+        purchase = JSON.parse(element.dataset.metrikaPurchase);
+    } catch {
+        return;
+    }
+
+    try {
+        const key = `metrika:order:${purchase.id}`;
+
+        if (sessionStorage.getItem(key)) {
+            return;
+        }
+
+        sessionStorage.setItem(key, '1');
+    } catch {
+        // sessionStorage недоступен (приватный режим): лучше задвоить, чем потерять заказ.
+    }
+
+    reachGoal('order', {order_price: purchase.revenue});
+
+    (window.dataLayer = window.dataLayer || []).push({
+        ecommerce: {
+            currencyCode: 'RUB',
+            purchase: {actionField: {id: String(purchase.id), revenue: purchase.revenue}, products: purchase.products},
+        },
+    });
+}
+
 /** Счётчик Яндекс.Метрики (<meta name="metrika-counter">): вебвизор, карта кликов, электронная коммерция. */
 export function initMetrika() {
-    const counterId = Number(document.querySelector('meta[name="metrika-counter"]')?.content);
+    const counterId = metrikaCounterId();
 
     if (!counterId) {
         return;
