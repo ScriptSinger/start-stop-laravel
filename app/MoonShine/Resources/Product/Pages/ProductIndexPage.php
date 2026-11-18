@@ -91,6 +91,15 @@ class ProductIndexPage extends IndexPage
             // Сколько значений характеристик у товара; сами они — в просмотре товара.
             Number::make('Хар-ки', 'attribute_values_count')->sortable()->columnSelection(hideOnInit: true),
             Money::make('Цена', 'price')->sortable(),
+            // Цена, которую видит покупатель: акция, цена под заказ или обычная.
+            Money::make('Цена на сайте', 'display_price')
+                ->changePreview(fn (mixed $value, Money $field): string => Money::make('', 'display_price')
+                    ->fill($field->getData()?->getOriginal()->displayPrice())
+                    ->preview())
+                ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query->orderByRaw(
+                    '('.Product::displayPriceSql().") {$direction}",
+                    [config('shop.supplier_order_min_quantity')],
+                )),
             Number::make('Остаток', 'quantity')->sortable(),
             Number::make('У поставщика', 'supplier_quantity')->sortable(),
             Switcher::make('Активен', 'status')

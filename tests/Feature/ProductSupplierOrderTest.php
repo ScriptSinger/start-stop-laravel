@@ -89,6 +89,22 @@ class ProductSupplierOrderTest extends TestCase
         $table('out')->assertSee('Нет нигде АКБ')->assertDontSee('Под заказ АКБ');
     }
 
+    public function test_admin_index_shows_storefront_price_for_on_order_products(): void
+    {
+        $this->actingAs(MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'admin@example.com',
+            'name' => 'Admin',
+            'password' => bcrypt('secret'),
+        ]), 'moonshine');
+
+        $this->makeProduct(['name' => 'Под заказ АКБ', 'slug' => 'on-order', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => 12350]);
+
+        $this->get('/admin/component/product-index-page/product-resource?'.http_build_query([
+            '_component_name' => 'index-table-product-resource',
+        ]))->assertOk()->assertSee('Цена на сайте')->assertSee('12 350 ₽');
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */
