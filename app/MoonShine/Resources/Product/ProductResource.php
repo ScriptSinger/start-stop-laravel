@@ -7,6 +7,7 @@ namespace App\MoonShine\Resources\Product;
 use App\Models\Manufacturer;
 use App\Models\Product;
 use App\MoonShine\Fields\Money;
+use App\MoonShine\Handlers\AvitoExportHandler;
 use App\MoonShine\Handlers\SafeImportHandler;
 use App\MoonShine\Resources\Concerns\ResetsPageOutOfRange;
 use App\MoonShine\Resources\Product\Pages\ProductDetailPage;
@@ -24,6 +25,7 @@ use MoonShine\ImportExport\ExportHandler;
 use MoonShine\ImportExport\Traits\ImportExportConcern;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Support\Enums\Ability;
+use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Switcher;
@@ -105,6 +107,18 @@ class ProductResource extends ModelResource implements HasImportExportContract
     protected function export(): ?Handler
     {
         return ExportHandler::make('Экспорт в Excel');
+    }
+
+    /**
+     * @return ListOf<Handler>
+     */
+    protected function handlers(): ListOf
+    {
+        return new ListOf(Handler::class, [
+            $this->export(),
+            AvitoExportHandler::make('Экспорт в Авито'),
+            $this->import(),
+        ]);
     }
 
     protected function import(): ?Handler
