@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AccessLogMiddleware;
 use App\Http\Middleware\NoIndex;
+use App\Http\Middleware\RedirectLegacyIndex;
 use App\Http\Middleware\RequestIdMiddleware;
 use App\Http\Middleware\TrackCustomerActivity;
 use Illuminate\Foundation\Application;
@@ -27,7 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Снаружи до nginx можно добраться только через Traefik.
         $middleware->trustProxies(at: '*');
 
-        $middleware->web(append: [
+        $middleware->web(prepend: [
+            RedirectLegacyIndex::class,
+        ], append: [
             RequestIdMiddleware::class,
             AccessLogMiddleware::class,
             TrackCustomerActivity::class,

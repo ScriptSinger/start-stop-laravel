@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Manufacturer;
 use App\Models\Page;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -10,8 +11,9 @@ use Illuminate\Http\Request;
 
 /**
  * Адреса старого сайта на OpenCart: товар — /zver-60-ah-o-p, раздел —
- * /avtotovari/kabeli (путь из родителей), инфостраница — /uslugi. Поисковики
- * держат их в индексе, поэтому ведём 301 на новые адреса, а не отдаём 404.
+ * /avtotovari/kabeli (путь из родителей), марка в разделе —
+ * /akkumulyatori/titan, инфостраница — /uslugi. Поисковики держат их в
+ * индексе, поэтому ведём 301 на новые адреса, а не отдаём 404.
  *
  * При импорте slug взят из SEO-адреса старого сайта, так что нужный
  * объект находится по последнему сегменту пути.
@@ -20,9 +22,9 @@ class LegacyUrlController extends Controller
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        $slug = last(explode('/', trim($request->path(), '/')));
+        $segments = array_values(array_filter(explode('/', trim($request->path(), '/'))));
 
-        $target = $this->target($slug, substr_count(trim($request->path(), '/'), '/') > 0);
+        $target = $this->target($segments, $request);
 
         abort_if($target === null, 404);
 
@@ -31,15 +33,22 @@ class LegacyUrlController extends Controller
 
     /**
      * Корень пути — товар, вложенный путь — раздел: у старого сайта товары лежали
-     * в корне, а разделы цепочкой родителей.
+     * в корне, а разделы цепочкой родителей. Если последний сегмент вложенного
+     * пути — не раздел, это может быть марка внутри раздела.
+     *
+     * @param  list<string>  $segments
      */
-    private function target(string $slug, bool $nested): ?string
+    private function target(array $segments, Request $request): ?string
     {
-        $product = fn (): ?string => ($model = Product::query()->where('status', true)->where('slug', $slug)->first()) ? route('product.show', $model) : null;
-        $category = fn (): ?string => ($model = Category::query()->where('status', true)->where('slug', $slug)->first()) ? route('category.show', $model) : null;
-        $page = fn (): ?string => ($model = Page::query()->where('status', true)->where('slug', $slug)->first()) ? route('page.show', $model) : null;
+        $slug = (string) last($segments);
+        $nested = count($segments) > 1;
 
-        $order = $nested ? [$category, $product, $page] : [$product, $category, $page];
+        $product = fn (): ?string => ($model = Product::query()->where('status', true)->where('slug', $slug)->first()) ? route('product.show', $model) : null;
+        $category = fn (): ?string => ($model = Category::query()->where('status', true)->where('slug', $slug)->first()) ? $this->categoryUrl($model, $request) : null;
+        $page = fn (): ?string => ($model = Page::query()->where('status', true)->where('slug', $slug)->first()) ? route('page.show', $model) : null;
+        $brandInCategory = fn (): ?string => $nested ? $this->brandInCategoryUrl($segments, $request) : null;
+
+        $order = $nested ? [$category, $product, $page, $brandInCategory] : [$product, $category, $page];
 
         foreach ($order as $resolve) {
             if (($target = $resolve()) !== null) {
@@ -48,5 +57,49 @@ class LegacyUrlController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Номер страницы со старого адреса (?page=3) сохраняем: страницы
+     * списка — самостоятельные.
+     *
+     * @param  array<string, mixed>  $filter
+     */
+    private function categoryUrl(Category $category, Request $request, array $filter = []): string
+    {
+        $page = $request->integer('page');
+
+        return route('category.show', [
+            'category' => $category,
+            ...$filter,
+            ...($page > 1 ? ['page' => $page] : []),
+        ]);
+    }
+
+    /**
+     * /akkumulyatori/titan → раздел с фильтром по производителю. У старого
+     * сайта страницы марки внутри раздела получали числовой суффикс
+     * (titan-1, bushido-2), у производителя его нет — отрезаем.
+     *
+     * @param  list<string>  $segments
+     */
+    private function brandInCategoryUrl(array $segments, Request $request): ?string
+    {
+        $brandSlug = array_pop($segments);
+
+        $category = Category::query()->where('status', true)->where('slug', last($segments))->first();
+
+        if ($category === null) {
+            return null;
+        }
+
+        $manufacturer = Manufacturer::query()
+            ->whereIn('slug', array_unique([$brandSlug, preg_replace('/-\d+$/', '', $brandSlug)]))
+            ->orderByRaw('slug = ? DESC', [$brandSlug])
+            ->first();
+
+        return $manufacturer === null
+            ? null
+            : $this->categoryUrl($category, $request, ['manufacturer' => [$manufacturer->id]]);
     }
 }
