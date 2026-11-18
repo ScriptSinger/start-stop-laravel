@@ -89,11 +89,11 @@ class Dashboard extends Page
                     Fragment::make([$this->photoChart($this->catalogCategoryIds('photo_scope'))->withoutWrapper()])->name('photo-chart'),
                 ])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
                 Column::make([Box::make([$this->ordersChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
+                Column::make([Grid::make([
+                    Column::make([$this->attention()->class('h-full')], colSpan: 12),
+                    Column::make([$this->bestsellers()->class('h-full')], colSpan: 12),
+                ])], colSpan: 6, adaptiveColSpan: 12),
             ])])->open(),
-            Grid::make([
-                Column::make([$this->attention()], colSpan: 6, adaptiveColSpan: 12),
-                Column::make([$this->bestsellers()], colSpan: 6, adaptiveColSpan: 12),
-            ])->customAttributes(['style' => 'margin-top: 0.5rem']),
         ];
     }
 
