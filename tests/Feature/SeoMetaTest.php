@@ -56,7 +56,8 @@ class SeoMetaTest extends TestCase
             ->assertOk()
             ->assertSee('<title>О нас — Старт-Стоп</title>', false)
             ->assertSee('<h1>О нас</h1>', false)
-            ->assertDontSee('<meta name="description"', false);
+            // Страница без текста и без своего описания: название и магазин, а не пусто.
+            ->assertSee('<meta name="description" content="О нас — магазин «Старт-Стоп» в Уфе.">', false);
     }
 
     public function test_filtered_category_is_canonicalized_to_category(): void

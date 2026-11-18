@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Page;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,6 +71,33 @@ class SeoMarkupTest extends TestCase
         $this->get(route('product.show', $this->product('ZUBR 60 Ah')))
             ->assertSee('<meta property="product:price:amount" content="7000.00">', false)
             ->assertSee('<meta property="product:price:currency" content="RUB">', false);
+    }
+
+    public function test_home_page_has_a_single_h1(): void
+    {
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, '<h1'));
+        $this->assertStringContainsString('<h1 class="sr-only">Старт-Стоп — автомобильные аккумуляторы в Уфе</h1>', $html);
+    }
+
+    public function test_info_page_without_own_description_gets_one_from_its_text(): void
+    {
+        $page = Page::query()->create([
+            'title' => 'Трейд-ин',
+            'slug' => 'trade-in',
+            'description' => '<p>Сдайте старый аккумулятор&nbsp;и получите <b>скидку</b> на новый.</p>',
+            'status' => true,
+        ]);
+        $empty = Page::query()->create(['title' => 'Гарантия', 'slug' => 'garantiya', 'description' => '<p><br></p>', 'status' => true]);
+        $own = Page::query()->create(['title' => 'О нас', 'slug' => 'about', 'description' => '<p>Текст</p>', 'meta_description' => 'Своё описание', 'status' => true]);
+
+        $this->get(route('page.show', $page))
+            ->assertSee('<meta name="description" content="Сдайте старый аккумулятор и получите скидку на новый.">', false);
+        $this->get(route('page.show', $empty))
+            ->assertSee('<meta name="description" content="Гарантия — магазин «Старт-Стоп» в Уфе.">', false);
+        $this->get(route('page.show', $own))
+            ->assertSee('<meta name="description" content="Своё описание">', false);
     }
 
     public function test_product_without_photo_has_no_image_in_data(): void

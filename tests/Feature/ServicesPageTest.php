@@ -28,6 +28,7 @@ class ServicesPageTest extends TestCase
             ->assertDontSee('href="'.route('page.show', 'uslugi').'#express-check"', false)
             ->assertSee('href="'.route('callback.create').'"', false)
             ->assertDontSee('Старый текст')
+            ->assertSee('<meta name="description" content="Услуги магазина «Старт-Стоп» в Уфе: диагностика аккумулятора', false)
             ->assertDontSee('id="column-left"', false);
     }
 

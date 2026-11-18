@@ -22,6 +22,8 @@
             <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs hidden-sm"></aside>
             <div id="content" class="col-sm-12 col-md-9 col-lg-9 col-xxl-16">
                 <div class="content-top">
+                    {{-- Единственный h1 главной: внешний вид не меняем, поэтому скрыт визуально. --}}
+                    <h1 class="sr-only">{{ config('shop.name') }} — автомобильные аккумуляторы в Уфе</h1>
                     @include('home.banners')
                 </div>
             </div>
