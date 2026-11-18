@@ -25,6 +25,7 @@ class CarLandingTest extends TestCase
             'excluded_brands' => ['Грузовики'],
             'brand_names' => ['ВАЗ (Lada)' => 'Lada'],
             'skip_models' => ['ВАЗ (Lada)' => ['XRAY concept']],
+            'popular_brands' => ['lada'],
         ]]);
 
         $this->batteries = Category::query()->forceCreate(['id' => 1, 'name' => 'Аккумуляторы', 'slug' => 'akkumulyatori']);
@@ -67,7 +68,7 @@ class CarLandingTest extends TestCase
             ->assertSee('<a href="'.route('car-landing.index').'">По марке авто</a>', false);
     }
 
-    public function test_product_page_links_to_car_landings_after_nightly_refresh(): void
+    public function test_product_page_links_to_popular_car_models_after_nightly_refresh(): void
     {
         $product = Product::query()->where('name', 'TITAN 60Ah О.П.')->sole();
 
@@ -79,10 +80,34 @@ class CarLandingTest extends TestCase
         $this->get(route('product.show', $product))
             ->assertOk()
             ->assertSee('Подходит для автомобилей')
-            ->assertSee('<a href="'.route('car-landing.brand', 'lada').'">Lada</a>', false)
             ->assertSee('<a href="'.route('car-landing.model', ['lada', 'vesta']).'" class="car-landing__chip">Lada Vesta</a>', false)
             // У 2107 полярность прямая, а у этой батареи обратная — страницы 2107 в блоке нет.
-            ->assertDontSee(route('car-landing.model', ['lada', '2107']), false);
+            ->assertDontSee(route('car-landing.model', ['lada', '2107']), false)
+            // Длинной простыни «Все марки» больше нет.
+            ->assertDontSee('Все марки');
+    }
+
+    public function test_product_page_skips_the_block_when_it_fits_no_popular_brand(): void
+    {
+        config(['shop.car_landings.popular_brands' => ['bmw']]);
+        $product = Product::query()->where('name', 'TITAN 60Ah О.П.')->sole();
+
+        $this->artisan('car-landings:refresh')->assertSuccessful();
+
+        $this->get(route('product.show', $product))->assertOk()->assertDontSee('Подходит для автомобилей');
+    }
+
+    public function test_most_common_models_come_first_and_their_number_is_limited(): void
+    {
+        $product = Product::query()->where('name', 'TITAN 60Ah О.П.')->sole();
+
+        $this->artisan('car-landings:refresh')->assertSuccessful();
+
+        $models = app(CarLandingCatalog::class)->linksForProduct($product->id)['models'];
+
+        $this->assertLessThanOrEqual(2, count($models), 'у одной марки не больше двух моделей');
+        // У Vesta в данных больше всего записей (поколения и моторы) — она идёт первой.
+        $this->assertSame('Lada Vesta', $models[0]['name']);
     }
 
     public function test_model_page_links_to_battery_category_and_selection(): void

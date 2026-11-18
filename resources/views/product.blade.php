@@ -217,17 +217,14 @@
                     </div>
                 </div>
 
-                @if ($carLinks['brands'] !== [])
+                @if ($carLinks['models'] !== [])
                     <section class="car-landing__section product-page__fits">
                         <h2 class="car-landing__title">Подходит для автомобилей</h2>
-                        @if ($carLinks['models'] !== [])
-                            <ul class="car-landing__chips">
-                                @foreach ($carLinks['models'] as $model)
-                                    <li><a href="{{ $model['url'] }}" class="car-landing__chip">{{ $model['name'] }}</a></li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        <p class="product-page__fits-brands">Все марки: @foreach ($carLinks['brands'] as $brand)<a href="{{ $brand['url'] }}">{{ $brand['name'] }}</a>@unless ($loop->last), @endunless @endforeach</p>
+                        <ul class="car-landing__chips">
+                            @foreach ($carLinks['models'] as $model)
+                                <li><a href="{{ $model['url'] }}" class="car-landing__chip">{{ $model['name'] }}</a></li>
+                            @endforeach
+                        </ul>
                     </section>
                 @endif
 

@@ -40,9 +40,9 @@ class CarLandingCatalog
 
     private const PRODUCT_LINKS_HOURS = 48;
 
-    private const PRODUCT_LINKS_BRANDS_WITH_MODELS = 6;
-
     private const PRODUCT_LINKS_MODELS_PER_BRAND = 2;
+
+    private const PRODUCT_LINKS_MAX_MODELS = 12;
 
     /**
      * @var array<string, list<int>>
@@ -158,22 +158,26 @@ class CarLandingCatalog
     {
         $this->invalidate();
 
-        // товар → марка → сколько моделей ему подходит и первые из них
+        $popularBrands = config('shop.car_landings.popular_brands', []);
+
+        // товар → марка → самые «массовые» подходящие ему модели (до PRODUCT_LINKS_MODELS_PER_BRAND)
         $links = [];
 
-        $pages = $this->brands()->sum(function (CarBrand $brand) use (&$links): int {
+        $pages = $this->brands()->sum(function (CarBrand $brand) use (&$links, $popularBrands): int {
             $models = $this->models($brand);
 
-            foreach ($models as $model) {
-                foreach ($this->productIds($model) as $productId) {
-                    $entry = $links[$productId][$brand->slug] ?? ['name' => $brand->name, 'count' => 0, 'models' => []];
-                    $entry['count']++;
+            if (in_array($brand->slug, $popularBrands, true)) {
+                foreach ($models as $model) {
+                    // Чем больше записей подбора (поколения, моторы), тем массовее модель.
+                    $weight = $model->fitments->count();
 
-                    if (count($entry['models']) < self::PRODUCT_LINKS_MODELS_PER_BRAND) {
-                        $entry['models'][] = ['slug' => $model->slug, 'name' => $model->fullName()];
+                    foreach ($this->productIds($model) as $productId) {
+                        $candidates = $links[$productId][$brand->slug] ?? [];
+                        $candidates[] = ['slug' => $model->slug, 'name' => $model->fullName(), 'weight' => $weight];
+                        usort($candidates, fn (array $a, array $b): int => $b['weight'] <=> $a['weight']);
+
+                        $links[$productId][$brand->slug] = array_slice($candidates, 0, self::PRODUCT_LINKS_MODELS_PER_BRAND);
                     }
-
-                    $links[$productId][$brand->slug] = $entry;
                 }
             }
 
@@ -186,56 +190,56 @@ class CarLandingCatalog
         });
 
         foreach ($links as $productId => $byBrand) {
-            Cache::put(self::PRODUCT_LINKS_KEY.$productId, $this->productLinks($byBrand), now()->addHours(self::PRODUCT_LINKS_HOURS));
+            Cache::put(self::PRODUCT_LINKS_KEY.$productId, $this->productLinks($byBrand, $popularBrands), now()->addHours(self::PRODUCT_LINKS_HOURS));
         }
 
         return $pages;
     }
 
     /**
-     * Марки и модели, которым подходит товар, — для блока «Подходит для
+     * Ходовые модели, которым подходит товар, — для блока «Подходит для
      * автомобилей» на его странице. Берёт готовое из кеша (его наполняет
      * refresh()): считать это на лету слишком долго. Нет в кеше — блока нет.
      *
-     * @return array{brands: list<array{name: string, url: string}>, models: list<array{name: string, url: string}>}
+     * @return array{models: list<array{name: string, url: string}>}
      */
     public function linksForProduct(int $productId): array
     {
         $links = Cache::get(self::PRODUCT_LINKS_KEY.$productId);
 
         if (! is_array($links)) {
-            return ['brands' => [], 'models' => []];
+            return ['models' => []];
         }
 
         return [
-            'brands' => array_map(fn (array $brand): array => ['name' => $brand['name'], 'url' => route('car-landing.brand', $brand['slug'])], $links['brands']),
-            'models' => array_map(fn (array $model): array => ['name' => $model['name'], 'url' => route('car-landing.model', [$model['brand'], $model['slug']])], $links['models']),
+            'models' => array_map(
+                fn (array $model): array => ['name' => $model['name'], 'url' => route('car-landing.model', [$model['brand'], $model['slug']])],
+                $links['models'] ?? [],
+            ),
         ];
     }
 
     /**
-     * Марки — все, по убыванию числа подходящих моделей. Модели — по нескольку
-     * у самых «ёмких» марок: ссылками на все модели страница бы не обошлась.
+     * Модели ходовых марок (shop.car_landings.popular_brands) в порядке этого
+     * списка. Редкие марки в блок не попадают: покупателю нужны Lada и Kia, а
+     * не Aston Martin, а сотни одинаковых ссылок на странице — повод для
+     * поисковика счесть блок переоптимизацией.
      *
-     * @param  array<string, array{name: string, count: int, models: list<array{slug: string, name: string}>}>  $byBrand
-     * @return array{brands: list<array{name: string, slug: string}>, models: list<array{name: string, slug: string, brand: string}>}
+     * @param  array<string, list<array{slug: string, name: string, weight: int}>>  $byBrand
+     * @param  list<string>  $popularBrands
+     * @return array{models: list<array{name: string, slug: string, brand: string}>}
      */
-    private function productLinks(array $byBrand): array
+    private function productLinks(array $byBrand, array $popularBrands): array
     {
-        uasort($byBrand, fn (array $a, array $b): int => $b['count'] <=> $a['count']);
-
         $models = [];
 
-        foreach (array_slice($byBrand, 0, self::PRODUCT_LINKS_BRANDS_WITH_MODELS, true) as $brandSlug => $entry) {
-            foreach ($entry['models'] as $model) {
-                $models[] = ['name' => $model['name'], 'slug' => $model['slug'], 'brand' => (string) $brandSlug];
+        foreach ($popularBrands as $brandSlug) {
+            foreach ($byBrand[$brandSlug] ?? [] as $model) {
+                $models[] = ['name' => $model['name'], 'slug' => $model['slug'], 'brand' => $brandSlug];
             }
         }
 
-        return [
-            'brands' => array_map(fn (string $slug, array $entry): array => ['name' => $entry['name'], 'slug' => $slug], array_keys($byBrand), $byBrand),
-            'models' => $models,
-        ];
+        return ['models' => array_slice($models, 0, self::PRODUCT_LINKS_MAX_MODELS)];
     }
 
     /**
