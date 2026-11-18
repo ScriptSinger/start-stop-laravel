@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Manufacturer;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use MoonShine\Laravel\Models\MoonshineUser;
@@ -103,6 +105,34 @@ class ProductSupplierOrderTest extends TestCase
         $this->get('/admin/component/product-index-page/product-resource?'.http_build_query([
             '_component_name' => 'index-table-product-resource',
         ]))->assertOk()->assertSee('Цена на сайте')->assertSee('12 350 ₽');
+    }
+
+    public function test_price_problem_ignores_on_order_products_with_supplier_price(): void
+    {
+        $this->makeProduct(['name' => 'Под заказ с ценой', 'slug' => 'on-order-priced', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => 12350]);
+        $this->makeProduct(['name' => 'Под заказ без цены', 'slug' => 'on-order-free', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => null]);
+        $this->makeProduct(['name' => 'На складе без цены', 'slug' => 'stock-free', 'price' => 0, 'quantity' => 3]);
+        $this->makeProduct(['name' => 'Акция выше цены', 'slug' => 'bad-special', 'price' => 1000, 'quantity' => 3, 'special_price' => 1200]);
+        $this->makeProduct(['name' => 'Всё в порядке', 'slug' => 'fine', 'price' => 1000, 'quantity' => 3]);
+
+        $this->assertEqualsCanonicalizing(
+            ['Под заказ без цены', 'На складе без цены', 'Акция выше цены'],
+            Product::query()->withPriceProblem()->pluck('name')->all(),
+        );
+    }
+
+    public function test_ready_for_export_accepts_on_order_products_with_supplier_price(): void
+    {
+        $manufacturer = Manufacturer::query()->create(['name' => 'ZUBR', 'slug' => 'zubr']);
+        $category = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akb']);
+        $ready = ['image' => 'catalog/products/a.jpg', 'manufacturer_id' => $manufacturer->getKey()];
+
+        $onOrder = $this->makeProduct($ready + ['name' => 'Под заказ с ценой', 'slug' => 'export-on-order', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => 12350]);
+        $noPrice = $this->makeProduct($ready + ['name' => 'Под заказ без цены', 'slug' => 'export-free', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => null]);
+        $onOrder->categories()->attach($category);
+        $noPrice->categories()->attach($category);
+
+        $this->assertSame(['Под заказ с ценой'], Product::query()->readyForExport()->pluck('name')->all());
     }
 
     /**

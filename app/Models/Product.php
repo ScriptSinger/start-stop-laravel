@@ -304,28 +304,30 @@ class Product extends Model
 
     /**
      * Можно отдавать в выгрузку (прайс, Яндекс Маркет): продаётся, есть
-     * цена, фото, производитель и категория — без них площадки товар не примут.
+     * цена для покупателя (под заказ — цена поставщика), фото, производитель
+     * и категория — без них площадки товар не примут.
      */
     #[Scope]
     protected function readyForExport(Builder $query): void
     {
         $query->where('status', true)
             ->available()
-            ->where('price', '>', 0)
+            ->whereRaw('('.self::displayPriceSql().') > 0', [config('shop.supplier_order_min_quantity')])
             ->whereNotNull('image')
             ->whereNotNull('manufacturer_id')
             ->has('categories');
     }
 
     /**
-     * Ошибка в цене: нулевая цена или «цена по акции» не ниже обычной
-     * (акция тогда не показывается, а в выгрузке будет странная скидка).
+     * Ошибка в цене: нулевая цена для покупателя (у товара под заказ это цена
+     * поставщика, а не обычная) или «цена по акции» не ниже обычной (акция
+     * тогда не показывается, а в выгрузке будет странная скидка).
      */
     #[Scope]
     protected function withPriceProblem(Builder $query): void
     {
         $query->where(fn (Builder $query) => $query
-            ->where('price', '<=', 0)
+            ->whereRaw('('.self::displayPriceSql().') <= 0', [config('shop.supplier_order_min_quantity')])
             ->orWhere(fn (Builder $query) => $query->whereNotNull('special_price')->whereColumn('special_price', '>=', 'price')));
     }
 
