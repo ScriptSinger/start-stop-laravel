@@ -22,3 +22,11 @@
     border: 1px solid #eee;
 }
 .product-page__tabs-gap {height: 20px}
+
+/* Вкладка «Вопрос-ответ»: тема задаёт отступы для div, а внутри абзац. */
+.question-info {gap: 10px 20px}
+.question-info > p {margin: 0}
+
+/* Отступ после содержимого любой вкладки, чтобы следующий блок не прилипал. */
+.product-page-tabs + .tab-content {margin-bottom: 30px}
+.product-page-tabs + .tab-content .question-info {margin-bottom: 0}
