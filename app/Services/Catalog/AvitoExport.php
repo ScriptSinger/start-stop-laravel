@@ -7,7 +7,9 @@ use App\Models\Manufacturer;
 use App\Models\Product;
 use Generator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Rap2hpoutre\FastExcel\FastExcel;
 
 /**
  * Строки выгрузки для Авито: весь ассортимент, который можно купить (в наличии
@@ -49,6 +51,42 @@ class AvitoExport
         foreach (Product::query()->available()->with('categories:id')->orderBy('id')->lazyById() as $product) {
             yield $this->row($product, $manufacturers, $categories);
         }
+    }
+
+    /**
+     * Собирает XLSX и кладёт его на диск (локальный или S3) по указанному пути,
+     * перезаписывая прежний файл. Возвращает число выгруженных товаров.
+     */
+    public function store(string $disk, string $path): int
+    {
+        $count = 0;
+        $rows = (function () use (&$count): Generator {
+            foreach ($this->rows() as $row) {
+                $count++;
+
+                yield $row;
+            }
+        })();
+
+        $temporary = tempnam(sys_get_temp_dir(), 'avito');
+        $file = $temporary.'.xlsx';
+
+        try {
+            (new FastExcel($rows))->export($file);
+
+            $stream = fopen($file, 'rb');
+
+            try {
+                Storage::disk($disk)->put($path, $stream);
+            } finally {
+                fclose($stream);
+            }
+        } finally {
+            @unlink($file);
+            @unlink($temporary);
+        }
+
+        return $count;
     }
 
     /**

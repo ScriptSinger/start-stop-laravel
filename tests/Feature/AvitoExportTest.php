@@ -145,4 +145,37 @@ class AvitoExportTest extends TestCase
 
         $this->assertSame(['Жив'], array_column($this->exportedRows(), 'Наименование'));
     }
+
+    public function test_command_stores_file_on_disk(): void
+    {
+        Product::query()->create(['name' => 'В наличии', 'slug' => 'in-stock', 'price' => 100, 'quantity' => 3]);
+        Product::query()->create(['name' => 'Нет', 'slug' => 'none', 'price' => 100, 'quantity' => 0]);
+
+        $this->artisan('avito:export')
+            ->expectsOutputToContain('Выгружено товаров: 1')
+            ->assertSuccessful();
+
+        Storage::disk('public')->assertExists('avito/avito.xlsx');
+
+        $rows = (new FastExcel)->import(Storage::disk('public')->path('avito/avito.xlsx'))->all();
+
+        $this->assertSame(['В наличии'], array_column($rows, 'Наименование'));
+    }
+
+    public function test_command_accepts_disk_and_path(): void
+    {
+        Storage::fake('s3');
+        Product::query()->create(['name' => 'В наличии', 'slug' => 'in-stock', 'price' => 100, 'quantity' => 3]);
+
+        $this->artisan('avito:export', ['--disk' => 's3', '--path' => 'feeds/avito.xlsx'])->assertSuccessful();
+
+        Storage::disk('s3')->assertExists('feeds/avito.xlsx');
+    }
+
+    public function test_command_fails_on_unknown_disk(): void
+    {
+        $this->artisan('avito:export', ['--disk' => 'nowhere'])
+            ->expectsOutputToContain('Выгрузка не удалась')
+            ->assertFailed();
+    }
 }
