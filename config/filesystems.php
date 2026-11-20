@@ -65,6 +65,21 @@ return [
             'throw' => true,
         ],
 
+        // Отдельный бакет с файлом выгрузки для автозагрузки Авито (avito:export --disk=avito).
+        'avito' => [
+            'driver' => 's3',
+            'key' => env('AVITO_S3_ACCESS_KEY_ID'),
+            'secret' => env('AVITO_S3_SECRET_ACCESS_KEY'),
+            'region' => env('AVITO_S3_REGION', 'ru-central1'),
+            'bucket' => env('AVITO_S3_BUCKET'),
+            'endpoint' => env('AVITO_S3_ENDPOINT', 'https://storage.yandexcloud.net'),
+            'url' => env('AVITO_S3_URL'),
+            'use_path_style_endpoint' => true,
+            // Публичное чтение задаётся настройкой бакета, ACL объектов остаётся private.
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
