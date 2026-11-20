@@ -33,7 +33,7 @@
     <div class="product-thumb__caption">
         <a class="product-thumb__name" href="{{ route('product.show', $product) }}">{{ $product->name }}</a>
 
-        @if (($specifications = $product->specifications(6))->isNotEmpty())
+        @if (($specifications = $product->specifications(6, visibleOnly: true))->isNotEmpty())
             <div class="product-thumb__attribute product-thumb__description attribute">
                 @foreach ($specifications as $name => $value)
                     <span class="product-thumb__attribute-item">{{ $name }}: <span class="product-thumb__attribute-value">{{ $value }}</span></span>

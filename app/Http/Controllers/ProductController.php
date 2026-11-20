@@ -20,8 +20,8 @@ class ProductController extends Controller
 
         return view('product', [
             'product' => $product,
-            'specifications' => $product->specifications(),
-            'specificationGroups' => $product->specificationGroups(),
+            'specifications' => $product->specifications(visibleOnly: true),
+            'specificationGroups' => $product->specificationGroups(visibleOnly: true),
             'similarProducts' => $similarProducts->for($product),
             'carLinks' => $carLandings->linksForProduct($product->id),
             'guide' => $guides->forProduct($product),

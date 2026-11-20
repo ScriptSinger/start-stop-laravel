@@ -116,14 +116,16 @@ class Product extends Model
 
     /**
      * Характеристики в порядке карточки товара: «Напряжение» => «12V».
-     * Несколько значений одной характеристики — через запятую. Нужна
+     * Несколько значений одной характеристики — через запятую. С $visibleOnly
+     * служебные характеристики (show_on_card = 0) пропускаются: так их видит
+     * покупатель, в админке — все. Нужна
      * загруженная связь attributeValues.attribute (см. withCardData()).
      *
      * @return Collection<string, string>
      */
-    public function specifications(?int $limit = null): Collection
+    public function specifications(?int $limit = null, bool $visibleOnly = false): Collection
     {
-        return $this->specificationGroups($limit)
+        return $this->specificationGroups($limit, $visibleOnly)
             ->map(fn (Collection $values): string => $values->pluck('value')->implode(', '));
     }
 
@@ -133,9 +135,10 @@ class Product extends Model
      *
      * @return Collection<string, Collection<int, AttributeValue>>
      */
-    public function specificationGroups(?int $limit = null): Collection
+    public function specificationGroups(?int $limit = null, bool $visibleOnly = false): Collection
     {
         return $this->attributeValues
+            ->when($visibleOnly, fn (Collection $values) => $values->filter(fn (AttributeValue $value): bool => $value->attribute->showsOnCard()))
             ->sortBy([['attribute.display_sort_order', 'asc'], ['attribute.name', 'asc'], ['sort_order', 'asc']])
             ->groupBy('attribute.name')
             ->when($limit !== null, fn (Collection $groups) => $groups->take($limit));

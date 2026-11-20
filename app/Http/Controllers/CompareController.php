@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attribute;
 use App\Models\Product;
 use App\Services\SavedProducts\Compare;
 use Artesaos\SEOTools\Facades\SEOTools;
@@ -20,6 +21,7 @@ class CompareController extends Controller
         // Строки таблицы — все характеристики сравниваемых товаров в порядке карточки.
         $specificationNames = $products
             ->flatMap(fn (Product $product): Collection => $product->attributeValues->pluck('attribute'))
+            ->filter(fn (Attribute $attribute): bool => $attribute->showsOnCard())
             ->unique('id')
             ->sortBy([['display_sort_order', 'asc'], ['name', 'asc']])
             ->pluck('name')

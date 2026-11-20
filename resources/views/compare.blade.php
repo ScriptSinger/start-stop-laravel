@@ -68,7 +68,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-                                @php($specifications = $products->mapWithKeys(fn ($product) => [$product->id => $product->specifications()]))
+                                @php($specifications = $products->mapWithKeys(fn ($product) => [$product->id => $product->specifications(visibleOnly: true)]))
                                 @foreach ($specificationNames as $name)
                                     {{-- «Показывать только отличия»: строка, где у всех товаров одно значение, прячется. --}}
                                     @php($isSame = $products->count() > 1 && $products->map(fn ($product) => $specifications[$product->id][$name] ?? '-')->unique()->count() === 1)

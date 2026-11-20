@@ -39,6 +39,7 @@ class AttributeDetailPage extends DetailPage
             Text::make('Название', 'name'),
             Number::make('Порядок сортировки', 'sort_order'),
             Switcher::make('В фильтре', 'is_filterable'),
+            Switcher::make('На карточке', 'show_on_card'),
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
                 ->inLine(separator: ' ', badge: true),
         ];

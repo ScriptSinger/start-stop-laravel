@@ -86,7 +86,7 @@ class ProductSeo
     private function description(Product $product, string $heading): string
     {
         $price = number_format($product->displayPrice(), 0, '', ' ');
-        $specifications = $product->specifications(3)
+        $specifications = $product->specifications(3, visibleOnly: true)
             ->map(fn (string $value, string $name): string => "{$name}: {$value}")
             ->implode(', ');
 

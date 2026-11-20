@@ -51,6 +51,8 @@ class AttributeFormPage extends FormPage
                     ->hint('Якорь раздела внутри гайда, например polarity (id заголовка)'),
                 Number::make('Порядок сортировки', 'sort_order')->default(0),
                 Switcher::make('Показывать в фильтре', 'is_filterable')->default(true),
+                Switcher::make('Показывать на карточке товара', 'show_on_card')->default(true)
+                    ->hint('Выключите для служебных характеристик (диапазоны для фильтра): покупатель не увидит их на карточке и в сравнении, фильтр работает как раньше'),
                 BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
                     ->selectMode()
                     ->hint('Характеристика показывается в форме товаров этих категорий'),

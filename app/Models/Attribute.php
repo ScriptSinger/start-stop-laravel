@@ -17,15 +17,26 @@ class Attribute extends Model
         'sort_order',
         'display_sort_order',
         'is_filterable',
+        'show_on_card',
     ];
 
     protected $casts = [
         'is_filterable' => 'boolean',
+        'show_on_card' => 'boolean',
     ];
 
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    /**
+     * Показывать покупателю на карточке и в сравнении. Пока миграция не
+     * выполнена, колонки нет — показываем всё, а не роняем страницу.
+     */
+    public function showsOnCard(): bool
+    {
+        return (bool) ($this->show_on_card ?? true);
     }
 
     public function guide(): BelongsTo

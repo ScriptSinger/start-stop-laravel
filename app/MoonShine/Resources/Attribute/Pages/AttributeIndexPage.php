@@ -13,6 +13,7 @@ use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\QueryTags\QueryTag;
+use MoonShine\Support\Enums\Ability;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
@@ -38,7 +39,11 @@ class AttributeIndexPage extends IndexPage
             ID::make(),
             Text::make('Название', 'name'),
             Number::make('Порядок сортировки', 'sort_order'),
-            Switcher::make('В фильтре', 'is_filterable'),
+            // Переключатели меняются прямо в списке, как «Активен» у товаров.
+            Switcher::make('В фильтре', 'is_filterable')
+                ->updateOnPreview(condition: fn (): bool => $this->getResource()->can(Ability::UPDATE)),
+            Switcher::make('На карточке', 'show_on_card')
+                ->updateOnPreview(condition: fn (): bool => $this->getResource()->can(Ability::UPDATE)),
             Number::make('Значений', 'values_count'),
             Number::make('Товаров', 'id', fn (Attribute $attribute): int => DB::table('attribute_value_product')
                 ->join('attribute_values', 'attribute_values.id', '=', 'attribute_value_product.attribute_value_id')
