@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AttributeHintController;
 use App\Http\Controllers\BatteryFilterController;
 use App\Http\Controllers\BusinessPageController;
 use App\Http\Controllers\CallbackRequestController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegacyUrlController;
 use App\Http\Controllers\PageController;
@@ -32,6 +34,10 @@ Route::get('/category/{category:slug}/count', [CategoryController::class, 'count
 Route::get('/contact-us', ContactController::class)->name('contact');
 Route::get('/dlya-organizatsiy', BusinessPageController::class)->name('business');
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.show');
+// «Как выбрать»: гайды, на которые ведут подсказки к характеристикам товара.
+Route::get('/guide/{guide:slug}', [GuideController::class, 'show'])->name('guide.show');
+Route::get('/hint/attribute/{attribute}', [AttributeHintController::class, 'attribute'])->middleware('noindex')->name('hint.attribute');
+Route::get('/hint/value/{attributeValue}', [AttributeHintController::class, 'value'])->middleware('noindex')->name('hint.value');
 
 Route::get('/auth/yandex', [YandexAuthController::class, 'redirect'])->middleware(['guest', 'throttle:10,1', 'noindex'])->name('auth.yandex');
 Route::get('/auth/yandex/callback', [YandexAuthController::class, 'callback'])->middleware(['throttle:10,1', 'noindex'])->name('auth.yandex.callback');

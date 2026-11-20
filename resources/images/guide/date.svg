@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 340" role="img" aria-labelledby="t" font-family="Arial, Helvetica, sans-serif">
+<title id="t">Где на аккумуляторе искать дату выпуска</title>
+<rect width="840" height="340" rx="14" fill="#f6f7f9"/>
+<!-- корпус, вид сбоку -->
+<rect x="30" y="70" width="470" height="220" rx="12" fill="#2b2f36"/>
+<rect x="70" y="50" width="60" height="26" rx="5" fill="#2b2f36"/>
+<rect x="400" y="50" width="60" height="26" rx="5" fill="#2b2f36"/>
+<rect x="30" y="70" width="470" height="30" rx="12" fill="#3a3f48"/>
+<!-- наклейка с датой -->
+<rect x="300" y="196" width="150" height="62" rx="6" fill="#fff"/>
+<text x="375" y="238" text-anchor="middle" font-size="32" font-weight="700" fill="#222">05/24</text>
+<path d="M375 196V150" stroke="#1776c9" stroke-width="3"/>
+<circle cx="375" cy="142" r="13" fill="#1776c9"/>
+<text x="375" y="147" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1</text>
+<text x="52" y="318" font-size="13" fill="#999">Схема: место и вид отметки зависят от производителя</text>
+<!-- пояснение -->
+<g font-size="17" fill="#222">
+<circle cx="560" cy="100" r="13" fill="#1776c9"/>
+<text x="560" y="105" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">1</text>
+<text x="584" y="106" font-weight="700">Отметка с датой выпуска</text>
+<text x="560" y="146" font-size="15" fill="#444">Чаще всего это месяц и год:</text>
+<text x="560" y="170" font-size="15" fill="#444">05/24 — май 2024 года.</text>
+<text x="560" y="210" font-size="15" fill="#444">Бывают и буквенно-цифровые</text>
+<text x="560" y="234" font-size="15" fill="#444">коды: расшифровку подскажет</text>
+<text x="560" y="258" font-size="15" fill="#444">продавец или производитель.</text>
+</g>
+</svg>

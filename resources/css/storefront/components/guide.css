@@ -1,0 +1,517 @@
+/*
+ * Гайды «Как выбрать» (resources/views/guide.blade.php): шапка со сведениями,
+ * оглавление слева, статья с таблицей, схемой, советами и чек-листом, внизу —
+ * блок подбора. Классы guide-* используются в тексте гайда (админка → Гайды).
+ */
+.guide {
+    --guide-accent: #c82a00;
+    --guide-link: var(--spec-hint-link, #1776c9);
+    --guide-border: #e6e6e6;
+    --guide-muted: #6b6b6b;
+    --guide-soft: #f6f7f9;
+}
+
+.guide .breadcrumb {
+    margin-bottom: 0;
+}
+
+.guide__hero {
+    margin: 10px 0 28px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--guide-border);
+}
+
+.guide__title {
+    margin: 0 0 12px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.guide__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--guide-muted);
+    font-size: 14px;
+}
+
+.guide__meta i {
+    margin-right: 6px;
+    color: var(--guide-accent);
+}
+
+.guide__layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 44px;
+    align-items: start;
+    margin-bottom: 50px;
+}
+
+/* Оглавление и блок помощи прилипают при прокрутке статьи. */
+.guide__aside {
+    position: sticky;
+    top: 90px;
+}
+
+.guide__toc-title,
+.guide__help-title {
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--guide-muted);
+}
+
+.guide__toc-list {
+    margin: 0 0 24px;
+    padding: 0;
+    list-style: none;
+    border-left: 2px solid var(--guide-border);
+    counter-reset: guide-toc;
+}
+
+.guide__toc-list li {
+    counter-increment: guide-toc;
+}
+
+.guide__toc-list a {
+    display: block;
+    margin-left: -2px;
+    padding: 7px 12px;
+    border-left: 2px solid transparent;
+    color: #333;
+    font-size: 15px;
+    line-height: 1.35;
+    text-decoration: none;
+}
+
+.guide__toc-list a::before {
+    content: counter(guide-toc) ". ";
+    color: var(--guide-muted);
+}
+
+.guide__toc-list a:hover,
+.guide__toc-list a:focus-visible {
+    color: var(--guide-link);
+}
+
+.guide__toc-list a.is-active {
+    border-left-color: var(--guide-accent);
+    color: var(--guide-accent);
+    font-weight: 600;
+}
+
+.guide__help {
+    padding: 18px;
+    background: var(--guide-soft);
+    border-radius: 10px;
+}
+
+.guide__help p {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--guide-muted);
+}
+
+.guide__help-phone {
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.guide__help-phone i {
+    margin-right: 6px;
+    color: var(--guide-accent);
+}
+
+/* Статья */
+.guide__body {
+    min-width: 0;
+    font-size: 16px;
+    line-height: 1.7;
+    counter-reset: guide-section;
+}
+
+.guide__body h2 {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 44px 0 16px;
+    padding-top: 6px;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    scroll-margin-top: 90px;
+    counter-increment: guide-section;
+}
+
+.guide__body h2:first-child,
+.guide__body .guide-lead + h2 {
+    margin-top: 32px;
+}
+
+.guide__body h2::before {
+    content: counter(guide-section);
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--guide-accent);
+    color: #fff;
+    font-size: 17px;
+    line-height: 36px;
+    text-align: center;
+}
+
+.guide__body p {
+    margin: 0 0 16px;
+}
+
+.guide__body ul,
+.guide__body ol {
+    margin: 0 0 18px;
+    padding-left: 22px;
+}
+
+.guide__body li {
+    margin-bottom: 6px;
+}
+
+.guide__body a {
+    color: var(--guide-link);
+}
+
+.guide-lead {
+    margin: 0 0 8px;
+    padding: 18px 22px;
+    background: var(--guide-soft);
+    border-left: 4px solid var(--guide-accent);
+    border-radius: 0 10px 10px 0;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+/* Совет эксперта и предупреждение */
+.guide-tip,
+.guide-note {
+    position: relative;
+    margin: 20px 0;
+    padding: 16px 20px 4px 58px;
+    background: #eef6fd;
+    border-radius: 10px;
+}
+
+.guide-tip::before,
+.guide-note::before {
+    content: "i";
+    position: absolute;
+    top: 16px;
+    left: 18px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--guide-link);
+    color: #fff;
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 28px;
+    text-align: center;
+}
+
+.guide-note {
+    background: #fdf1ee;
+}
+
+.guide-note::before {
+    content: "!";
+    background: var(--guide-accent);
+    font-style: normal;
+}
+
+.guide-tip__title {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+/* Сравнительная таблица */
+.guide-table-wrap {
+    margin: 20px 0 24px;
+    overflow-x: auto;
+    border: 1px solid var(--guide-border);
+    border-radius: 10px;
+}
+
+.guide-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+.guide-table th,
+.guide-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--guide-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.guide-table thead th {
+    background: var(--guide-soft);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--guide-muted);
+}
+
+.guide-table tbody tr:last-child th,
+.guide-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.guide-table tbody th {
+    white-space: nowrap;
+    font-size: 16px;
+}
+
+.guide-table .guide-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 12px;
+    background: #e8f5ec;
+    color: #1d7a3a;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.guide-table .guide-badge_mid {
+    background: #fff4de;
+    color: #9a6200;
+}
+
+.guide-table .guide-badge_low {
+    background: #f1f1f1;
+    color: #666;
+}
+
+/* Схема полярности */
+.guide-polarity {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 20px 0 24px;
+}
+
+.guide-polarity__item {
+    margin: 0;
+    padding: 20px;
+    background: var(--guide-soft);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.guide-polarity__battery {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 150px;
+    height: 70px;
+    margin: 14px auto 16px;
+    padding: 0 24px;
+    border: 3px solid #333;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.guide-polarity__battery::before {
+    content: "клеммы к вам";
+    position: absolute;
+    bottom: -26px;
+    left: 0;
+    width: 100%;
+    color: var(--guide-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.guide-polarity__pole {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 34px;
+}
+
+.guide-polarity__pole_plus {
+    background: var(--guide-accent);
+}
+
+.guide-polarity__pole_minus {
+    background: #1f5fbf;
+}
+
+.guide-polarity__item figcaption {
+    margin-top: 34px;
+    line-height: 1.5;
+}
+
+/* Иллюстрации: метка [[figure:имя]] в тексте гайда (App\Services\Catalog\GuideFigures) */
+.guide-figure {
+    margin: 22px 0 26px;
+}
+
+.guide-figure__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--guide-border);
+    border-radius: 12px;
+}
+
+.guide-figure__caption {
+    margin-top: 8px;
+    color: var(--guide-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Чек-лист и частые ошибки */
+.guide-checklist,
+.guide-mistakes {
+    padding: 0 !important;
+    list-style: none;
+}
+
+.guide-checklist li,
+.guide-mistakes li {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 12px 16px 12px 48px;
+    background: var(--guide-soft);
+    border-radius: 8px;
+}
+
+.guide-checklist li::before,
+.guide-mistakes li::before {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 24px;
+    text-align: center;
+}
+
+.guide-checklist li::before {
+    content: "✓";
+    background: #1d9a4a;
+}
+
+.guide-mistakes li::before {
+    content: "✕";
+    background: var(--guide-accent);
+}
+
+/* Блок подбора в конце статьи */
+.guide-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 32px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 48px;
+    padding: 28px 32px;
+    background: #2b2f36;
+    border-radius: 12px;
+    color: #fff;
+}
+
+.guide-cta > div:first-child {
+    flex: 1 1 340px;
+}
+
+.guide__body .guide-cta__title {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.guide-cta__text {
+    margin: 0 !important;
+    color: rgba(255 255 255 / .8);
+    line-height: 1.55;
+}
+
+.guide-cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 991px) {
+    .guide__layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    /* На узком экране оглавление идёт перед статьёй, без прилипания. */
+    .guide__aside {
+        position: static;
+    }
+
+    .guide__help {
+        display: none;
+    }
+
+    .guide__toc-list {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    .guide__title {
+        font-size: 26px;
+    }
+
+    .guide__body {
+        font-size: 15px;
+    }
+
+    .guide__body h2 {
+        font-size: 22px;
+    }
+
+    .guide-lead {
+        padding: 14px 16px;
+        font-size: 16px;
+    }
+
+    .guide-polarity {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guide-cta {
+        padding: 22px 20px;
+    }
+}

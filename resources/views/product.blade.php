@@ -151,8 +151,8 @@
 
                                     @if (($shortSpecifications = $specifications->take(6))->isNotEmpty())
                                         <div class="product-page__short-attribute product-data">
-                                            @foreach ($shortSpecifications as $name => $value)
-                                                <div class="product-data__item"><div class="product-data__item-div">{{ $name }}</div>{{ $value }}</div>
+                                            @foreach ($specificationGroups->take(6) as $name => $values)
+                                                <div class="product-data__item"><div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div><x-spec-values :values="$values" /></div>
                                             @endforeach
                                         </div>
                                         <a class="product-page__more-attr" href="#tab-specification" @click.prevent="$showTab('#tab-specification')">Все характеристики</a>
@@ -198,10 +198,10 @@
                             @if ($specifications->isNotEmpty())
                                 <div class="tab-pane {{ $product->hasDescription() ? '' : 'active' }}" id="tab-specification">
                                     <div class="product-data">
-                                        @foreach ($specifications as $name => $value)
+                                        @foreach ($specificationGroups as $name => $values)
                                             <div class="product-data__item">
-                                                <div class="product-data__item-div">{{ $name }}</div>
-                                                <div class="product-data__item-div">{{ $value }}</div>
+                                                <div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div>
+                                                <div class="product-data__item-div"><x-spec-values :values="$values" /></div>
                                             </div>
                                         @endforeach
                                     </div>

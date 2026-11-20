@@ -11,6 +11,8 @@ class AttributeValue extends Model
     protected $fillable = [
         'attribute_id',
         'value',
+        'hint',
+        'guide_anchor',
         'sort_order',
     ];
 

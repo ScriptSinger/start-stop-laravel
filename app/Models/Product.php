@@ -123,11 +123,22 @@ class Product extends Model
      */
     public function specifications(?int $limit = null): Collection
     {
+        return $this->specificationGroups($limit)
+            ->map(fn (Collection $values): string => $values->pluck('value')->implode(', '));
+    }
+
+    /**
+     * Те же характеристики, но со значениями-моделями: страница товара по ним
+     * строит значок «i» с подсказкой у названия и у отдельных значений.
+     *
+     * @return Collection<string, Collection<int, AttributeValue>>
+     */
+    public function specificationGroups(?int $limit = null): Collection
+    {
         return $this->attributeValues
             ->sortBy([['attribute.display_sort_order', 'asc'], ['attribute.name', 'asc'], ['sort_order', 'asc']])
             ->groupBy('attribute.name')
-            ->map(fn (Collection $values): string => $values->pluck('value')->implode(', '))
-            ->when($limit !== null, fn (Collection $specifications) => $specifications->take($limit));
+            ->when($limit !== null, fn (Collection $groups) => $groups->take($limit));
     }
 
     /**

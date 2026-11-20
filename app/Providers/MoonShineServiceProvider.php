@@ -15,6 +15,7 @@ use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
+use App\MoonShine\Resources\Guide\GuideResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\MenuItem\MenuItemResource;
 use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
@@ -51,6 +52,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 OrderItemResource::class,
                 CustomerResource::class,
                 PageResource::class,
+                GuideResource::class,
                 ProductImageResource::class,
                 MenuItemResource::class,
                 CustomerRequestResource::class,

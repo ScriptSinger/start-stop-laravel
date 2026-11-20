@@ -22,7 +22,7 @@
                 <h4 class="modal-title" id="modal-form-title" x-text="$store.modal.title"></h4>
             </div>
             <div class="modal-body">
-                <p x-show="$store.modal.loading" x-cloak role="status">Загружаем форму…</p>
+                <p x-show="$store.modal.loading" x-cloak role="status">Загружаем…</p>
                 <div x-show="$store.modal.error" x-cloak role="alert">
                     <p>Не получилось открыть форму. Попробуйте ещё раз.</p>
                     <button type="button" class="btn btn-default" @click="$store.modal.open($store.modal.lastUrl, $store.modal.title)">Повторить</button>

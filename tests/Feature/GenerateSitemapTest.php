@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Guide;
 use App\Models\Page;
 use App\Models\Product;
 use Illuminate\Console\Scheduling\Schedule;
@@ -71,6 +72,18 @@ class GenerateSitemapTest extends TestCase
 
         // Адреса страниц лежат в файлах по типам, а не в индексе.
         $this->assertStringNotContainsString(route('home'), str_replace(url('sitemap-'), '', $index));
+    }
+
+    public function test_pages_file_has_only_active_guides(): void
+    {
+        $live = Guide::factory()->create(['slug' => 'live']);
+        $hidden = Guide::factory()->create(['slug' => 'hidden', 'status' => false]);
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
+
+        $pages = file_get_contents(dirname($this->path).'/sitemap-pages.xml');
+        $this->assertStringContainsString('<loc>'.route('guide.show', $live).'</loc>', $pages);
+        $this->assertStringNotContainsString(route('guide.show', $hidden), $pages);
     }
 
     public function test_pages_file_has_main_pages_and_lastmod_follows_catalog(): void

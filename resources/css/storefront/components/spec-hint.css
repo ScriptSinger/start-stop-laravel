@@ -1,0 +1,59 @@
+/*
+ * Подсказки к характеристикам на карточке товара: значок «i» у названия,
+ * значение-термин ссылкой и окно с коротким объяснением и ссылкой на гайд.
+ */
+:root {
+    --spec-hint-link: #1776c9;
+    --spec-hint-link-hover: #0f5aa0;
+}
+
+.spec-hint-trigger {
+    display: inline-block;
+    margin-left: 4px;
+    color: #9a9a9a;
+    text-decoration: none;
+    vertical-align: baseline;
+}
+
+.spec-hint-trigger:hover,
+.spec-hint-trigger:focus-visible {
+    color: var(--spec-hint-link);
+}
+
+.spec-hint-trigger:focus-visible,
+.spec-hint-term:focus-visible {
+    outline: var(--store-focus-ring);
+    outline-offset: var(--store-focus-offset);
+}
+
+.spec-hint-term {
+    color: var(--spec-hint-link);
+    text-decoration: none;
+}
+
+.spec-hint-term:hover,
+.spec-hint-term:focus-visible {
+    color: var(--spec-hint-link-hover);
+    text-decoration: underline;
+}
+
+.spec-hint__text {
+    margin: 0 0 15px;
+    line-height: 1.5;
+}
+
+.spec-hint__more {
+    display: inline-block;
+    color: var(--spec-hint-link);
+    text-decoration: none;
+}
+
+.spec-hint__more:hover,
+.spec-hint__more:focus-visible {
+    color: var(--spec-hint-link-hover);
+}
+
+.spec-hint__more i {
+    margin-left: 4px;
+    font-size: 0.85em;
+}

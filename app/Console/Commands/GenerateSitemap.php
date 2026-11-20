@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\BatteryFitment;
 use App\Models\Category;
+use App\Models\Guide;
 use App\Models\Page;
 use App\Models\Product;
 use App\Services\CarLanding\CarBrand;
@@ -122,7 +123,12 @@ class GenerateSitemap extends Command
             Url::create(route('page.show', $page))->setLastModificationDate($page->updated_at),
         ));
 
-        return [$sitemap, $pages->count() + 3];
+        $guides = Guide::query()->where('status', true)->orderBy('sort_order')->get();
+        $guides->each(fn (Guide $guide) => $sitemap->add(
+            Url::create(route('guide.show', $guide))->setLastModificationDate($guide->updated_at),
+        ));
+
+        return [$sitemap, $pages->count() + $guides->count() + 3];
     }
 
     /**

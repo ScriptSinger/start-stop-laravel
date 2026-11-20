@@ -7,10 +7,12 @@ namespace App\MoonShine\Resources\Attribute\Pages;
 use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\AttributeValue\AttributeValueResource;
 use App\MoonShine\Resources\Category\CategoryResource;
+use App\MoonShine\Resources\Guide\GuideResource;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Fields\Relationships\RelationRepeater;
 use MoonShine\Laravel\Pages\Crud\FormPage;
@@ -21,6 +23,7 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Textarea;
 use Throwable;
 
 /**
@@ -37,6 +40,15 @@ class AttributeFormPage extends FormPage
             Box::make([
                 ID::make(),
                 Text::make('Название', 'name')->required(),
+                Textarea::make('Подсказка', 'hint')
+                    ->nullable()
+                    ->hint('Короткое объяснение в окне по значку «i» рядом с названием характеристики на карточке товара'),
+                BelongsTo::make('Гайд', 'guide', resource: GuideResource::class)
+                    ->nullable()
+                    ->hint('Куда ведёт ссылка «Больше советов по выбору» в окне подсказки'),
+                Text::make('Раздел гайда', 'guide_anchor')
+                    ->nullable()
+                    ->hint('Якорь раздела внутри гайда, например polarity (id заголовка)'),
                 Number::make('Порядок сортировки', 'sort_order')->default(0),
                 Switcher::make('Показывать в фильтре', 'is_filterable')->default(true),
                 BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
@@ -49,6 +61,8 @@ class AttributeFormPage extends FormPage
                 ->fields([
                     ID::make(),
                     Text::make('Значение', 'value')->required(),
+                    Textarea::make('Подсказка', 'hint')->nullable(),
+                    Text::make('Раздел гайда', 'guide_anchor')->nullable(),
                     Number::make('Порядок', 'sort_order')->default(0),
                 ])
                 ->creatable()

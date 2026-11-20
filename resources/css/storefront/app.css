@@ -21,6 +21,8 @@
 @import './components/forms.css';
 @import './components/errors.css';
 @import './components/car-landing.css';
+@import './components/spec-hint.css';
+@import './components/guide.css';
 
 :root {
     --store-control-height: 44px;
