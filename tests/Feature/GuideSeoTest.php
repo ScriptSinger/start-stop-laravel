@@ -7,6 +7,7 @@ use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Guide;
 use App\Models\MenuItem;
+use App\Models\Page;
 use App\Models\Product;
 use App\Services\Catalog\BatteryGuideContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -65,6 +66,19 @@ class GuideSeoTest extends TestCase
             ->assertSee('<a href="'.route('car-landing.index').'">подбор по авто</a>', false)
             ->assertSee('<a href="'.route('car-landing.brand', 'kia').'">Kia</a>', false)
             ->assertDontSee('[[', false);
+    }
+
+    public function test_page_marker_links_to_active_site_page_only(): void
+    {
+        Page::query()->create(['title' => 'Услуги', 'slug' => 'uslugi', 'status' => true]);
+        Page::query()->create(['title' => 'Скрытая', 'slug' => 'skrytaya', 'status' => false]);
+        $this->guide->update(['body' => '<p>[[page:uslugi|наши услуги]] и [[page:skrytaya|скрытая]].</p>']);
+
+        $this->get(route('guide.show', $this->guide))
+            ->assertOk()
+            ->assertSee('<a href="'.route('page.show', 'uslugi').'">наши услуги</a>', false)
+            ->assertSee('и скрытая.', false)
+            ->assertDontSee(route('page.show', 'skrytaya'), false);
     }
 
     public function test_links_to_missing_targets_stay_plain_text(): void

@@ -3,6 +3,7 @@
 namespace App\Services\Catalog;
 
 use App\Models\Category;
+use App\Models\Page;
 use App\Services\CarLanding\CarBrand;
 use App\Services\CarLanding\CarLandingCatalog;
 
@@ -13,6 +14,7 @@ use App\Services\CarLanding\CarLandingCatalog;
  *   [[category:1|аккумуляторы]]     — раздел каталога по id
  *   [[cars|подбор по автомобилю]]    — страница подбора по маркам
  *   [[brand:lada|для Lada]]          — посадочная марки
+ *   [[page:uslugi|наши услуги]]      — страница сайта по адресу (slug)
  *   [[block:catalog]]                — плашки разделов и популярных марок
  *
  * Если раздела или марки нет (отключён), остаётся простой текст.
@@ -24,7 +26,7 @@ class GuideLinks
     public function render(string $body): string
     {
         $body = (string) preg_replace_callback(
-            '~\[\[(category:(\d+)|cars|brand:([a-z0-9-]+))\|([^\]]+)\]\]~u',
+            '~\[\[(category:(\d+)|cars|brand:([a-z0-9-]+)|page:([a-z0-9_-]+))\|([^\]]+)\]\]~u',
             fn (array $match): string => $this->link($match),
             $body,
         );
@@ -44,11 +46,12 @@ class GuideLinks
      */
     private function link(array $match): string
     {
-        $text = e($match[4]);
+        $text = e($match[5]);
 
         $url = match (true) {
             str_starts_with($match[1], 'category:') => $this->categoryUrl((int) $match[2]),
             $match[1] === 'cars' => route('car-landing.index'),
+            str_starts_with($match[1], 'page:') => $this->pageUrl($match[4]),
             default => $this->brandUrl($match[3]),
         };
 
@@ -60,6 +63,13 @@ class GuideLinks
         $category = Category::query()->where('status', true)->find($id);
 
         return $category === null ? null : route('category.show', $category);
+    }
+
+    private function pageUrl(string $slug): ?string
+    {
+        $page = Page::query()->where('status', true)->where('slug', $slug)->first();
+
+        return $page === null ? null : route('page.show', $page);
     }
 
     private function brandUrl(string $slug): ?string
