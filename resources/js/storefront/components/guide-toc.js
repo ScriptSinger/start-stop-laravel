@@ -1,9 +1,29 @@
 /*
- * Оглавление гайда (resources/views/guide.blade.php): подсвечивает раздел,
- * который сейчас читают. Без JavaScript оглавление остаётся обычными якорями.
+ * Оглавление гайда (resources/views/guide.blade.php): плавно прокручивает к
+ * разделу и подсвечивает тот, который сейчас читают. Без JavaScript
+ * оглавление остаётся обычными якорями.
  */
 export default () => ({
     active: '',
+
+    /**
+     * Плавная прокрутка к разделу, как у кнопки «наверх»: при включённом в
+     * системе «уменьшении анимации» — мгновенно. Отступ под шапку задаёт
+     * scroll-margin-top у заголовков (guide.css).
+     */
+    go(id) {
+        const heading = document.getElementById(id);
+
+        if (!heading) {
+            return;
+        }
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        this.active = id;
+        heading.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block: 'start'});
+        history.replaceState(null, '', `#${id}`);
+    },
 
     init() {
         const headings = [...this.$root.querySelectorAll('.guide__body h2[id]')];

@@ -43,6 +43,7 @@ class FillBatteryGuideTest extends TestCase
 
         $guide = Guide::query()->where('slug', BatteryGuideContent::SLUG)->firstOrFail();
         $this->assertTrue($guide->status);
+        $this->assertSame(BatteryGuideContent::META_TITLE, $guide->meta_title);
         $this->assertStringContainsString('<h2 id="polarity">', $guide->body);
 
         $technology = $this->technology->fresh();
@@ -79,6 +80,7 @@ class FillBatteryGuideTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame(BatteryGuideContent::body(), $guide->fresh()->body);
+        $this->assertSame(BatteryGuideContent::META_TITLE, $guide->fresh()->meta_title);
         $this->assertSame(1, Guide::query()->count());
     }
 

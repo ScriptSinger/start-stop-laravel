@@ -14,6 +14,9 @@
                             <li class="footer__column-li"><a href="{{ $link->href() }}" title="{{ $link->title }}" class="footer__column-a">{{ $link->title }}</a></li>
                         @endforeach
                         @if ($loop->first)
+                            @foreach ($footerGuides as $guide)
+                                <li class="footer__column-li"><a href="{{ route('guide.show', $guide) }}" title="{{ $guide->title }}" class="footer__column-a">{{ $guide->title }}</a></li>
+                            @endforeach
                             <li class="footer__column-li"><a href="{{ route('business') }}" class="footer__column-a">Для организаций</a></li>
                         @endif
                     </ul>

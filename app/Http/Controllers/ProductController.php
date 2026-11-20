@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\CarLanding\CarLandingCatalog;
+use App\Services\Catalog\GuideLocator;
 use App\Services\Catalog\SimilarProducts;
 use App\Services\Seo\ProductSeo;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function show(Product $product, SimilarProducts $similarProducts, ProductSeo $seo, CarLandingCatalog $carLandings): View
+    public function show(Product $product, SimilarProducts $similarProducts, ProductSeo $seo, CarLandingCatalog $carLandings, GuideLocator $guides): View
     {
         abort_unless($product->status, 404);
 
@@ -23,6 +24,7 @@ class ProductController extends Controller
             'specificationGroups' => $product->specificationGroups(),
             'similarProducts' => $similarProducts->for($product),
             'carLinks' => $carLandings->linksForProduct($product->id),
+            'guide' => $guides->forProduct($product),
         ]);
     }
 }

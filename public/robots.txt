@@ -5,6 +5,8 @@ Disallow: /cart/state
 Disallow: /category/*/count
 Disallow: /battery-filter/
 Disallow: /auth/
+# Окна подсказок к характеристикам: фрагменты без самостоятельного содержимого.
+Disallow: /hint/
 
 # Сортировка, число товаров на странице и фильтр по цене не меняют
 # содержимое — Яндекс склеивает такие адреса с чистым (Google берёт canonical).

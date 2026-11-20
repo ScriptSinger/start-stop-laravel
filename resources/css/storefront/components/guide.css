@@ -433,6 +433,63 @@
     background: var(--guide-accent);
 }
 
+/* Плашки разделов и марок: [[block:catalog]] в тексте гайда */
+.guide-catalog {
+    margin: 18px 0 8px;
+}
+
+.guide-catalog__title {
+    margin: 18px 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--guide-muted);
+}
+
+.guide-catalog__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none;
+}
+
+.guide-catalog__list li {
+    margin: 0;
+}
+
+.guide__body .guide-catalog__item {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 1px solid var(--guide-border);
+    border-radius: 20px;
+    background: #fff;
+    color: #333;
+    text-decoration: none;
+    transition: border-color .2s, color .2s;
+}
+
+.guide__body .guide-catalog__item:hover,
+.guide__body .guide-catalog__item:focus-visible {
+    border-color: var(--guide-link);
+    color: var(--guide-link);
+}
+
+.guide__body .guide-catalog__item_main {
+    border-color: var(--guide-accent);
+    background: var(--guide-accent);
+    color: #fff;
+}
+
+.guide__body .guide-catalog__item_main:hover,
+.guide__body .guide-catalog__item_main:focus-visible {
+    border-color: #9c2300;
+    background: #9c2300;
+    color: #fff;
+}
+
 /* Блок подбора в конце статьи */
 .guide-cta {
     display: flex;

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Database\Factories\GuideFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +28,15 @@ class Guide extends Model
     ];
 
     /**
+     * Опубликованные гайды.
+     */
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->where('status', true);
+    }
+
+    /**
      * Разделы гайда для оглавления: заголовки <h2 id="…"> из текста.
      *
      * @return list<array{id: string, title: string}>
@@ -45,7 +56,7 @@ class Guide extends Model
      */
     public function readingMinutes(): int
     {
-        $words = str_word_count(strip_tags((string) $this->body), 0, 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ0123456789');
+        $words = str_word_count((string) preg_replace('~<[^>]+>~', ' ', (string) $this->body), 0, 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ0123456789');
 
         return max(1, (int) ceil($words / 180));
     }

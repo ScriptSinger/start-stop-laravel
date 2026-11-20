@@ -57,3 +57,20 @@
     margin-left: 4px;
     font-size: 0.85em;
 }
+
+/* Ссылка на гайд «Как выбрать» на странице раздела и товара. */
+.category-guide,
+.product-page__guide-note {
+    margin: 0 0 18px;
+    color: var(--guide-muted, #6b6b6b);
+}
+
+.category-guide i,
+.product-page__guide-note i {
+    margin-right: 6px;
+    color: #c82a00;
+}
+
+.product-page__guide-note {
+    margin-top: 20px;
+}

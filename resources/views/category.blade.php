@@ -23,6 +23,10 @@
                         <div class="category-info">{!! $category->description !!}</div>
                     @endif
 
+                    @if ($guide)
+                        <p class="category-guide"><i class="far fa-lightbulb" aria-hidden="true"></i> <a href="{{ route('guide.show', $guide) }}">{{ $guide->title }}</a></p>
+                    @endif
+
                     @if ($categoryLinks !== [])
                         <div class="category-list row row-flex">
                             @foreach ($categoryLinks as $link)

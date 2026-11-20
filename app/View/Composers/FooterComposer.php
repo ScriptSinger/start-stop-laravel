@@ -3,6 +3,7 @@
 namespace App\View\Composers;
 
 use App\Enums\MenuLocation;
+use App\Models\Guide;
 use App\Models\MenuItem;
 use Illuminate\View\View;
 
@@ -14,5 +15,6 @@ class FooterComposer
     public function compose(View $view): void
     {
         $view->with('footerColumns', MenuItem::query()->forLocation(MenuLocation::Footer)->get());
+        $view->with('footerGuides', Guide::query()->active()->orderBy('sort_order')->get(['id', 'title', 'slug']));
     }
 }

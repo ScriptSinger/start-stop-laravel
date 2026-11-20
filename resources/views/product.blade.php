@@ -214,6 +214,9 @@
                                 </div>
                             </div>
                         </div>
+                        @if ($guide)
+                            <p class="product-page__guide-note"><i class="far fa-lightbulb" aria-hidden="true"></i> Не уверены, подойдёт ли аккумулятор? <a href="{{ route('guide.show', $guide) }}">{{ $guide->title }}</a></p>
+                        @endif
                     </div>
                 </div>
 

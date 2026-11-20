@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\Catalog\CatalogFacets;
 use App\Services\Catalog\CatalogFilter;
 use App\Services\Catalog\CategoryMenu;
+use App\Services\Catalog\GuideLocator;
 use App\Services\Seo\BreadcrumbsSeo;
 use Artesaos\SEOTools\Facades\SEOMeta;
 use Artesaos\SEOTools\Facades\SEOTools;
@@ -18,7 +19,7 @@ use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
-    public function show(CatalogFilterRequest $request, Category $category, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs): View
+    public function show(CatalogFilterRequest $request, Category $category, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View
     {
         $filter = $request->toFilter();
         $priceBounds = $facets->priceBounds($category);
@@ -34,6 +35,7 @@ class CategoryController extends Controller
         return view('category', [
             'category' => $category,
             'categoryLinks' => $categoryMenu->subcategoryLinks($category),
+            'guide' => $guides->forCategory($category),
             'products' => $products,
             'filter' => $filter,
             'sort' => $request->sort(),

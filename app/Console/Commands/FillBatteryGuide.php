@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('guides:fill-battery {--force : Записать; без флага — только отчёт} {--rewrite-body : Заменить текст уже созданного гайда на свежий черновик (правки в админке будут потеряны)}')]
+#[Signature('guides:fill-battery {--force : Записать; без флага — только отчёт} {--rewrite-body : Заменить текст и мета-теги уже созданного гайда на свежий черновик (правки в админке будут потеряны)}')]
 #[Description('Добавить гайд «Как выбрать аккумулятор» и подсказки к характеристикам аккумуляторов (черновик для правки в админке)')]
 class FillBatteryGuide extends Command
 {
@@ -59,13 +59,18 @@ class FillBatteryGuide extends Command
         }
 
         if ($rewrite) {
-            $guide->update(['body' => BatteryGuideContent::body()]);
+            $guide->update([
+                'body' => BatteryGuideContent::body(),
+                'meta_title' => BatteryGuideContent::META_TITLE,
+                'meta_description' => BatteryGuideContent::META_DESCRIPTION,
+            ]);
         }
 
         $guide ??= Guide::query()->create([
             'title' => BatteryGuideContent::TITLE,
             'slug' => BatteryGuideContent::SLUG,
             'body' => BatteryGuideContent::body(),
+            'meta_title' => BatteryGuideContent::META_TITLE,
             'meta_description' => BatteryGuideContent::META_DESCRIPTION,
             'status' => true,
         ]);

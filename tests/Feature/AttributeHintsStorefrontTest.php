@@ -45,6 +45,7 @@ class AttributeHintsStorefrontTest extends TestCase
         $page = $this->get(route('product.show', $this->product))->assertOk();
 
         $page->assertSee(route('hint.attribute', $this->technology), false)
+            ->assertSee('rel="nofollow" class="spec-hint-trigger"', false)
             ->assertSee('Что такое «Технология»', false)
             ->assertDontSee(route('hint.attribute', $this->voltage), false);
     }
@@ -55,7 +56,7 @@ class AttributeHintsStorefrontTest extends TestCase
 
         $this->get(route('product.show', $this->product))
             ->assertOk()
-            ->assertSee('class="spec-hint-term"', false)
+            ->assertSee('rel="nofollow" class="spec-hint-term"', false)
             ->assertSee(route('hint.value', $efb), false);
     }
 

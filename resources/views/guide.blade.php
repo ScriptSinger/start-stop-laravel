@@ -25,7 +25,7 @@
                         <div class="guide__toc-title">Содержание</div>
                         <ol class="guide__toc-list">
                             @foreach ($sections as $section)
-                                <li><a href="#{{ $section['id'] }}" :class="{'is-active': active === @js($section['id'])}">{{ $section['title'] }}</a></li>
+                                <li><a href="#{{ $section['id'] }}" @click.prevent="go(@js($section['id']))" :class="{'is-active': active === @js($section['id'])}">{{ $section['title'] }}</a></li>
                             @endforeach
                         </ol>
                     </nav>
