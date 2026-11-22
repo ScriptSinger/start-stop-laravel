@@ -35,7 +35,6 @@
 /* «О нас»: текст из визуального редактора старой админки; там это были
    style у каждого абзаца, поэтому селектор сильнее правил темы для .html-module. */
 .home-page .html-module.home-about :is(h2, h3, p, li) {padding: 0; margin-bottom: 16px; margin-left: 25px; line-height: inherit; font-feature-settings: "liga", "kern"; font-kerning: normal}
-.home-about__verdana {font-family: Verdana}
 
 /* Отзывы (виджет MyReviews). */
 .reviews-widget {display: flex; justify-content: center; margin-top: 20px; border-radius: 20px}
@@ -44,3 +43,9 @@
 /* Карта с контактами. */
 .contact-wrap .blockontact {z-index: 2}
 .contact-wrap .map-area {z-index: 1}
+
+.home-about-wrap {position: relative}
+.home-about.is-collapsed {position: relative; max-height: 230px; overflow: hidden}
+.home-about.is-collapsed:after {position: absolute; right: 0; bottom: 0; left: 0; height: 90px; background: linear-gradient(rgba(247, 247, 247, 0), #f7f7f7); content: ""; pointer-events: none}
+.home-about__toggle {display: block; margin: 12px 0 20px; padding: 8px 22px; color: var(--btn-primary-bg); font-weight: 600; background: #fff; border: 1px solid var(--btn-primary-bg); border-radius: 6px}
+.home-about__toggle:hover {color: #fff; background: var(--btn-primary-bg)}

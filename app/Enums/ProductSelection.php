@@ -19,6 +19,17 @@ enum ProductSelection: string
     }
 
     /**
+     * Короткая надпись над заголовком блока.
+     */
+    public function eyebrow(): string
+    {
+        return match ($this) {
+            self::Recommended => 'Выбор магазина',
+            self::Promo => 'Выгодно',
+        };
+    }
+
+    /**
      * Ссылка в заголовке блока на главной, как на старом сайте.
      *
      * @return array{title: string, category: string}|null

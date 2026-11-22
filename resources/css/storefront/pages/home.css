@@ -4,8 +4,34 @@
 @import '../../../theme/stylesheet/news.css';
 @media (min-width: 768px) {
     .home-product-selection .uni-module__wrapper {display:grid; grid-template-columns:repeat(3, minmax(0, 1fr))}
-    .home-product-selection .uni-module__wrapper > .product-thumb {margin:0 10px 20px}
+    .home-product-selection .uni-module__wrapper > .product-thumb {width:auto; margin:0 10px 20px}
 }
 @media (min-width: 992px) {
     .home-product-selection .uni-module__wrapper {grid-template-columns:repeat(4, minmax(0, 1fr))}
+}
+
+/* Заголовки блоков главной — как на информационных страницах: надпись и крупный заголовок. */
+.home-page .section-heading {display: block; margin: 44px 0 20px}
+.section-heading__eyebrow {display: block; margin: 0 0 8px; color: var(--btn-primary-bg); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase}
+.section-heading__title {display: block; font-size: 26px; font-weight: 700; line-height: 1.25}
+.section-heading__title .heading__link {font-size: 14px; font-weight: 600}
+.w-title--section {margin: 0; font-size: 26px; line-height: 1.25}
+.battery-wizard-container .section-heading__eyebrow {margin-top: 4px}
+
+/* Подборки: колонок столько же, сколько карточек, если их меньше четырёх. */
+@media (min-width: 768px) {
+    .home-product-selection--1 .uni-module__wrapper {grid-template-columns: minmax(0, 1fr)}
+    .home-product-selection--2 .uni-module__wrapper {grid-template-columns: repeat(2, minmax(0, 1fr))}
+}
+@media (min-width: 992px) {
+    .home-product-selection--3 .uni-module__wrapper {grid-template-columns: repeat(3, minmax(0, 1fr))}
+}
+
+/* Марки в подборе: ровные ряды по пять. */
+@media (min-width: 768px) {
+    .battery-wizard-container .w-grid.brands {grid-template-columns: repeat(5, minmax(0, 1fr))}
+}
+@media (max-width: 767px) {
+    .home-page .section-heading {margin-top: 32px}
+    .section-heading__title, .w-title--section {font-size: 22px}
 }

@@ -1,6 +1,9 @@
 {{-- Модуль uni_category_wall_v2 (тип 2) старого сайта: разметка 1:1. --}}
 @if ($categoryWall->isNotEmpty())
-    <div class="heading">Популярные категории</div>
+    <div class="heading section-heading">
+        <span class="section-heading__eyebrow">Каталог</span>
+        <span class="section-heading__title">Популярные категории</span>
+    </div>
     <div class="uni-module category-wall category-wall_v2-0" data-uni-module="grid" data-uni-module-items='{"0":{"items":1},"700":{"items":2},"993":{"items":2},"1050":{"items":2},"1400":{"items":4}}'>
         <div class="uni-module__wrapper">
             @foreach ($categoryWall as ['category' => $wallCategory, 'links' => $links])

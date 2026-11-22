@@ -7,13 +7,17 @@
     <p x-show="message" x-cloak role="alert" x-text="message"></p>
     <div class="w-step" x-show="step === 1">
         <div class="w-brand-heading">
-            <h3 class="w-title" tabindex="-1">Подбор аккумулятора по марке авто</h3>
+            <div>
+                <span class="section-heading__eyebrow">Быстрый подбор</span>
+                <h3 class="w-title w-title--section" tabindex="-1">Аккумулятор для вашего автомобиля</h3>
+            </div>
             <a class="w-landings" href="{{ route('car-landing.index') }}">Все марки и модели <span aria-hidden="true">→</span></a>
         </div>
         {{-- Одна сетка: остальные марки продолжают ряд популярных. Их
              логотипы грузятся только после «Показать все марки». --}}
         <div class="w-grid brands" id="battery-brand-list">
-            @foreach ($popular_brands as $brand)
+            {{-- Первые десять марок — два ровных ряда по пять; остальные открываются кнопкой. --}}
+            @foreach (array_slice($popular_brands, 0, 10) as $brand)
                 <button type="button" class="w-item brand-box" @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
                         <img src="{{ $brand['image'] }}" alt="" width="60" height="50">
@@ -23,7 +27,7 @@
                     <span>{{ $brand['name'] }}</span>
                 </button>
             @endforeach
-            @foreach ($other_brands as $brand)
+            @foreach ([...array_slice($popular_brands, 10), ...$other_brands] as $brand)
                 <button type="button" class="w-item brand-box" x-show="allBrands" x-cloak @click="loadModels(@js($brand['name']))">
                     @if ($brand['image'])
                         <img :src="allBrands && @js($brand['image'])" alt="" width="60" height="50">
