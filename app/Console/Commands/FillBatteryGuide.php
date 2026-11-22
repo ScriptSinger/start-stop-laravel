@@ -9,13 +9,13 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('guides:fill-battery {--force : Записать; без флага — только отчёт} {--rewrite-body : Заменить текст и мета-теги уже созданного гайда на свежий черновик (правки в админке будут потеряны)}')]
+#[Signature('guides:fill-battery {--force : Записать; без флага — только отчёт} {--rewrite-body : Заменить текст, мета-теги и подсказки (и их разделы гайда) на свежий черновик (правки в админке будут потеряны)}')]
 #[Description('Добавить гайд «Как выбрать аккумулятор» и подсказки к характеристикам аккумуляторов (черновик для правки в админке)')]
 class FillBatteryGuide extends Command
 {
     /**
      * Только добавляет: существующий гайд, готовые подсказки и привязки к гайду
-     * не меняются; текст гайда заменяется только с --rewrite-body. Характеристики и значения ищутся по названию. Перед
+     * не меняются; текст гайда и подсказки из черновика заменяются только с --rewrite-body. Характеристики и значения ищутся по названию. Перед
      * запуском: php artisan db:backup.
      */
     public function handle(): int
@@ -33,7 +33,7 @@ class FillBatteryGuide extends Command
 
         foreach (BatteryGuideContent::attributeHints() as $name => [$hint, $anchor]) {
             foreach ($attributes->get($name, []) as $attribute) {
-                if (blank($attribute->hint)) {
+                if ($rewrite || blank($attribute->hint)) {
                     $plan['attributes'][] = [$attribute, $hint, $anchor];
                 }
             }
@@ -42,7 +42,7 @@ class FillBatteryGuide extends Command
         foreach (BatteryGuideContent::valueHints() as $name => $values) {
             foreach ($attributes->get($name, []) as $attribute) {
                 foreach ($attribute->values as $value) {
-                    if (isset($values[$value->value]) && blank($value->hint)) {
+                    if (isset($values[$value->value]) && ($rewrite || blank($value->hint))) {
                         $plan['values'][] = [$value, ...$values[$value->value]];
                     }
                 }
@@ -79,12 +79,12 @@ class FillBatteryGuide extends Command
             $attribute->update([
                 'hint' => $hint,
                 'guide_id' => $attribute->guide_id ?? $guide->id,
-                'guide_anchor' => $attribute->guide_anchor ?: $anchor,
+                'guide_anchor' => $rewrite ? $anchor : ($attribute->guide_anchor ?: $anchor),
             ]);
         }
 
         foreach ($plan['values'] as [$value, $hint, $anchor]) {
-            $value->update(['hint' => $hint, 'guide_anchor' => $value->guide_anchor ?: $anchor]);
+            $value->update(['hint' => $hint, 'guide_anchor' => $rewrite ? $anchor : ($value->guide_anchor ?: $anchor)]);
         }
 
         $this->info('Готово: гайд, подсказок к характеристикам — '.count($plan['attributes']).', к значениям — '.count($plan['values']).'.');

@@ -68,7 +68,7 @@ class FillBatteryGuideTest extends TestCase
         $this->assertSame(1, Guide::query()->count());
     }
 
-    public function test_rewrite_body_replaces_only_guide_text(): void
+    public function test_rewrite_body_replaces_guide_text_and_draft_hints_with_their_anchors(): void
     {
         $guide = Guide::factory()->create(['slug' => BatteryGuideContent::SLUG, 'body' => 'Старый текст']);
 
@@ -82,6 +82,42 @@ class FillBatteryGuideTest extends TestCase
         $this->assertSame(BatteryGuideContent::body(), $guide->fresh()->body);
         $this->assertSame(BatteryGuideContent::META_TITLE, $guide->fresh()->meta_title);
         $this->assertSame(1, Guide::query()->count());
+    }
+
+    public function test_rewrite_body_also_refreshes_hints_and_anchors_but_plain_run_does_not(): void
+    {
+        $guide = Guide::factory()->create(['slug' => BatteryGuideContent::SLUG]);
+        $agm = $this->technology->values()->where('value', 'AGM')->first();
+        $agm->update(['hint' => 'Старая подсказка', 'guide_anchor' => 'technology']);
+
+        $this->artisan('guides:fill-battery --force')->assertSuccessful();
+        $this->assertSame('Старая подсказка', $agm->fresh()->hint);
+
+        $this->artisan('guides:fill-battery --force --rewrite-body')->assertSuccessful();
+        $this->assertSame(BatteryGuideContent::valueHints()['Технология']['AGM'][0], $agm->fresh()->hint);
+        $this->assertSame('efb-agm', $agm->fresh()->guide_anchor);
+        $this->assertSame($guide->id, $this->technology->fresh()->guide_id);
+    }
+
+    public function test_every_hint_anchor_points_to_a_section_of_the_guide(): void
+    {
+        $anchors = collect(BatteryGuideContent::attributeHints())->pluck(1)
+            ->merge(collect(BatteryGuideContent::valueHints())->flatten(1)->pluck(1))
+            ->push(BatteryGuideContent::caseTypeHint()[1])
+            ->unique();
+
+        foreach ($anchors as $anchor) {
+            $this->assertStringContainsString('id="'.$anchor.'"', BatteryGuideContent::body(), "Нет раздела «{$anchor}»");
+        }
+    }
+
+    public function test_guide_does_not_promote_plain_lead_acid_and_explains_case_type(): void
+    {
+        $body = BatteryGuideContent::body();
+
+        $this->assertStringNotContainsString('Pb нужно обслуживание', $body);
+        $this->assertStringContainsString('Тип корпуса: что значат', $body);
+        $this->assertStringContainsString('практически нет', $body);
     }
 
     public function test_second_run_changes_nothing(): void

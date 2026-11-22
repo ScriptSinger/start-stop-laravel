@@ -477,7 +477,7 @@ class BatteryTradeInTest extends TestCase
         $noType->update(['status' => true]);
 
         $html = $this->get(route('product.show', $product))->assertOk()->getContent();
-        $this->assertSame(2, substr_count($html, 'Тип корпуса'), 'В кратком списке и во вкладке');
+        $this->assertSame(2, substr_count($html, 'Что такое «Тип корпуса»'), 'В кратком списке и во вкладке, со значком подсказки');
         $this->assertLessThan(strpos($html, 'Тип корпуса'), strpos($html, '278 x 175 x 190 мм'), 'Сразу после габаритов');
 
         $this->get(route('product.show', $noSizes))->assertOk()->assertSee('Тип корпуса')->assertSee('Груз A');

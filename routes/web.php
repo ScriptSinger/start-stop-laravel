@@ -37,6 +37,7 @@ Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page.sho
 // «Как выбрать»: гайды, на которые ведут подсказки к характеристикам товара.
 Route::get('/guide/{guide:slug}', [GuideController::class, 'show'])->name('guide.show');
 Route::get('/hint/attribute/{attribute}', [AttributeHintController::class, 'attribute'])->middleware('noindex')->name('hint.attribute');
+Route::get('/hint/case-type', [AttributeHintController::class, 'caseType'])->middleware('noindex')->name('hint.case-type');
 Route::get('/hint/value/{attributeValue}', [AttributeHintController::class, 'value'])->middleware('noindex')->name('hint.value');
 
 Route::get('/auth/yandex', [YandexAuthController::class, 'redirect'])->middleware(['guest', 'throttle:10,1', 'noindex'])->name('auth.yandex');
