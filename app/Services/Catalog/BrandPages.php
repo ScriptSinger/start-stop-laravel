@@ -60,14 +60,13 @@ class BrandPages
     }
 
     /**
-     * Производители раздела со страницей, по алфавиту. По умолчанию все;
-     * $indexableOnly — только те, что нужны поиску (плитки, sitemap).
+     * Производители раздела, у которых есть страница, по алфавиту.
      *
      * @return Collection<int, Manufacturer>
      */
-    public function manufacturers(Category $category, bool $indexableOnly = false): Collection
+    public function manufacturers(Category $category): Collection
     {
-        $ids = $this->changedAtByManufacturer($category, $indexableOnly ? $this->minProducts() : 1)->keys();
+        $ids = $this->changedAtByManufacturer($category, 1)->keys();
 
         return Manufacturer::query()->whereIn('id', $ids)->orderBy('name')->get();
     }

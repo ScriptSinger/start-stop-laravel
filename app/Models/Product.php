@@ -299,16 +299,21 @@ class Product extends Model
     }
 
     /**
-     * Порядок товаров в каталоге. Как на старом сайте (настройка темы
-     * sort_qty = 2), товары в наличии всегда идут первыми. Цена — с учётом
-     * акции; последним ключом id, чтобы товары не «прыгали» между страницами.
+     * Порядок товаров в каталоге. Если покупатель сортировку не выбирал,
+     * товары в наличии идут первыми, как на старом сайте. Выбранная им
+     * сортировка ($chosen) по цене или названию — чистая, по всему списку:
+     * иначе на границе «в наличии» / «нет в наличии» цена или буква прыгает
+     * назад и сортировка выглядит сломанной. Цена — с учётом акции; последним
+     * ключом id, чтобы товары не «прыгали» между страницами.
      */
     #[Scope]
-    protected function sortedBy(Builder $query, CatalogSort $sort): void
+    protected function sortedBy(Builder $query, CatalogSort $sort, bool $chosen = false): void
     {
         $direction = $sort->isDescending() ? 'desc' : 'asc';
 
-        $query->orderByRaw('products.quantity > 0 desc');
+        if (! $chosen) {
+            $query->orderByRaw('products.quantity > 0 desc');
+        }
 
         match (true) {
             $sort->isByPrice() => $query->orderByRaw('('.self::displayPriceSql().") {$direction}", [config('shop.supplier_order_min_quantity')]),

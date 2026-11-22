@@ -31,6 +31,17 @@ class CatalogFilterRequest extends FormRequest
     /** Варианты «товаров на странице», как на старом сайте. */
     public const PER_PAGE_OPTIONS = [24, 25, 50, 75, 100];
 
+    /**
+     * Покупатель сам выбрал сортировку по цене или названию (а не «По умолчанию»
+     * и не адрес без параметра): такой порядок чистый, по всему списку.
+     */
+    public function hasChosenSort(): bool
+    {
+        $chosen = CatalogSort::tryFrom($this->string('sort')->toString());
+
+        return $chosen !== null && $chosen !== CatalogSort::Default;
+    }
+
     public function sort(): CatalogSort
     {
         return CatalogSort::tryFrom($this->string('sort')->toString()) ?? CatalogSort::fallback();

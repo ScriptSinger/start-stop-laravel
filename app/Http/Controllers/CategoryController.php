@@ -74,7 +74,7 @@ class CategoryController extends Controller
 
         $products = $this->filteredProducts($category, $filter)
             ->withCardData()
-            ->sortedBy($request->sort())
+            ->sortedBy($request->sort(), $request->hasChosenSort())
             ->paginate($request->perPage())
             ->withQueryString();
 
@@ -87,7 +87,6 @@ class CategoryController extends Controller
             'manufacturer' => $manufacturer,
             'brandPage' => $brandPage,
             'categoryLinks' => $categoryMenu->subcategoryLinks($category),
-            'brandLinks' => $manufacturer === null ? $this->brandLinks($category, $brandPages) : [],
             'guide' => $guides->forCategory($category),
             'products' => $products,
             'filter' => $filter,
@@ -100,22 +99,6 @@ class CategoryController extends Controller
             'priceMin' => (int) floor($priceBounds['min']),
             'priceMax' => (int) ceil($priceBounds['max']),
         ]);
-    }
-
-    /**
-     * Плитки производителей со страницами в разделе: внутренние ссылки на
-     * индексируемые страницы брендов.
-     *
-     * @return list<array{title: string, url: string}>
-     */
-    private function brandLinks(Category $category, BrandPages $brandPages): array
-    {
-        return $brandPages->manufacturers($category, indexableOnly: true)
-            ->map(fn (Manufacturer $manufacturer): array => [
-                'title' => $manufacturer->name,
-                'url' => route('category.manufacturer', [$category, $manufacturer]),
-            ])
-            ->all();
     }
 
     /**

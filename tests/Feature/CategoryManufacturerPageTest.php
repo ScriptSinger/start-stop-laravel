@@ -139,15 +139,11 @@ class CategoryManufacturerPageTest extends TestCase
         $this->get(route('category.show', ['category' => $oils, 'manufacturer' => [$this->titan->id]]))->assertOk();
     }
 
-    public function test_category_page_links_to_brand_pages(): void
+    public function test_category_page_has_no_brand_tiles_next_to_the_filter(): void
     {
-        $brandUrl = route('category.manufacturer', [$this->batteries, $this->titan]);
-
         $this->get(route('category.show', $this->batteries))
             ->assertOk()
-            ->assertSee('href="'.$brandUrl.'"', false)
-            // Плитки — внутренние ссылки на индексируемые страницы: бренд с одним товаром в них не входит.
-            ->assertViewHas('brandLinks', fn (array $links): bool => array_column($links, 'title') === ['TITAN']);
+            ->assertViewMissing('brandLinks');
     }
 
     public function test_menu_links_every_manufacturer_to_its_clean_address(): void

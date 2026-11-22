@@ -56,18 +56,6 @@
                         </div>
                     @endif
 
-                    @if ($brandLinks !== [])
-                        <div class="category-list row row-flex">
-                            @foreach ($brandLinks as $link)
-                                <div class="col-xxl-2-1 col-lg-2 col-md-2 col-sm-4 col-xs-4">
-                                    <a href="{{ $link['url'] }}" class="category-list__item uni-item-bg" title="{{ $category->name }} {{ $link['title'] }}">
-                                        <span class="category-list__name">{{ $link['title'] }}</span>
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-
                     <button type="button" class="btn btn-default catalog-filter-open visible-xs" @click="$dispatch('open-catalog-filter')" aria-controls="catalog-filter"><i class="fas fa-sliders-h" aria-hidden="true"></i> Фильтры</button>
                     @include('partials.catalog-sorts')
 

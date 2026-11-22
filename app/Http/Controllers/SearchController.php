@@ -24,7 +24,7 @@ class SearchController extends Controller
             ->matchingSearch($search)
             ->when($category, fn (Builder $query) => $query->inCategoryTree($category))
             ->withCardData()
-            ->sortedBy($request->sort())
+            ->sortedBy($request->sort(), $request->hasChosenSort())
             ->paginate($request->perPage())
             ->withQueryString();
 

@@ -178,6 +178,21 @@ class CatalogFilterTest extends TestCase
         $this->getJson(route('category.count', ['category' => $this->batteries, 'price_to' => 4500]))->assertExactJson(['count' => 1]);
     }
 
+    public function test_chosen_sort_ignores_stock_and_default_sort_puts_in_stock_first(): void
+    {
+        Product::query()->update(['quantity' => 0]);
+        Product::query()->where('name', 'VARTA 60 О.П.')->update(['quantity' => 3, 'price' => 12000]);
+
+        // Сортировка по цене — чистая: дорогой товар в наличии не уходит в начало.
+        $this->category(['sort' => 'price'])->assertViewHas('products', fn ($products) => $products->pluck('name')->last() === 'VARTA 60 О.П.');
+        $this->category(['sort' => 'price-desc'])->assertViewHas('products', fn ($products) => $products->pluck('name')->first() === 'VARTA 60 О.П.');
+        $this->category(['sort' => 'name-desc'])->assertViewHas('products', fn ($products) => $products->pluck('name')->first() === 'VARTA 60 О.П.');
+
+        // Сортировку не выбирали — товар в наличии идёт первым, хоть и стоит дороже.
+        $this->category(['sort' => 'default'])->assertViewHas('products', fn ($products) => $products->pluck('name')->first() === 'VARTA 60 О.П.');
+        $this->category()->assertViewHas('products', fn ($products) => $products->pluck('name')->first() === 'VARTA 60 О.П.');
+    }
+
     public function test_price_sort_uses_valid_special_and_supplier_prices(): void
     {
         Product::query()->update(['quantity' => 0]);
@@ -235,13 +250,16 @@ class CatalogFilterTest extends TestCase
         $this->category(['sort' => 'мусор'])->assertSeeInOrder(['VARTA 60 О.П.', 'TITAN 60 О.П.']);
     }
 
-    public function test_out_of_stock_products_go_last_in_any_sort(): void
+    public function test_out_of_stock_products_go_last_unless_sort_is_chosen(): void
     {
         Product::query()->update(['quantity' => 1]);
         Product::query()->where('name', 'VARTA 60 О.П.')->update(['quantity' => 0, 'special_price' => 1000]);
 
+        // Сортировку не выбирали (адрес без параметра и «По умолчанию») — в наличии первыми.
         $this->category()->assertSeeInOrder(['TITAN 60 О.П.', 'TITAN 75 О.П.', 'VARTA 60 О.П.']);
-        $this->category(['sort' => 'name-desc'])->assertSeeInOrder(['TITAN 75 О.П.', 'TITAN 60 О.П.', 'VARTA 60 О.П.']);
+        $this->category(['sort' => 'default'])->assertSeeInOrder(['TITAN 60 О.П.', 'TITAN 75 О.П.', 'VARTA 60 О.П.']);
+        // Выбранная сортировка чистая: VARTA с акцией 1000 ₽ — самая дешёвая, хоть и нет в наличии.
+        $this->category(['sort' => 'price'])->assertSeeInOrder(['VARTA 60 О.П.', 'TITAN 60 О.П.', 'TITAN 75 О.П.']);
     }
 
     public function test_per_page_and_pagination_text(): void
