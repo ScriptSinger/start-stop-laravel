@@ -245,11 +245,18 @@
 
                 @if ($similarProducts->isNotEmpty())
                     <div class="heading">Похожие товары</div>
-                    <div class="uni-module similar-products" data-uni-module="carousel">
-                        <div class="uni-module__wrapper">
+                    <div class="uni-module similar-products scroll-carousel" x-data="scrollCarousel({items: {0: 2, 700: 3, 992: 4, 1400: 5}})">
+                        <div class="uni-module__wrapper scroll-carousel__track" x-ref="track">
                             @foreach ($similarProducts as $similarProduct)
                                 @include('partials.product-card', ['product' => $similarProduct])
                             @endforeach
+                        </div>
+                        <button type="button" class="scroll-carousel__btn scroll-carousel__btn--prev" aria-label="Назад" :disabled="!canPrev" x-show="pages > 1" x-cloak @click="prev()"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+                        <button type="button" class="scroll-carousel__btn scroll-carousel__btn--next" aria-label="Вперёд" :disabled="!canNext" x-show="pages > 1" x-cloak @click="next()"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                        <div class="scroll-carousel__dots" x-show="pages > 1" x-cloak>
+                            <template x-for="n in pages" :key="n">
+                                <button type="button" class="scroll-carousel__dot" :class="{'is-active': page === n - 1}" :aria-label="'Страница ' + n" @click="go(n - 1)"></button>
+                            </template>
                         </div>
                     </div>
                 @endif

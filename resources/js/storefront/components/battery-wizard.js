@@ -17,6 +17,14 @@ export default ({modelsUrl, generationsUrl, enginesUrl, resultUrl}) => ({
     message: '',
     requestId: 0,
 
+    // Вернуться на уже пройденный шаг: выбранные значения остаются, лишнее не сбрасываем.
+    goTo(step) {
+        if (step >= this.step) return;
+
+        this.cancelRequest();
+        this.step = step;
+    },
+
     cancelRequest() {
         this.requestId++;
         this.loading = false;

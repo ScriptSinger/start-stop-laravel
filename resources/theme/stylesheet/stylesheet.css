@@ -362,10 +362,7 @@ button.compare .fas{transform:rotate(90deg)}
 .uni-module__wrapper{display:flex;flex-wrap:wrap;margin:0 -10px;opacity:0}
 .uni-module__wrapper.load-complete{opacity:1;transition:none !important}
 
-.uni-module .owl-stage{display:flex}
-.uni-module__item, .uni-module .owl-item{display:flex;float:left;padding:0 10px}
-.uni-module .owl-nav{left:-5px !important;right:-5px !important;margin:-10px 0 0}
-.uni-module .owl-dots{margin:-10px 0 25px !important}
+.uni-module__item{display:flex;float:left;padding:0 10px}
 
 .product-thumb{display:flex;flex-direction:column;position:relative;z-index:1;margin:0 0 20px}
 .product-thumb.hover{position:absolute;z-index:99}
@@ -605,39 +602,6 @@ button.compare .fas{transform:rotate(90deg)}
 #modal-cart .modal-dialog{width:740px}
 #modal-cart img{padding:5px;background:#fff;border-radius:4px}
 
-.owl-carousel{position:relative;display:none}
-.owl-carousel .owl-stage{touch-action:manipulation}
-.owl-carousel .owl-stage-outer{overflow:hidden}
-.owl-carousel .owl-item{position:relative;z-index:1;min-height:1px;float:left;-ms-touch-action:pan-y;touch-action:pan-y}
-.owl-carousel .owl-nav.disabled, .owl-carousel .owl-dots.disabled{display:none}
-.owl-carousel .owl-nav .owl-prev, .owl-carousel .owl-nav .owl-next, .owl-carousel .owl-dot{cursor:pointer;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.owl-carousel.owl-loaded{display:block}
-.owl-carousel.owl-loading{opacity:0;display:block}
-.owl-carousel.owl-refresh .owl-item{visibility:hidden}
-.owl-carousel.owl-drag .owl-item{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.owl-carousel.owl-grab{cursor:move;cursor:grab}
-.owl-carousel.owl-rtl{direction:rtl}
-.owl-carousel.owl-rtl .owl-item{float:right}
-.no-js .owl-carousel{display:block}
-.owl-carousel .animated{animation-duration:1000ms;animation-fill-mode:both}
-.owl-carousel .owl-animated-in{z-index:0}
-.owl-carousel .owl-animated-out{z-index:1}
-.owl-carousel .owl-video-wrapper{position:relative;height:100%;background:#000}
-.owl-carousel .owl-video-play-icon{position:absolute;height:80px;width:80px;left:50%;top:50%;margin-left:-40px;margin-top:-40px;background:url('../image/owl.video.play.png') no-repeat;cursor:pointer;z-index:1;-webkit-backface-visibility:hidden;transition:transform 100ms ease}
-.owl-carousel .owl-video-play-icon:hover{-ms-transform:scale(1.3, 1.3);transform:scale(1.3, 1.3)}
-.owl-carousel .owl-video-playing .owl-video-tn, .owl-carousel .owl-video-playing .owl-video-play-icon{display:none}
-.owl-carousel .owl-video-tn{opacity:0;height:100%;background-position:center center;background-repeat:no-repeat;background-size:contain;transition:opacity 400ms ease}
-.owl-carousel .owl-video-frame{position:relative;z-index:1;height:100%;width:100%}
-.owl-carousel .owl-nav{position:absolute;z-index:100;top:50%;left:10px;right:10px;opacity:0}
-.owl-carousel .owl-next, .owl-carousel .owl-prev{position:absolute;display:flex;align-items:center;justify-content:center;opacity:1;width:34px;height:34px;border:none;border-radius:100%;box-shadow:0 0 10px #ccc;transform:translate(0, -50%)}
-.owl-carousel .owl-nav .disabled{cursor:default;opacity:.5}
-.owl-carousel .owl-nav .owl-next{right:0}
-.owl-carousel .owl-nav button{color:var(--carousel-nav-btn-c);background:var(--carousel-nav-btn-bg)}
-.owl-carousel .owl-dots{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;margin:10px 0;text-align:center}
-.owl-carousel .owl-dots .owl-dot{padding:0;background:none;border:none}
-.owl-carousel .owl-dots .owl-dot + .owl-dot{margin:0 0 0 10px}
-.owl-carousel .owl-dots .owl-dot span{display:block;width:20px;height:4px;background:var(--carousel-dot-bg);border-radius:6px;transition:all linear .2s}
-.owl-carousel .owl-dots .owl-dot.active span{background:var(--carousel-dot-bg-active);cursor:default}
 
 .uni-timer{position:absolute;z-index:1;left:0;bottom:11px;width:100%;display:flex;justify-content:center;transition:opacity ease-in-out .15s}
 .uni-timer__group{text-align:center;min-width:45px;padding:2px 6px;background:var(--timer-bg);border-radius:3px}
@@ -722,7 +686,7 @@ button.compare .fas{transform:rotate(90deg)}
 	.menu__banner, .menu__additional, .menu__level-2-img{display:none}
     .sorts-block__btn + .sorts-block__btn{border-radius:0 4px 4px 0 !important}
 	.list-view .product-thumb__image{width:42%;min-width:35%}
-	.product-thumb__quick-order, .owl-carousel .owl-nav{opacity:1}
+	.product-thumb__quick-order{opacity:1}
 	
     .footer__payments{justify-content:flex-start;margin:0 0 0 -10px}
 	
@@ -742,7 +706,6 @@ button.compare .fas{transform:rotate(90deg)}
     .header-cart__totals-item, .header-cart__buttons{justify-content:center}
     .header-cart__buttons .btn-default{display:none}
 	.breadcrumb.mobile li:not(:first-child):not(:last-child){display:var(--breadcrumb-mobile-display ,inline)}
-    .uni-module .owl-nav > div:not(.disabled){opacity:.8}
     
     .grid-view{flex:0 0 50%;width:50%;max-width:50%}
     .list-view{flex:0 1 100%}
@@ -782,9 +745,8 @@ button.compare .fas{transform:rotate(90deg)}
     .header-search__input.hide-on-mobile{border-radius:4px}
 	.sorts-block__item:first-child{min-width:90px}
 	.uni-module{padding:0 5px}
-	.uni-module .owl-item, .uni-module__item{padding:0 5px}
+	.uni-module__item{padding:0 5px}
     .uni-module__wrapper{display:flex;flex-wrap:wrap}
-    .uni-module .owl-dots{margin:0 0 25px !important;}
 	.products-block{margin-bottom:20px}
     .product-thumb{margin:0 0 10px;padding:10px}
 	.product-thumb__name{font-size:.95em}
@@ -798,7 +760,6 @@ button.compare .fas{transform:rotate(90deg)}
 	.category-info__image{display:none}
 	.error-not-found__404{width:290px;height:290px;font-size:7em}
 	.hidden-on-mobile{display:none !important}
-	.owl-carousel .owl-dots .owl-dot span {width:12px}
 }
 
 @media (max-width:425px){
@@ -924,7 +885,6 @@ button.compare .fas{transform:rotate(90deg)}
     .list-view .product-thumb__name{margin:0 0 10px;font-size:1.15em}
 	
 	.uni-item:hover{border:solid 1px transparent;box-shadow:0 5px 15px rgba(0 0 0 / .12)}
-	.owl-carousel:hover .owl-nav{opacity:1}
 	.modal-header{padding:15px 20px}
 	.modal-header .close:hover{opacity:1}
 	.modal-body{padding:20px}

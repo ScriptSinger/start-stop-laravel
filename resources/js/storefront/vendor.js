@@ -4,6 +4,5 @@
  */
 import './jquery-global';
 import 'bootstrap/dist/js/bootstrap';
-import 'owl.carousel';
 import 'jquery-menu-aim';
 import 'jquery.maskedinput/src/jquery.maskedinput';

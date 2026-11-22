@@ -19,7 +19,6 @@
         "bootstrap": "^3.4.1",
         "jquery": "^3.7.1",
         "jquery-menu-aim": "^1.1.0",
-        "jquery.maskedinput": "^1.4.1",
-        "owl.carousel": "^2.3.4"
+        "jquery.maskedinput": "^1.4.1"
     }
 }

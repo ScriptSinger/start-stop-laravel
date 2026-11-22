@@ -1,0 +1,31 @@
+/* Карусель на scroll-snap (компонент scrollCarousel). Без JavaScript листается свайпом. */
+.scroll-carousel {position: relative; --gap: 20px}
+.scroll-carousel__track {display: flex; flex-wrap: nowrap; gap: var(--gap); margin: 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none}
+.scroll-carousel__track::-webkit-scrollbar {display: none}
+.scroll-carousel__track > * {flex: 0 0 calc((100% - (var(--items, 1) - 1) * var(--gap)) / var(--items, 1)); min-width: 0; scroll-snap-align: start}
+
+.scroll-carousel__btn {position: absolute; top: 40%; z-index: 2; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; color: var(--carousel-nav-btn-c); background: var(--carousel-nav-btn-bg); border: 0; border-radius: 50%; box-shadow: 0 1px 6px rgba(0, 0, 0, .25); cursor: pointer; transform: translateY(-50%)}
+.scroll-carousel__btn--prev {left: -5px}
+.scroll-carousel__btn--next {right: -5px}
+.scroll-carousel__btn:disabled {opacity: .35; cursor: default}
+.scroll-carousel__btn:focus-visible, .scroll-carousel__dot:focus-visible {outline: var(--store-focus-ring); outline-offset: var(--store-focus-offset)}
+
+.scroll-carousel__dots {display: flex; align-items: center; justify-content: center; margin: 12px 0 20px}
+.scroll-carousel__dot {width: 20px; height: 4px; padding: 0; background: var(--carousel-dot-bg); border: 0; border-radius: 6px; transition: background-color .2s}
+.scroll-carousel__dot + .scroll-carousel__dot {margin-left: 10px}
+.scroll-carousel__dot.is-active {background: var(--carousel-dot-bg-active); cursor: default}
+@media (max-width: 767px) {
+    .scroll-carousel {--gap: 10px}
+    .scroll-carousel__dot {width: 12px}
+}
+
+/* Баннеры на главной: слайд — одна картинка, без промежутков. */
+.home-slider {--gap: 0px}
+.home-slider .scroll-carousel__track > a {display: block}
+
+/* Подборки товаров на главной на телефоне: ряд из двух карточек, листается свайпом. */
+@media (max-width: 767px) {
+    .home-product-selection .uni-module__wrapper {display: flex; flex-wrap: nowrap; gap: 10px; margin: 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none}
+    .home-product-selection .uni-module__wrapper::-webkit-scrollbar {display: none}
+    .home-product-selection .uni-module__wrapper > .product-thumb {flex: 0 0 calc(50% - 5px); min-width: 0; margin: 0 0 10px; scroll-snap-align: start}
+}

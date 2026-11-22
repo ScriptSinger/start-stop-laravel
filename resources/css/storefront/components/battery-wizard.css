@@ -1,32 +1,75 @@
-/* Подбор АКБ по марке авто (модуль battery_filter старого сайта). */
-.battery-wizard-container {background: #fff; padding: 20px; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px}
-.w-title {font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center}
-.w-back {cursor: pointer; color: #e31e24; font-size: 24px; vertical-align: middle; margin-right: 10px}
-.w-back {border:0; background:transparent; padding:0 6px}
-.w-item:focus-visible, .w-back:focus-visible {outline:var(--store-focus-ring); outline-offset:var(--store-focus-offset)}
-.w-item {font:inherit; color:inherit}
-.w-cur-brand {color: #e31e24}
-.w-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px}
-.w-grid.gens {grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))}
-.w-grid.models {grid-template-columns: repeat(auto-fill, minmax(140px, 1fr))}
-.w-grid.engines {grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))}
-.w-item {border: 1px solid #f0f0f0; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; transition: all 0.2s ease-in-out; background: #fff}
-.w-item:hover {border-color: #e31e24; box-shadow: 0 5px 12px rgba(227, 30, 36, 0.1); transform: translateY(-2px)}
-.brand-box img {max-width: 60px; height: 50px; object-fit: contain; display: block; margin: 0 auto 8px}
-/* Марка без логотипа: первая буква в круге той же высоты, что логотип. */
-.brand-box__letter {display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0 auto 8px; border-radius: 50%; background: #f4f4f4; color: #999; font-size: 22px; font-weight: 700}
-.gens img {width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px}
-.w-brand-heading {display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px}
-.w-brand-heading .w-title {margin:0; text-align:left}
-.w-brand-actions {display:flex; justify-content:flex-start; margin-top:var(--store-space-md)}
-.w-btn-more {min-height:var(--store-control-height); background:#fff; border:1px solid #aaa; padding:8px 18px; border-radius:var(--store-control-radius); color:#333; font-weight:600; cursor:pointer}
-.battery-wizard-container .mt-3 {margin-top: 15px}
+/* Подбор АКБ по марке авто: карточка, полоса шагов, сетки выбора. */
+.battery-wizard-container {position: relative; margin-bottom: 30px; padding: 24px; overflow: hidden; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px}
+.w-title {margin: 0; font-size: 26px; font-weight: 700; line-height: 1.25}
 
-/* Ссылки на посадочные «Аккумулятор для <модель>». */
-.w-landings {display:inline-flex; align-items:center; gap:6px; min-height:44px; color:#333; font-weight:600; text-decoration:none}
-.w-landings:hover {color:var(--btn-primary-bg); text-decoration:none}
-.w-landings:focus-visible, .w-btn-more:focus-visible {outline:var(--store-focus-ring); outline-offset:var(--store-focus-offset)}
-@media (max-width:767px) {
-    .w-brand-heading {align-items:flex-start; flex-direction:column; gap:4px; margin-bottom:16px}
-    .w-brand-actions {justify-content:center}
+/* Загрузка: тонкая бегущая полоса по верхнему краю карточки. */
+.w-progress {position: absolute; top: 0; right: 0; left: 0; height: 3px; background: #f8eee9; overflow: hidden}
+.w-progress:after {display: block; width: 35%; height: 100%; background: var(--btn-primary-bg); content: ""; animation: w-progress 1s ease-in-out infinite}
+@keyframes w-progress {
+    from {transform: translateX(-100%)}
+    to {transform: translateX(300%)}
+}
+@media (prefers-reduced-motion: reduce) {
+    .w-progress:after {width: 100%; animation: none}
+}
+
+.w-brand-heading {display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px}
+.w-landings {display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #333; font-weight: 600; text-decoration: none}
+.w-landings:hover {color: var(--btn-primary-bg); text-decoration: none}
+
+/* Полоса шагов: пройденный шаг подписан выбранным значением и возвращает назад. */
+.w-stepper {display: flex; gap: 8px; margin: 0 0 20px; padding: 0; list-style: none}
+.w-stepper__item {flex: 1 1 0; min-width: 0}
+.w-stepper__btn {display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 14px; color: #888; text-align: left; background: #f7f7f7; border: 1px solid transparent; border-radius: 6px; font: inherit}
+.w-stepper__num {flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: #999; background: #ececec; border-radius: 6px; font-size: 14px; font-weight: 700}
+.w-stepper__text {display: flex; flex-direction: column; min-width: 0; line-height: 1.3}
+.w-stepper__label {font-size: 14px; font-weight: 600}
+.w-stepper__value {overflow: hidden; color: #333; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap}
+.w-stepper__item.is-current .w-stepper__btn {color: #252525; background: #fff; border-color: var(--btn-primary-bg); box-shadow: inset 0 -3px 0 var(--btn-primary-bg)}
+.w-stepper__item.is-current .w-stepper__num {color: #fff; background: var(--btn-primary-bg)}
+.w-stepper__item.is-done .w-stepper__btn {color: #252525; cursor: pointer}
+.w-stepper__item.is-done .w-stepper__num {color: var(--btn-primary-bg); background: #f8eee9}
+.w-stepper__item.is-done .w-stepper__btn:hover {border-color: #e0cfc7; background: #fff}
+.w-stepper__btn:focus-visible, .w-item:focus-visible, .w-landings:focus-visible, .w-btn-more:focus-visible {outline: var(--store-focus-ring); outline-offset: var(--store-focus-offset)}
+
+.w-message {margin: 0 0 16px; padding: 12px 16px; color: #8a1f0a; background: #fdf1ee; border-left: 4px solid var(--btn-primary-bg); border-radius: 0 6px 6px 0}
+
+/* Сетки выбора. */
+.w-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px}
+.w-grid.brands {grid-template-columns: repeat(5, minmax(0, 1fr))}
+.w-grid.gens {grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))}
+.w-grid.models {grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))}
+.w-grid.engines {grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))}
+.w-item {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 12px; color: #252525; text-align: center; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; font: inherit; cursor: pointer; transition: border-color .15s, background-color .15s}
+.w-item:hover {background: #fffaf8; border-color: var(--btn-primary-bg)}
+.brand-box img {display: block; max-width: 60px; height: 50px; margin: 0 auto 8px; object-fit: contain}
+/* Марка без логотипа: первая буква в круге той же высоты, что логотип. */
+.brand-box__letter {display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0 auto 8px; color: #999; background: #f4f4f4; border-radius: 50%; font-size: 22px; font-weight: 700}
+.gens img {width: 100%; height: auto; margin-bottom: 10px; border-radius: 6px}
+
+.w-brand-actions {display: flex; justify-content: flex-start; margin-top: 16px}
+.w-btn-more {min-height: var(--store-control-height); padding: 8px 18px; color: #333; background: #fff; border: 1px solid #aaa; border-radius: var(--store-control-radius); font-weight: 600; cursor: pointer}
+.w-btn-more:hover {color: var(--btn-primary-bg); border-color: var(--btn-primary-bg)}
+.w-help {margin: 18px 0 0; padding-top: 14px; color: #666; border-top: 1px solid #eee; line-height: 1.6}
+.w-help a {color: #252525; font-weight: 600; white-space: nowrap}
+
+@media (max-width: 767px) {
+    .battery-wizard-container {padding: 18px}
+    .w-title {font-size: 22px}
+    .w-brand-heading {align-items: flex-start; flex-direction: column; gap: 4px; margin-bottom: 16px}
+    /* Все шаги в один ряд: у пройденного — выбранное значение, у текущего — название, у будущих — номер. */
+    .w-stepper {gap: 6px}
+    .w-stepper__btn {gap: 8px; padding: 8px}
+    .w-stepper__num {width: 28px; height: 28px; font-size: 13px}
+    .w-stepper__label, .w-stepper__value {overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+    .w-stepper__item.is-done .w-stepper__label, .w-stepper__item:not(.is-current):not(.is-done) .w-stepper__label {display: none}
+    .w-stepper__item.is-current {flex: 2 1 0}
+    .w-stepper__item.is-done .w-stepper__num {display: none}
+    .w-stepper__item.is-done .w-stepper__value {color: var(--btn-primary-bg)}
+    .w-grid.brands {grid-template-columns: repeat(2, minmax(0, 1fr))}
+    .w-grid.models {grid-template-columns: repeat(2, minmax(0, 1fr))}
+    .w-brand-actions {justify-content: center}
+}
+@media (min-width: 560px) and (max-width: 767px) {
+    .w-grid.brands {grid-template-columns: repeat(5, minmax(0, 1fr))}
 }

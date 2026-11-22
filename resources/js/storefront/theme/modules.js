@@ -1,13 +1,13 @@
 /*
- * Раскладка блоков товаров и категорий (сетка или карусель по ширине) —
- * плагин uniModules из common.js темы UniShop2 старого сайта.
- * Блок размечается data-uni-module="carousel|grid" и, при необходимости,
- * data-uni-module-items='{"0":{"items":1},…}'.
+ * Раскладка блоков категорий сеткой по ширине — плагин uniModules из common.js
+ * темы UniShop2 старого сайта. Блок размечается data-uni-module="grid" и,
+ * при необходимости, data-uni-module-items='{"0":{"items":1},…}'.
+ * Карусели — отдельный компонент Alpine scrollCarousel.
  */
 import $ from 'jquery';
-import { touchSupport, itemsOnMobile, moduleOnMobile } from './settings';
+import { touchSupport, itemsOnMobile } from './settings';
 
-const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile, module_on_mobile = moduleOnMobile;
+const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile;
 
 	var Modules = {
 		init:function(options, el) {
@@ -24,35 +24,7 @@ const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile, module_
 			
 			base.wrapper = (base.$elem2.closest('.tab-content').length) ? base.$elem2.closest('.tab-content') : base.$elem;
 			
-			if((base.options.type == 'grid' && module_on_mobile == 'carousel' && base.wrapper.width()+20 < 768) || base.wrapper.closest('#column-left, #column-right').length) {
-				base.options.type = 'carousel';
-			}
-			
-			if(base.wrapper.closest('#column-left, #column-right').length) {
-				base.options.items = {0: {items: 1}};
-			}
-			
-			if (base.options.type == 'grid') {
-				base.$elem2.children().wrap('<div class="uni-module__item" style="width:'+base.items()+'"></div>');
-			} else {
-				base.$elem2.addClass('owl-carousel').owlCarousel({
-					responsive:base.options.items,
-					responsiveBaseElement:base.wrapper,
-					dots:base.options.dots,
-					mouseDrag:false,
-					loop:base.options.loop,
-					autoplay:base.options.autoplay,
-					nav:true,
-					navText:['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
-				});
-				
-				if(base.$elem2.width() == 0) {
-					const item = base.$elem2.find('.owl-item'), item_width = base.items();
-					
-					item.css({width: item_width});
-					base.$elem2.find('.owl-stage').css({width:item.length * item_width});
-				}
-			}
+			base.$elem2.children().wrap('<div class="uni-module__item" style="width:'+base.items()+'"></div>');
 			
 			base.$elem2.addClass('load-complete');
 			base.responsive();
@@ -70,16 +42,14 @@ const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile, module_
 			
 			const items = base.options.items[match]['items']
 			
-			return (base.options.type == 'carousel') ? width/items : 100/items+'%';
+			return 100/items+'%';
 		},
 		responsive:function() {
             var base = this, lastWindowWidth = $(window).width();
 			
 			base.resizer = () => {
                 if ($(window).width() != lastWindowWidth || uni_touch_support) {
-					if (base.options.type == 'grid') {	
-						base.$elem2.children().css('width', base.items());
-					}
+					base.$elem2.children().css('width', base.items());
                 }
             };
 			
@@ -102,29 +72,10 @@ const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile, module_
 	
 	
 	$.fn.uniModules.options = {
-		type 	   :'carousel',
-		items	   :{0:{items:items_on_mobile},700:{items:3},992:{items:4},1400:{items:5}},
-		autoheight :[],
-		dots	   :true,
-		loop	   :false,
-		autoplay   :false
+		items	   :{0:{items:items_on_mobile},700:{items:3},992:{items:4},1400:{items:5}}
 	};
 
 export function initUniModules(root = document) {
-	$(root).find('[data-home-selection]').each(function () {
-		const wrapper = $(this).children();
-		const mobile = window.matchMedia('(max-width: 767px)');
-		const update = () => {
-			if (mobile.matches && !wrapper.hasClass('owl-loaded')) {
-				wrapper.addClass('owl-carousel').owlCarousel({items: 2, dots: true, nav: true, mouseDrag: false, navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>']});
-			} else if (!mobile.matches && wrapper.hasClass('owl-loaded')) {
-				wrapper.trigger('destroy.owl.carousel').removeClass('owl-carousel');
-			}
-			wrapper.addClass('load-complete');
-		};
-		update();
-		mobile.addEventListener('change', update);
-	});
 	$(root).find('[data-uni-module]').each(function() {
 		const options = {type: $(this).data('uni-module')};
 		const items = $(this).data('uni-module-items');
