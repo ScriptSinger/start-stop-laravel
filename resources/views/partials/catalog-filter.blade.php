@@ -3,6 +3,7 @@
      с учётом остальных условий. Применяется кнопкой «Показать N товаров»;
      на телефоне форма живёт в выезжающей панели. Компонент catalogFilter,
      его x-data — на колонке. --}}
+<button type="button" class="catalog-filter-tab" @click="show()"><span>Фильтр</span><i class="fas fa-sliders-h" aria-hidden="true"></i></button>
 <div class="catalog-filter-backdrop" x-show="open" x-cloak @click="close()"></div>
 
 <div class="catalog-filter-panel" :class="{open}">

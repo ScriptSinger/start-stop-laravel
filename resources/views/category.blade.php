@@ -19,7 +19,7 @@
             <h1>{{ $manufacturer ? ($brandPage?->heading ?: $category->name.' '.$manufacturer->name) : ($category->heading ?: $category->name) }}</h1>
         </div>
         <div class="row">
-            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4" x-data="catalogFilter({countUrl: @js(route('category.count', $category)), priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }}, brandUrl: @js($manufacturer ? route('category.manufacturer', [$category, $manufacturer]) : null), brandId: @js($manufacturer?->id)})" @keydown.escape.window="close()" @open-catalog-filter.window="show()">
+            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4" x-data="catalogFilter({countUrl: @js(route('category.count', $category)), priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }}, brandUrl: @js($manufacturer ? route('category.manufacturer', [$category, $manufacturer]) : null), brandId: @js($manufacturer?->id)})" @keydown.escape.window="close()">
                 @include('partials.catalog-filter')
             </aside>
             <div id="content" class="col-sm-8 col-md-9 col-lg-9 col-xxl-16">
@@ -55,8 +55,6 @@
                             </select>
                         </div>
                     @endif
-
-                    <button type="button" class="btn btn-default catalog-filter-open visible-xs" @click="$dispatch('open-catalog-filter')" aria-controls="catalog-filter"><i class="fas fa-sliders-h" aria-hidden="true"></i> Фильтры</button>
                     @include('partials.catalog-sorts')
 
                     @if ($products->isEmpty())
