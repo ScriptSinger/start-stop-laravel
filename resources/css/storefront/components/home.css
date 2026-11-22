@@ -32,10 +32,6 @@
     .imageblock .header-phones__callback {display: table; margin: 16px 0 0}
 }
 
-/* «О нас»: текст из визуального редактора старой админки; там это были
-   style у каждого абзаца, поэтому селектор сильнее правил темы для .html-module. */
-.home-page .html-module.home-about :is(h2, h3, p, li) {padding: 0; margin-bottom: 16px; margin-left: 25px; line-height: inherit; font-feature-settings: "liga", "kern"; font-kerning: normal}
-
 /* Отзывы (виджет MyReviews). */
 .reviews-widget {display: flex; justify-content: center; margin-top: 20px; border-radius: 20px}
 .reviews-widget__frame {width: 100%; height: 100%; max-width: 1170px; border: none; outline: none; padding: 0; margin: 0}
@@ -44,8 +40,35 @@
 .contact-wrap .blockontact {z-index: 2}
 .contact-wrap .map-area {z-index: 1}
 
-.home-about-wrap {position: relative}
-.home-about.is-collapsed {position: relative; max-height: 230px; overflow: hidden}
-.home-about.is-collapsed:after {position: absolute; right: 0; bottom: 0; left: 0; height: 90px; background: linear-gradient(rgba(247, 247, 247, 0), #f7f7f7); content: ""; pointer-events: none}
-.home-about__toggle {display: block; margin: 12px 0 20px; padding: 8px 22px; color: var(--btn-primary-bg); font-weight: 600; background: #fff; border: 1px solid var(--btn-primary-bg); border-radius: 6px}
-.home-about__toggle:hover {color: #fff; background: var(--btn-primary-bg)}
+
+/* «О магазине»: вступление, преимущества карточками, подробный текст свёрнут. */
+.home-about {margin: 48px 0 30px}
+.home-about__title {max-width: 900px; margin: 0 0 14px; font-size: 26px; font-weight: 700; line-height: 1.25}
+.home-about__lead {max-width: 820px; margin: 0 0 30px; color: #555; font-size: 16px; line-height: 1.7}
+.home-about__subtitle {margin: 0 0 18px; font-size: 20px; font-weight: 700}
+.home-about__benefits {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none}
+.home-about__benefit {display: flex; flex-direction: column; padding: 24px; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px}
+.home-about__benefit i {display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 16px; color: var(--btn-primary-bg); background: #f8eee9; border-radius: 6px; font-size: 20px}
+.home-about__benefit b {margin-bottom: 8px; font-size: 17px; font-weight: 700; line-height: 1.3}
+.home-about__benefit span {color: #666; line-height: 1.6}
+
+.home-about__more {margin-top: 36px; padding-top: 28px; border-top: 1px solid #e8e8e8}
+.home-about__details {position: relative; max-width: 900px; color: #555; line-height: 1.7}
+.home-about__details h3 {margin: 0 0 8px; color: #252525; font-size: 17px; font-weight: 700}
+.home-about__details p {margin: 0 0 18px}
+.home-about__details a {color: var(--btn-primary-bg); text-decoration: underline}
+.home-about__details.is-collapsed {max-height: 150px; overflow: hidden}
+.home-about__details.is-collapsed:after {position: absolute; right: 0; bottom: 0; left: 0; height: 80px; background: linear-gradient(rgba(255, 255, 255, 0), #fff); content: ""; pointer-events: none}
+.home-about__toggle {display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 0; color: var(--btn-primary-bg); background: none; border: 0; font-weight: 600; cursor: pointer}
+.home-about__toggle:hover span {text-decoration: underline}
+.home-about__toggle i {font-size: 12px; transition: transform .2s}
+.home-about__toggle i.is-open {transform: rotate(180deg)}
+@media (max-width: 991px) {
+    .home-about__benefits {grid-template-columns: repeat(2, minmax(0, 1fr))}
+}
+@media (max-width: 575px) {
+    .home-about {margin-top: 36px}
+    .home-about__title {font-size: 22px}
+    .home-about__benefits {grid-template-columns: 1fr; gap: 12px}
+    .home-about__benefit {padding: 20px}
+}
