@@ -21,13 +21,23 @@
                 ])->all(),
             ], JSON_UNESCAPED_UNICODE) }}">
                 <div class="order-success__head">
-                    <h1 class="order-success__heading">
-                        <i class="fa fa-check-circle order-success__icon" aria-hidden="true"></i>
-                        <span>Ваш заказ #{{ $order->id }} сформирован!</span>
-                    </h1>
-                    <p class="order-success__lead">Менеджер перезвонит на номер <strong class="order-success__phone">{{ $order->customer_phone }}</strong>, чтобы подтвердить заказ.
-                        Пожалуйста, задавайте <a href="{{ route('contact') }}">нам</a> любые вопросы, которые у вас возникают.</p>
+                    <i class="fa fa-check order-success__icon" aria-hidden="true"></i>
+                    <div class="order-success__intro">
+                        <h1 class="order-success__heading">Ваш заказ #{{ $order->id }} сформирован!</h1>
+                        <p class="order-success__lead">Менеджер перезвонит на номер <strong class="order-success__phone">{{ $order->customer_phone }}</strong>, чтобы подтвердить заказ.
+                            Пожалуйста, задавайте <a href="{{ route('contact') }}">нам</a> любые вопросы, которые у вас возникают.</p>
+                    </div>
+                    <div class="order-success__sum">
+                        <span class="order-success__sum-label">Сумма заказа</span>
+                        <span class="order-success__sum-value">{{ App\Support\Price::format((float) $order->total) }}</span>
+                    </div>
                 </div>
+
+                <ol class="order-success__steps">
+                    <li class="order-success__step is-done"><span class="order-success__step-mark"><i class="fa fa-check" aria-hidden="true"></i></span>Заказ принят</li>
+                    <li class="order-success__step"><span class="order-success__step-mark">2</span>Звонок менеджера</li>
+                    <li class="order-success__step"><span class="order-success__step-mark">3</span>Получение заказа</li>
+                </ol>
 
                 <div class="row">
                     <div class="col-md-7">

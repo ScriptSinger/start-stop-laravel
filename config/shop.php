@@ -38,7 +38,7 @@ return [
     ],
     // Плашки справа на странице товара (настройки темы product.text_banner).
     'product_banners' => [
-        ['icon' => 'fas fa-shipping-fast', 'text' => 'Бесплатная доставка по Уфе'],
+        ['icon' => 'fas fa-shipping-fast', 'text' => 'Доставка по Уфе, в основных районах бесплатно'],
         ['icon' => 'fas fa-car-battery', 'text' => 'Бесплатное гарантийное обслуживание'],
         ['icon' => 'fas fa-credit-card', 'text' => 'Скидки и бонусы для постоянных клиентов'],
         ['icon' => 'fas fa-user-shield', 'text' => '100% Гарантия на брак без дополнительных условий'],

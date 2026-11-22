@@ -72,10 +72,6 @@
                         @include('partials.product-grid', ['columnClass' => 'col-sm-6 col-md-4 col-lg-4 col-xxl-5'])
                     @endif
                 </div>
-                <div class="content-bottom">
-                    @include('home.advantages')
-                    @include('home.map')
-                </div>
             </div>
         </div>
     </div>

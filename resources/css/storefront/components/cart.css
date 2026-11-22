@@ -15,12 +15,7 @@
 .order-summary__badge {display: inline-block; margin-top: 4px; padding: 2px 8px; font-size: 13px; color: #333; background: #e8f3ea; border: 1px solid #c5e0cb; border-radius: 3px}
 .order-summary__total td {border-top: 2px solid #ddd; font-size: 16px}
 
-.order-success__head {margin-bottom: 25px}
-.order-success__heading {display: flex; align-items: center; gap: 12px}
-.order-success__icon {flex: none; font-size: 36px; color: #2e9e4f}
-.order-success__lead {font-size: 15px; max-width: 760px}
 .order-success__title {font-size: 18px; margin: 0 0 12px}
-.order-success__card {padding: 20px; background: #f7f7f7; border: 1px solid #e5e5e5; border-radius: 4px; margin-bottom: 20px}
 .order-success__card .table-responsive {margin-bottom: 0; border: 0}
 .order-success__phone {white-space: nowrap}
 .order-success__card .order-success__title {margin-top: 0}
@@ -49,3 +44,76 @@
     .header-cart__total, .checkout-cart__total {flex: 1 1 50%}
     .checkout-cart__total-text {display: block}
 }
+
+.unicheckout__pickup-map {height: 300px; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; background: #ececec}
+@media (min-width: 768px) {
+    .unicheckout__method .unicheckout__pickup-item {display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; column-gap: 24px; align-items: start}
+    .unicheckout__method .unicheckout__pickup-map {height: 340px}
+}
+
+/* Страница «Заказ сформирован»: подтверждение, сумма, этапы, карточки. */
+.order-success__head {display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-bottom: 20px; padding: 24px; background: linear-gradient(135deg, #eef8f0, #fff 70%); border: 1px solid #d3ead9; border-radius: 8px}
+.order-success__icon {flex: none; display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; font-size: 30px; color: #fff; background: #2e9e4f; border-radius: 50%; box-shadow: 0 0 0 8px rgba(46, 158, 79, .15); animation: order-success-pop .5s cubic-bezier(.2, 1.4, .4, 1) both}
+.order-success__intro {flex: 1 1 320px}
+.order-success__heading {margin: 0 0 8px}
+.order-success__lead {margin: 0; max-width: 760px; font-size: 15px}
+.order-success__sum {flex: none; padding: 12px 20px; text-align: right; background: #fff; border: 1px solid #d3ead9; border-radius: 6px}
+.order-success__sum-label {display: block; font-size: 13px; color: #777}
+.order-success__sum-value {display: block; font-size: 26px; font-weight: 700; white-space: nowrap}
+
+.order-success__steps {display: flex; gap: 12px; margin: 0 0 25px; padding: 0; list-style: none}
+.order-success__step {flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 14px; color: #777; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px}
+.order-success__step-mark {flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; font-size: 14px; font-weight: 600; border: 2px solid #ccc; border-radius: 50%}
+.order-success__step.is-done {color: #222; font-weight: 600; border-color: #b8dfc3}
+.order-success__step.is-done .order-success__step-mark {color: #fff; background: #2e9e4f; border-color: #2e9e4f}
+
+.order-success__card {margin-bottom: 20px; padding: 20px; background: #fff; border: 1px solid #ececec; border-radius: 8px; box-shadow: 0 2px 12px rgba(0, 0, 0, .06)}
+
+@keyframes order-success-pop {
+    from {transform: scale(.4); opacity: 0}
+    to {transform: scale(1); opacity: 1}
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .order-success__icon {animation: none}
+}
+
+@media (max-width: 767px) {
+    .order-success__head {padding: 16px}
+    .order-success__sum {width: 100%; text-align: left}
+    .order-success__steps {flex-direction: column; gap: 8px}
+}
+
+/* Оформление заказа: каждый шаг и сводка заказа — карточка. */
+.unicheckout__user, .unicheckout__method, .unicheckout__payment, .unicheckout__comment {margin: 0 0 20px; padding: 20px; background: #fff; border: 1px solid #ececec; border-radius: 8px; box-shadow: 0 2px 12px rgba(0, 0, 0, .06)}
+.unicheckout__method .unicheckout__pickup-item {margin-bottom: 0; padding: 0; background: none}
+.unicheckout__method .help-block {margin: 0 0 15px}
+.unicheckout-sticky__wrapper {padding: 20px; background: #fff; border: 1px solid #ececec; border-radius: 8px; box-shadow: 0 2px 12px rgba(0, 0, 0, .06)}
+@media (max-width: 767px) {
+    .unicheckout__user, .unicheckout__method, .unicheckout__payment, .unicheckout__comment {padding: 15px}
+}
+
+/* Подзаголовки внутри шага «Способ получения» (адрес, способы доставки) — без своей нумерации. */
+.unicheckout__method .unicheckout__address .heading:before, .unicheckout__method .unicheckout__shipping .heading:before {content: none; counter-increment: none}
+.unicheckout__method .unicheckout__address .heading, .unicheckout__method .unicheckout__shipping .heading {font-size: 1.05em}
+
+/* Самовывоз / Доставка — переключатель: активный вариант — белая «кнопка» с акцентным текстом, неактивный — приглушённый. */
+.unicheckout__pickup-nav {gap: 4px; padding: 4px; border-radius: 8px}
+.unicheckout__pickup-nav li {flex: 1; justify-content: center; height: var(--store-control-height); padding: 0; border-radius: 6px}
+.unicheckout__pickup-nav li a {justify-content: center; height: 100%; color: #666}
+.unicheckout__pickup-nav li a:after {display: none}
+.unicheckout__pickup-nav li.active {background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .15)}
+.unicheckout__pickup-nav li.active a, .unicheckout__pickup-nav li.active a:hover, .unicheckout__pickup-nav li.active a:focus {color: #c82a00}
+
+.shipping-method__link {display: inline-block; margin-top: 4px; color: #c82a00; font-weight: 600; text-decoration: underline}
+.shipping-method__link:hover, .shipping-method__link:focus {color: #a02200}
+
+.unicheckout__method-note {display: flex; gap: 10px; align-items: flex-start; margin: 0 0 15px; padding: 10px 14px; color: #5a4a00; background: #fff8e1; border: 1px solid #f1e2a6; border-radius: 6px}
+.unicheckout__method-note i {flex: none; margin-top: 3px; color: #c28a00}
+
+.pickup-facts {margin: 0 0 20px; padding: 0}
+.pickup-facts__item {display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #ececec}
+.pickup-facts__item:first-child {padding-top: 0}
+.pickup-facts__item:last-child {border-bottom: 0}
+.pickup-facts__icon {flex: none; width: 36px; height: 36px; margin: 0; font-size: 16px; line-height: 36px; text-align: center; color: #c82a00; background: #fbeeea; border-radius: 50%}
+.pickup-facts__title {margin: 0 0 2px; font-weight: 600}

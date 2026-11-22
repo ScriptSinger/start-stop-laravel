@@ -129,9 +129,11 @@
                                     </div>
                                 </div>
 
+                                <div class="unicheckout__method">
                                 <div class="heading">Способ получения</div>
+                                <p class="unicheckout__method-note" x-show="pickupOnly" @if (! $isPickupOnly) style="display: none" @endif><i class="fas fa-info-circle" aria-hidden="true"></i> В корзине есть товар, который можно забрать только самовывозом, поэтому доставка недоступна.</p>
                                 <input type="hidden" name="delivery" value="{{ $selectedDelivery->value }}" :value="delivery" />
-                                <ul class="unicheckout__pickup-nav nav nav-tabs">
+                                <ul class="unicheckout__pickup-nav nav nav-tabs" x-show="!pickupOnly" @if ($isPickupOnly) style="display: none" @endif>
                                     @foreach ([DeliveryMethod::Pickup, DeliveryMethod::City] as $method)
                                         <li class="{{ $method === $selectedDelivery ? 'active' : '' }}" :class="{active: delivery === @js($method->value)}" @if ($method === DeliveryMethod::City) x-show="!pickupOnly" @if ($isPickupOnly) style="display: none" @endif @endif><a href="#unicheckout-method-{{ $method->value }}" class="{{ $method === DeliveryMethod::Pickup ? 'unicheckout__pickup' : 'unicheckout__delivery' }}" data-delivery="{{ $method->value }}" @click.prevent="delivery = @js($method->value)">{{ $method === DeliveryMethod::Pickup ? 'Самовывоз' : 'Доставка' }}</a></li>
                                     @endforeach
@@ -139,14 +141,22 @@
                                 <div class="tab-content">
                                     <div id="unicheckout-method-pickup" class="tab-pane {{ $selectedDelivery === DeliveryMethod::Pickup ? 'active' : '' }}" :class="{active: delivery === @js(DeliveryMethod::Pickup->value)}">
                                         <div class="unicheckout__pickup-item">
-                                            <div class="unicheckout__pickup-title">Магазин «{{ config('shop.name') }}»</div>
-                                            <div class="unicheckout__pickup-address">{{ config('shop.address') }}</div>
-                                            <div class="unicheckout__pickup-time-life">
-                                                <div class="unicheckout__pickup-time"><span class="unicheckout__pickup-time-span">Время работы</span> 10-20</div>
-                                                <div class="unicheckout__pickup-life"><span class="unicheckout__pickup-life-span">Срок хранения</span> 3 дня</div>
-                                            </div>
+                                            <ul class="pickup-facts list-unstyled">
+                                                <li class="pickup-facts__item">
+                                                    <i class="fas fa-store fa-fw pickup-facts__icon" aria-hidden="true"></i>
+                                                    <div><div class="pickup-facts__title">Магазин «{{ config('shop.name') }}»</div>{{ config('shop.address') }}</div>
+                                                </li>
+                                                <li class="pickup-facts__item">
+                                                    <i class="far fa-clock fa-fw pickup-facts__icon" aria-hidden="true"></i>
+                                                    <div><div class="pickup-facts__title">Время работы</div>@foreach (config('shop.opening_hours') as $hours){{ $hours['days'] }}, {{ $hours['from'] }}–{{ $hours['to'] }}@if (! $loop->last)<br>@endif @endforeach</div>
+                                                </li>
+                                                <li class="pickup-facts__item">
+                                                    <i class="fas fa-box-open fa-fw pickup-facts__icon" aria-hidden="true"></i>
+                                                    <div><div class="pickup-facts__title">Срок хранения заказа</div>3 дня</div>
+                                                </li>
+                                            </ul>
+                                            <div class="unicheckout__pickup-map" data-yandex-map data-coordinates="{{ json_encode(config('shop.map_coordinates')) }}" data-map-key="{{ config('services.yandex_maps.key') }}"></div>
                                         </div>
-                                        <p class="help-block" x-show="pickupOnly" @if (! $isPickupOnly) style="display: none" @endif>В корзине есть товар, который можно забрать только самовывозом.</p>
                                     </div>
                                         <div id="unicheckout-method-city" class="tab-pane {{ $selectedDelivery === DeliveryMethod::City ? 'active' : '' }}" :class="{active: delivery === @js(DeliveryMethod::City->value)}">
                                             <div class="unicheckout__address payment-address">
@@ -161,12 +171,13 @@
                                                     <div class="shipping-method__item radio">
                                                         <label class="shipping-method__label input">
                                                             <input type="radio" checked disabled />
-                                                            <span class="shipping-method__quote">{{ DeliveryMethod::City->label() }} — бесплатно</span>
+                                                            <span class="shipping-method__quote">{{ DeliveryMethod::City->label() }} — стоимость зависит от района. Менеджер уточнит её при подтверждении заказа. <a class="shipping-method__link" href="{{ route('page.show', ['page' => 'dostavka-i-oplata']) }}" target="_blank" rel="noopener">Тарифы по районам</a></span>
                                                         </label>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                </div>
                                 </div>
 
                                 <div class="unicheckout__payment">

@@ -253,11 +253,6 @@
                         </div>
                     </div>
                 @endif
-
-                <div class="content-bottom">
-                    @include('home.advantages')
-                    @include('home.map')
-                </div>
             </div>
         </div>
     </div>
