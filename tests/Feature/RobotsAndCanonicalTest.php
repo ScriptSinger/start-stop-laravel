@@ -20,7 +20,7 @@ class RobotsAndCanonicalTest extends TestCase
             $this->assertStringContainsString("Disallow: {$path}", $robots);
         }
 
-        $this->assertStringContainsString('Clean-param: sort&limit&price_from&price_to&available /category/', $robots);
+        $this->assertStringContainsString('Clean-param: sort&limit&price_from&price_to&available&manufacturer&case_type&attr /category/', $robots);
         $this->assertStringContainsString('Sitemap: https://start-stop.su/sitemap.xml', $robots);
     }
 

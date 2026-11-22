@@ -12,7 +12,10 @@ Disallow: /hint/
 # содержимое — Яндекс склеивает такие адреса с чистым (Google берёт canonical).
 # Сами адреса не закрываем: закрытая страница не отдаёт роботу ни canonical,
 # ни noindex, и ссылка на неё остаётся в выдаче без описания.
-Clean-param: sort&limit&price_from&price_to&available /category/
+# Фильтры по производителю, типу корпуса и характеристикам тоже склеиваются
+# с чистой категорией; у страниц производителей (/category/{раздел}/{бренд})
+# адрес без параметров, их Clean-param не затрагивает.
+Clean-param: sort&limit&price_from&price_to&available&manufacturer&case_type&attr /category/
 Clean-param: sort&limit /akkumulyator-dlya/
 
 Sitemap: https://start-stop.su/sitemap.xml

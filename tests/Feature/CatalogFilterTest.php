@@ -192,7 +192,8 @@ class CatalogFilterTest extends TestCase
 
     public function test_counts_ignore_own_group_but_respect_others(): void
     {
-        $response = $this->category(['manufacturer' => [$this->titan->id]]);
+        // Один производитель без других условий — страница производителя, куда ведёт 301.
+        $response = $this->get(route('category.manufacturer', [$this->batteries, $this->titan]))->assertOk();
 
         // Полярность при выбранном TITAN: обратных 2, прямых 1.
         $this->assertFacetCount($response, 'Обратная', 2);

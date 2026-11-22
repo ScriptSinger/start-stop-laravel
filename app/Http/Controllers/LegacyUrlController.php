@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Page;
 use App\Models\Product;
+use App\Services\Catalog\BrandPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -20,11 +21,11 @@ use Illuminate\Http\Request;
  */
 class LegacyUrlController extends Controller
 {
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(Request $request, BrandPages $brandPages): RedirectResponse
     {
         $segments = array_values(array_filter(explode('/', trim($request->path(), '/'))));
 
-        $target = $this->target($segments, $request);
+        $target = $this->target($segments, $request, $brandPages);
 
         abort_if($target === null, 404);
 
@@ -38,7 +39,7 @@ class LegacyUrlController extends Controller
      *
      * @param  list<string>  $segments
      */
-    private function target(array $segments, Request $request): ?string
+    private function target(array $segments, Request $request, BrandPages $brandPages): ?string
     {
         $slug = (string) last($segments);
         $nested = count($segments) > 1;
@@ -46,7 +47,7 @@ class LegacyUrlController extends Controller
         $product = fn (): ?string => ($model = Product::query()->where('status', true)->where('slug', $slug)->first()) ? route('product.show', $model) : null;
         $category = fn (): ?string => ($model = Category::query()->where('status', true)->where('slug', $slug)->first()) ? $this->categoryUrl($model, $request) : null;
         $page = fn (): ?string => ($model = Page::query()->where('status', true)->where('slug', $slug)->first()) ? route('page.show', $model) : null;
-        $brandInCategory = fn (): ?string => $nested ? $this->brandInCategoryUrl($segments, $request) : null;
+        $brandInCategory = fn (): ?string => $nested ? $this->brandInCategoryUrl($segments, $request, $brandPages) : null;
 
         $order = $nested ? [$category, $product, $page, $brandInCategory] : [$product, $category, $page];
 
@@ -77,13 +78,14 @@ class LegacyUrlController extends Controller
     }
 
     /**
-     * /akkumulyatori/titan → раздел с фильтром по производителю. У старого
+     * /akkumulyatori/titan → страница производителя в разделе, а если у неё
+     * нет страницы (мало товаров, раздел не в списке) — раздел с фильтром. У старого
      * сайта страницы марки внутри раздела получали числовой суффикс
      * (titan-1, bushido-2), у производителя его нет — отрезаем.
      *
      * @param  list<string>  $segments
      */
-    private function brandInCategoryUrl(array $segments, Request $request): ?string
+    private function brandInCategoryUrl(array $segments, Request $request, BrandPages $brandPages): ?string
     {
         $brandSlug = array_pop($segments);
 
@@ -98,8 +100,14 @@ class LegacyUrlController extends Controller
             ->orderByRaw('slug = ? DESC', [$brandSlug])
             ->first();
 
-        return $manufacturer === null
-            ? null
-            : $this->categoryUrl($category, $request, ['manufacturer' => [$manufacturer->id]]);
+        if ($manufacturer === null) {
+            return null;
+        }
+
+        if ($brandPages->isAvailable($category, $manufacturer)) {
+            return route('category.manufacturer', [$category, $manufacturer, ...($request->integer('page') > 1 ? ['page' => $request->integer('page')] : [])]);
+        }
+
+        return $this->categoryUrl($category, $request, ['manufacturer' => [$manufacturer->id]]);
     }
 }

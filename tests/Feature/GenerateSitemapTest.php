@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Guide;
+use App\Models\Manufacturer;
 use App\Models\Page;
 use App\Models\Product;
 use Illuminate\Console\Scheduling\Schedule;
@@ -65,13 +66,38 @@ class GenerateSitemapTest extends TestCase
 
         $index = file_get_contents($this->path);
 
-        foreach (['categories', 'products', 'pages', 'cars'] as $type) {
+        foreach (['categories', 'brands', 'products', 'pages', 'cars'] as $type) {
             $this->assertStringContainsString('<loc>'.url("sitemap-{$type}.xml").'</loc>', $index);
             $this->assertFileExists(dirname($this->path)."/sitemap-{$type}.xml");
         }
 
         // Адреса страниц лежат в файлах по типам, а не в индексе.
         $this->assertStringNotContainsString(route('home'), str_replace(url('sitemap-'), '', $index));
+    }
+
+    public function test_brands_file_has_only_brand_pages_with_enough_products(): void
+    {
+        $batteries = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori', 'status' => true]);
+        $oils = Category::query()->create(['name' => 'Масла', 'slug' => 'motornoe-maslo', 'status' => true]);
+        $titan = Manufacturer::query()->create(['name' => 'TITAN', 'slug' => 'titan']);
+        $varta = Manufacturer::query()->create(['name' => 'VARTA', 'slug' => 'varta']);
+
+        foreach (['1', '2', '3'] as $number) {
+            $batteries->products()->attach(Product::query()->create(['name' => "TITAN {$number}", 'slug' => "titan-{$number}", 'manufacturer_id' => $titan->id, 'price' => 1, 'status' => true]));
+            $oils->products()->attach(Product::query()->create(['name' => "Масло {$number}", 'slug' => "maslo-{$number}", 'manufacturer_id' => $titan->id, 'price' => 1, 'status' => true]));
+        }
+
+        $batteries->products()->attach(Product::query()->create(['name' => 'VARTA 1', 'slug' => 'varta-1', 'manufacturer_id' => $varta->id, 'price' => 1, 'status' => true]));
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
+
+        $brands = file_get_contents(dirname($this->path).'/sitemap-brands.xml');
+
+        $this->assertStringContainsString('<loc>'.route('category.manufacturer', [$batteries, $titan]).'</loc>', $brands);
+        // Мало товаров, раздел вне списка и адреса с параметрами в карту не попадают.
+        $this->assertStringNotContainsString('varta', $brands);
+        $this->assertStringNotContainsString('motornoe-maslo', $brands);
+        $this->assertDoesNotMatchRegularExpression('/<loc>[^<]*\\?[^<]*<\\/loc>/', $brands);
     }
 
     public function test_pages_file_has_only_active_guides(): void

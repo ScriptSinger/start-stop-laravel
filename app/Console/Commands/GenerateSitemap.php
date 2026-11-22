@@ -11,6 +11,7 @@ use App\Services\CarLanding\CarBrand;
 use App\Services\CarLanding\CarGeneration;
 use App\Services\CarLanding\CarLandingCatalog;
 use App\Services\CarLanding\CarModel;
+use App\Services\Catalog\BrandPages;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -33,10 +34,10 @@ class GenerateSitemap extends Command
      * половина адресов в нём отдавала 404.
      *
      * sitemap.xml — индекс, сами адреса лежат в sitemap-categories.xml,
-     * sitemap-products.xml, sitemap-pages.xml и sitemap-cars.xml: так в
+     * sitemap-brands.xml, sitemap-products.xml, sitemap-pages.xml и sitemap-cars.xml: так в
      * Вебмастере и Search Console видно, какой тип страниц не индексируется.
      */
-    public function handle(CarLandingCatalog $carLandings): int
+    public function handle(CarLandingCatalog $carLandings, BrandPages $brandPages): int
     {
         $path = $this->option('path') ?: public_path('sitemap.xml');
         $directory = dirname($path);
@@ -46,6 +47,7 @@ class GenerateSitemap extends Command
         $catalogChangedAt = $this->catalogChangedAt();
 
         [$categorySitemap, $categories] = $this->categorySitemap();
+        [$brandSitemap, $brands] = $this->brandSitemap($brandPages);
         [$productSitemap, $products] = $this->productSitemap();
         [$pageSitemap, $pages] = $this->pageSitemap($catalogChangedAt);
         [$carSitemap, $carPages] = $this->carSitemap($carLandings, $catalogChangedAt);
@@ -54,6 +56,7 @@ class GenerateSitemap extends Command
 
         foreach ([
             'sitemap-categories.xml' => $categorySitemap,
+            'sitemap-brands.xml' => $brandSitemap,
             'sitemap-products.xml' => $productSitemap,
             'sitemap-pages.xml' => $pageSitemap,
             'sitemap-cars.xml' => $carSitemap,
@@ -64,7 +67,7 @@ class GenerateSitemap extends Command
 
         $index->writeToFile($path);
 
-        $this->info("sitemap.xml: разделов {$categories}, товаров {$products}, страниц {$pages}, подбор по авто {$carPages} → {$path}");
+        $this->info("sitemap.xml: разделов {$categories}, страниц производителей {$brands}, товаров {$products}, страниц {$pages}, подбор по авто {$carPages} → {$path}");
 
         return self::SUCCESS;
     }
@@ -82,6 +85,24 @@ class GenerateSitemap extends Command
         ));
 
         return [$sitemap, $categories->count()];
+    }
+
+    /**
+     * Страницы «раздел + производитель»: только пары с достаточным числом
+     * товаров, без адресов с фильтрами.
+     *
+     * @return array{Sitemap, int}
+     */
+    private function brandSitemap(BrandPages $brandPages): array
+    {
+        $sitemap = Sitemap::create();
+        $pages = $brandPages->pages();
+
+        $pages->each(fn (array $page) => $sitemap->add(
+            Url::create(route('category.manufacturer', [$page['category'], $page['manufacturer']]))->setLastModificationDate($page['changed_at'] ?? now()),
+        ));
+
+        return [$sitemap, $pages->count()];
     }
 
     /**

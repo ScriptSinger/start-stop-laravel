@@ -9,9 +9,14 @@
                 @if ($category->parent)
                     <li><a href="{{ route('category.show', $category->parent) }}">{{ $category->parent->name }}</a></li>
                 @endif
-                <li>{{ $category->name }}</li>
+                @if ($manufacturer)
+                    <li><a href="{{ route('category.show', $category) }}">{{ $category->name }}</a></li>
+                    <li>{{ $manufacturer->name }}</li>
+                @else
+                    <li>{{ $category->name }}</li>
+                @endif
             </ul>
-            <h1>{{ $category->heading ?: $category->name }}</h1>
+            <h1>{{ $manufacturer ? $category->name.' '.$manufacturer->name : ($category->heading ?: $category->name) }}</h1>
         </div>
         <div class="row">
             <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4" x-data="catalogFilter({countUrl: @js(route('category.count', $category)), priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }}})" @keydown.escape.window="close()" @open-catalog-filter.window="show()">
@@ -44,6 +49,18 @@
                                     <option value="{{ $link['url'] }}">{{ $link['title'] }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                    @endif
+
+                    @if ($brandLinks !== [])
+                        <div class="category-list row row-flex">
+                            @foreach ($brandLinks as $link)
+                                <div class="col-xxl-2-1 col-lg-2 col-md-2 col-sm-4 col-xs-4">
+                                    <a href="{{ $link['url'] }}" class="category-list__item uni-item-bg" title="{{ $category->name }} {{ $link['title'] }}">
+                                        <span class="category-list__name">{{ $link['title'] }}</span>
+                                    </a>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
 

@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CategoryMenu
 {
+    public function __construct(private readonly BrandPages $brandPages) {}
+
     /** Меньше двух производителей — выпадающий список не нужен. */
     private const MIN_MANUFACTURERS = 2;
 
@@ -62,7 +64,10 @@ class CategoryMenu
     /**
      * Подкатегории раздела, а если их нет — его производители (от двух).
      *
-     * @param  Collection<int, object{id: int, name: string}>  $manufacturers
+     * Производитель с индексируемой страницей ведёт на неё, остальные — на
+     * раздел с фильтром.
+     *
+     * @param  Collection<int, object{id: int, name: string, slug: string}>  $manufacturers
      * @return list<array{title: string, url: string}>
      */
     private function buildLinks(Category $category, Collection $manufacturers): array
@@ -78,9 +83,13 @@ class CategoryMenu
             return [];
         }
 
+        $brandPages = $this->brandPages->manufacturers($category)->keyBy('id');
+
         return $manufacturers->map(fn (object $manufacturer): array => [
             'title' => $manufacturer->name,
-            'url' => route('category.show', ['category' => $category, 'manufacturer' => [$manufacturer->id]]),
+            'url' => $brandPages->has($manufacturer->id)
+                ? route('category.manufacturer', [$category, $brandPages->get($manufacturer->id)])
+                : route('category.show', ['category' => $category, 'manufacturer' => [$manufacturer->id]]),
         ])->values()->all();
     }
 
@@ -88,7 +97,7 @@ class CategoryMenu
      * Производители активных товаров по разделам — одним запросом.
      *
      * @param  list<int>  $categoryIds
-     * @return Collection<int, Collection<int, object{id: int, name: string, category_id: int}>>
+     * @return Collection<int, Collection<int, object{id: int, name: string, slug: string, category_id: int}>>
      */
     private function manufacturersByCategory(array $categoryIds): Collection
     {
@@ -100,7 +109,7 @@ class CategoryMenu
             ->whereNull('products.deleted_at')
             ->distinct()
             ->orderBy('manufacturers.name')
-            ->get(['category_product.category_id', 'manufacturers.id', 'manufacturers.name'])
+            ->get(['category_product.category_id', 'manufacturers.id', 'manufacturers.name', 'manufacturers.slug'])
             ->groupBy('category_id');
     }
 }

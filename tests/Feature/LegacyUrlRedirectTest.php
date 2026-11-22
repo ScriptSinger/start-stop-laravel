@@ -41,6 +41,25 @@ class LegacyUrlRedirectTest extends TestCase
         $this->get('/akkumulyatori/titan-1')->assertStatus(301)->assertRedirect($expected);
     }
 
+    public function test_old_brand_inside_category_redirects_to_the_brand_page_when_it_exists(): void
+    {
+        $batteries = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori']);
+        $titan = Manufacturer::query()->create(['name' => 'TITAN', 'slug' => 'titan']);
+
+        foreach (['60', '75', '90'] as $capacity) {
+            Product::query()
+                ->create(['name' => "TITAN {$capacity}", 'slug' => "titan-{$capacity}", 'manufacturer_id' => $titan->id, 'price' => 7000, 'status' => true])
+                ->categories()
+                ->attach($batteries);
+        }
+
+        $expected = route('category.manufacturer', [$batteries, $titan]);
+
+        $this->get('/akkumulyatori/titan')->assertStatus(301)->assertRedirect($expected);
+        $this->get('/akkumulyatori/titan-1')->assertStatus(301)->assertRedirect($expected);
+        $this->get('/akkumulyatori/titan?page=3')->assertStatus(301)->assertRedirect($expected.'?page=3');
+    }
+
     public function test_exact_manufacturer_slug_wins_over_the_trimmed_one(): void
     {
         $trucks = Category::query()->create(['name' => 'Грузовые', 'slug' => 'gruzovie-akkumulyatori']);

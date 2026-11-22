@@ -30,6 +30,8 @@ Route::get('/catalog/{product:slug}', [ProductController::class, 'show'])->name(
 Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->name('category.show');
 // Сколько товаров будет с выбранным фильтром — для кнопки «Показать N товаров» на телефоне.
 Route::get('/category/{category:slug}/count', [CategoryController::class, 'count'])->name('category.count');
+// Страница «раздел + производитель» — индексируется; после /count, чтобы «count» не считался брендом.
+Route::get('/category/{category:slug}/{manufacturer:slug}', [CategoryController::class, 'manufacturer'])->withoutScopedBindings()->name('category.manufacturer');
 // Адрес как на старом сайте (OpenCart information/contact).
 Route::get('/contact-us', ContactController::class)->name('contact');
 Route::get('/dlya-organizatsiy', BusinessPageController::class)->name('business');

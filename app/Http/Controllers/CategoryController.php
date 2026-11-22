@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CatalogFilterRequest;
 use App\Models\Category;
+use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Services\Catalog\BrandPages;
 use App\Services\Catalog\CatalogFacets;
 use App\Services\Catalog\CatalogFilter;
 use App\Services\Catalog\CategoryMenu;
@@ -15,13 +17,57 @@ use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
-    public function show(CatalogFilterRequest $request, Category $category, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View
+    public function show(CatalogFilterRequest $request, Category $category, BrandPages $brandPages, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View|RedirectResponse
+    {
+        if (($brandPage = $this->brandPageRedirect($request, $category, $brandPages)) !== null) {
+            return $brandPage;
+        }
+
+        return $this->page($request, $category, null, $brandPages, $facets, $categoryMenu, $breadcrumbs, $guides);
+    }
+
+    /**
+     * Фильтр из одного производителя без других условий — та же выборка, что
+     * страница производителя: ведём на неё 301-м, чтобы в индексе был один адрес.
+     * Сортировка, число товаров и номер страницы переносятся.
+     */
+    private function brandPageRedirect(CatalogFilterRequest $request, Category $category, BrandPages $brandPages): ?RedirectResponse
     {
         $filter = $request->toFilter();
+
+        if (count($filter->manufacturerIds) !== 1 || $filter->withManufacturers([])->isActive()) {
+            return null;
+        }
+
+        $manufacturer = Manufacturer::query()->find($filter->manufacturerIds[0]);
+
+        if ($manufacturer === null || ! $brandPages->isAvailable($category, $manufacturer)) {
+            return null;
+        }
+
+        return redirect()->route('category.manufacturer', [$category, $manufacturer, ...$request->only(['sort', 'limit', 'page'])], 301);
+    }
+
+    /**
+     * Страница «раздел + производитель»: бренд задан адресом, остальные
+     * условия фильтра работают поверх него. Нет страницы у раздела или
+     * у бренда мало товаров — 404, как у любого несуществующего адреса.
+     */
+    public function manufacturer(CatalogFilterRequest $request, Category $category, Manufacturer $manufacturer, BrandPages $brandPages, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View
+    {
+        abort_unless($brandPages->isAvailable($category, $manufacturer), 404);
+
+        return $this->page($request, $category, $manufacturer, $brandPages, $facets, $categoryMenu, $breadcrumbs, $guides);
+    }
+
+    private function page(CatalogFilterRequest $request, Category $category, ?Manufacturer $manufacturer, BrandPages $brandPages, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View
+    {
+        $filter = $manufacturer === null ? $request->toFilter() : $request->toFilter()->withManufacturers([$manufacturer->id]);
         $priceBounds = $facets->priceBounds($category);
 
         $products = $this->filteredProducts($category, $filter)
@@ -30,11 +76,13 @@ class CategoryController extends Controller
             ->paginate($request->perPage())
             ->withQueryString();
 
-        $this->describe($category, $products, $breadcrumbs);
+        $this->describe($category, $manufacturer, $filter, $products, $breadcrumbs, $brandPages);
 
         return view('category', [
             'category' => $category,
+            'manufacturer' => $manufacturer,
             'categoryLinks' => $categoryMenu->subcategoryLinks($category),
+            'brandLinks' => $manufacturer === null ? $this->brandLinks($category, $brandPages) : [],
             'guide' => $guides->forCategory($category),
             'products' => $products,
             'filter' => $filter,
@@ -50,6 +98,22 @@ class CategoryController extends Controller
     }
 
     /**
+     * Плитки производителей со страницами в разделе: внутренние ссылки на
+     * индексируемые страницы брендов.
+     *
+     * @return list<array{title: string, url: string}>
+     */
+    private function brandLinks(Category $category, BrandPages $brandPages): array
+    {
+        return $brandPages->manufacturers($category)
+            ->map(fn (Manufacturer $manufacturer): array => [
+                'title' => $manufacturer->name,
+                'url' => route('category.manufacturer', [$category, $manufacturer]),
+            ])
+            ->all();
+    }
+
+    /**
      * Число товаров раздела с выбранным фильтром: на телефоне фильтр
      * применяется кнопкой «Показать N товаров», а не каждой галочкой.
      */
@@ -61,35 +125,75 @@ class CategoryController extends Controller
     }
 
     /**
-     * Фильтры и сортировка — варианты страницы категории: canonical ведёт на
-     * неё саму (как на старом сайте). Страницы пагинации — самостоятельные,
-     * со ссылками prev/next без фильтров.
+     * Сортировка, цена и наличие — варианты страницы категории (или страницы
+     * производителя в ней): canonical ведёт на неё саму. Страницы пагинации —
+     * самостоятельные, со ссылками prev/next без фильтров.
+     *
+     * Отбор по производителю, типу корпуса или характеристике — страница
+     * для людей, а не для поиска: noindex, follow, а canonical на ближайшую
+     * индексируемую страницу (производитель со своей страницей — она, иначе раздел).
      */
-    private function describe(Category $category, LengthAwarePaginator $products, BreadcrumbsSeo $breadcrumbs): void
+    private function describe(Category $category, ?Manufacturer $manufacturer, CatalogFilter $filter, LengthAwarePaginator $products, BreadcrumbsSeo $breadcrumbs, BrandPages $brandPages): void
     {
         $page = $products->currentPage();
-        $title = $category->meta_title ?: $category->name;
+        $name = $manufacturer === null ? $category->name : "{$category->name} {$manufacturer->name}";
+        $title = $manufacturer === null ? ($category->meta_title ?: $category->name) : $name.' — купить в Уфе';
+        $ownTitle = $manufacturer === null && $category->meta_title;
 
-        SEOTools::setTitle($page > 1 ? "{$title} — страница {$page}" : $title, appendDefault: ! $category->meta_title);
-        SEOTools::setDescription($category->meta_description ?: "{$category->name} — купить в Уфе в магазине ".config('shop.name').'. Цены, характеристики, наличие. Доставка по городу, гарантия.');
+        SEOTools::setTitle($page > 1 ? "{$title} — страница {$page}" : $title, appendDefault: ! $ownTitle);
+        SEOTools::setDescription(($manufacturer === null ? $category->meta_description : null) ?: "{$name} — купить в Уфе в магазине ".config('shop.name').'. Цены, характеристики, наличие. Доставка по городу, гарантия.');
+
+        $categoryUrl = route('category.show', $category);
+        $pageRoute = fn (int $page): string => $manufacturer === null
+            ? route('category.show', $page > 1 ? [$category, 'page' => $page] : $category)
+            : route('category.manufacturer', $page > 1 ? [$category, $manufacturer, 'page' => $page] : [$category, $manufacturer]);
 
         $breadcrumbs->apply(array_values(array_filter([
             ['name' => config('shop.name'), 'url' => route('home')],
             $category->parent ? ['name' => $category->parent->name, 'url' => route('category.show', $category->parent)] : null,
-            ['name' => $category->name, 'url' => route('category.show', $category)],
+            ['name' => $category->name, 'url' => $categoryUrl],
+            $manufacturer ? ['name' => $manufacturer->name, 'url' => route('category.manufacturer', [$category, $manufacturer])] : null,
         ])));
 
-        $pageUrl = fn (int $page): string => route('category.show', $page > 1 ? [$category, 'page' => $page] : $category);
+        if ($this->isSelection($filter, $manufacturer)) {
+            SEOMeta::setRobots('noindex, follow');
+            SEOMeta::setCanonical($this->indexableUrl($category, $manufacturer, $filter, $brandPages));
 
-        SEOMeta::setCanonical($pageUrl($page));
+            return;
+        }
+
+        SEOMeta::setCanonical($pageRoute($page));
 
         if ($page > 1) {
-            SEOMeta::setPrev($pageUrl($page - 1));
+            SEOMeta::setPrev($pageRoute($page - 1));
         }
 
         if ($products->hasMorePages()) {
-            SEOMeta::setNext($pageUrl($page + 1));
+            SEOMeta::setNext($pageRoute($page + 1));
         }
+    }
+
+    /**
+     * Отбор, который не должен попадать в индекс. Производитель на странице
+     * производителя задан адресом и отбором не считается.
+     */
+    private function isSelection(CatalogFilter $filter, ?Manufacturer $manufacturer): bool
+    {
+        return $filter->attributeValueIds !== []
+            || $filter->caseTypeIds !== []
+            || ($manufacturer === null && $filter->manufacturerIds !== []);
+    }
+
+    private function indexableUrl(Category $category, ?Manufacturer $manufacturer, CatalogFilter $filter, BrandPages $brandPages): string
+    {
+        if ($manufacturer === null && count($filter->manufacturerIds) === 1) {
+            $candidate = Manufacturer::query()->find($filter->manufacturerIds[0]);
+            $manufacturer = $candidate !== null && $brandPages->isAvailable($category, $candidate) ? $candidate : null;
+        }
+
+        return $manufacturer === null
+            ? route('category.show', $category)
+            : route('category.manufacturer', [$category, $manufacturer]);
     }
 
     /**

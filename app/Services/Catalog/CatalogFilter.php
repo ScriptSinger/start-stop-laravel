@@ -50,6 +50,17 @@ final readonly class CatalogFilter
     }
 
     /**
+     * Тот же фильтр с другим набором производителей — для страницы производителя,
+     * где бренд задан адресом, а не параметром.
+     *
+     * @param  list<int>  $manufacturerIds
+     */
+    public function withManufacturers(array $manufacturerIds): self
+    {
+        return new self($manufacturerIds, $this->attributeValueIds, $this->priceFrom, $this->priceTo, $this->onlyAvailable, $this->caseTypeIds);
+    }
+
+    /**
      * Тот же фильтр без условия по типу корпуса — для счётчиков в блоке «Тип корпуса».
      */
     public function withoutCaseTypes(): self
