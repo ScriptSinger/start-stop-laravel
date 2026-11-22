@@ -99,6 +99,23 @@ class CatalogFilterTest extends TestCase
             ->assertDontSee('TITAN 75 О.П.');
     }
 
+    public function test_toolbar_button_shows_number_of_selected_conditions(): void
+    {
+        $this->category()
+            ->assertSee('catalog-toolbar__filters', false)
+            ->assertDontSee('catalog-toolbar__badge', false);
+
+        // Две марки и цена от — три условия; бренд страницы производителя не считается.
+        $this->category(['manufacturer' => [$this->titan->id, $this->varta->id], 'price_from' => 6050])
+            ->assertSee('<span class="catalog-toolbar__badge" aria-label="выбрано условий: 3">3</span>', false);
+
+        $this->get(route('category.manufacturer', [$this->batteries, $this->varta]))
+            ->assertDontSee('catalog-toolbar__badge', false);
+
+        $this->get(route('category.manufacturer', [$this->batteries, $this->varta, 'available' => 1]))
+            ->assertSee('aria-label="выбрано условий: 1">1</span>', false);
+    }
+
     public function test_case_type_is_its_own_filter_with_counts_and_or_semantics(): void
     {
         $l2 = TradeInType::query()->create(['code' => 'L2', 'name' => 'L2', 'amount' => 1000, 'sort_order' => 1]);

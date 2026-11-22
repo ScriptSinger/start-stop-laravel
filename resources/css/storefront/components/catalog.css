@@ -74,21 +74,13 @@
 /* «Показать еще» — как в showmore-ajaxpagination.js темы. */
 .show-more {margin: 15px 0 30px; text-align: center}
 
-/* Фильтр на телефоне — как OCFilter старого сайта: язычок «Фильтр» у края,
+/* Фильтр на телефоне открывается кнопкой над сортировкой:
    выезжающая панель, список групп → значения группы, внизу «Показать N товаров».
    Мобильные элементы скрыты на компьютере здесь, а не классом visible-xs:
    тот задаёт display: block !important и ломает flex/grid. */
-.catalog-filter-tab, .catalog-filter__head, .catalog-filter__toggle {display: none}
+.catalog-filter__head, .catalog-filter__toggle {display: none}
 
 @media (max-width: 767px) {
-    .catalog-filter-tab {
-        position: fixed; z-index: 1030; left: 0; top: 45%;
-        display: flex; flex-direction: column; align-items: center; gap: 10px;
-        padding: 14px 8px; border: none; border-radius: 0 8px 8px 0;
-        background: var(--btn-primary-bg, #c82a00); color: var(--btn-primary-c, #fff); font-size: 16px;
-    }
-    .catalog-filter-tab span {writing-mode: vertical-rl; transform: rotate(180deg)}
-
     .catalog-filter-backdrop {position: fixed; z-index: 1065; inset: 0; background: rgba(0, 0, 0, .5)}
 
     .catalog-filter-panel {
@@ -140,3 +132,28 @@
     .uni-wrapper > .sorts-block:first-child {margin-top: 0 !important}
 }
 
+
+/* Панель над списком товаров. На компьютере — обычная строка сортировки; на телефоне
+   «Фильтры (N)» и сортировка в одной строке, панель прилипает к верху при прокрутке
+   (прилипающей шапки на телефоне нет — её заменяет нижняя навигация). */
+.catalog-toolbar__filters {display: none}
+/* Меню сортировки на телефоне/планшете: кнопка и список под ней. */
+.sort-menu {position: relative}
+.sort-menu__button {display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 14px; color: #333; text-align: left; background: #fff; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-weight: 600}
+.sort-menu__button > i:first-child {color: #666}
+.sort-menu__current {flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.sort-menu__chevron {font-size: 11px; color: #666; transition: transform .15s}
+.sort-menu__chevron.is-open {transform: rotate(180deg)}
+.sort-menu__panel {position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; min-width: 220px; padding: 6px 0; background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .15)}
+.sort-menu__group {display: block; padding: 10px 16px 4px; color: #999; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase}
+.sort-menu__item {display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 0 16px; color: #333; font-weight: 500; text-decoration: none}
+.sort-menu__item:hover {color: #333; background: #f7f7f7; text-decoration: none}
+.sort-menu__item.is-selected {color: var(--btn-primary-bg); font-weight: 700}
+@media (max-width: 767px) {
+    .catalog-toolbar {position: sticky; top: 0; z-index: 30; display: flex; align-items: stretch; gap: 10px; margin: 0 -15px 16px; padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee}
+    /* Отступ сверху у .sorts-block задан в пользовательском CSS темы с !important. */
+    .catalog-toolbar .sorts-block {flex: 1 1 0; min-width: 0; margin: 0 !important}
+    .catalog-toolbar .sorts-block__wrapper, .catalog-toolbar .sort-menu {width: 100%}
+    .catalog-toolbar__filters {display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; color: #333; font-weight: 600; background: #fff; border: 1px solid #ccc; border-radius: 4px}
+    .catalog-toolbar__badge {display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; color: #fff; background: var(--btn-primary-bg); border-radius: 10px; font-size: 12px; font-weight: 700; line-height: 1}
+}

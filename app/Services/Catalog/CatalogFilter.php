@@ -33,6 +33,20 @@ final readonly class CatalogFilter
     }
 
     /**
+     * Сколько условий выбрано — число на кнопке «Фильтры». Каждое отмеченное
+     * значение — одно условие, цена и «в наличии» — по одному. Производитель
+     * на странице производителя задан адресом и не считается.
+     */
+    public function activeCount(bool $manufacturerFixed = false): int
+    {
+        return ($manufacturerFixed ? 0 : count($this->manufacturerIds))
+            + array_sum(array_map('count', $this->attributeValueIds))
+            + count($this->caseTypeIds)
+            + ($this->priceFrom !== null || $this->priceTo !== null ? 1 : 0)
+            + ($this->onlyAvailable ? 1 : 0);
+    }
+
+    /**
      * @return list<int>
      */
     public function selectedValueIds(int $attributeId): array

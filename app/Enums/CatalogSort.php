@@ -25,10 +25,10 @@ enum CatalogSort: string
     {
         return match ($this) {
             self::Default => 'По умолчанию',
-            self::NameAsc => 'Название (А - Я)',
-            self::NameDesc => 'Название (Я - А)',
-            self::PriceAsc => 'Цена (низкая > высокая)',
-            self::PriceDesc => 'Цена (высокая > низкая)',
+            self::NameAsc => 'А–Я',
+            self::NameDesc => 'Я–А',
+            self::PriceAsc => 'Дешёвые',
+            self::PriceDesc => 'Дорогие',
         };
     }
 
