@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BrandPage;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
@@ -257,6 +258,59 @@ class CategoryManufacturerPageTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $this->titan]).'"', false);
+    }
+
+    public function test_empty_category_is_noindex(): void
+    {
+        $empty = Category::query()->create(['name' => 'Пустой', 'slug' => 'pustoy']);
+
+        $this->get(route('category.show', $empty))
+            ->assertOk()
+            ->assertSee('<meta name="robots" content="noindex, follow">', false);
+    }
+
+    public function test_brand_page_filter_component_gets_the_brand_address(): void
+    {
+        $brandUrl = route('category.manufacturer', [$this->batteries, $this->titan]);
+
+        $this->get($brandUrl)
+            ->assertSee("brandUrl: '".str_replace('/', '\\/', $brandUrl)."', brandId: ".$this->titan->id, false);
+
+        $this->get(route('category.show', $this->batteries))
+            ->assertSee('brandUrl: null', false);
+    }
+
+    public function test_brand_page_shows_its_own_texts_from_the_admin(): void
+    {
+        $this->batteries->update(['description' => '<p>Описание раздела</p>']);
+        BrandPage::factory()->create([
+            'category_id' => $this->batteries->id,
+            'manufacturer_id' => $this->titan->id,
+            'heading' => 'Аккумуляторы Титан: лучший выбор',
+            'meta_title' => 'Титан в Уфе — свой title',
+            'meta_description' => 'Свой description бренда',
+            'description' => '<p>Текст про Титан</p>',
+        ]);
+
+        $this->get(route('category.manufacturer', [$this->batteries, $this->titan]))
+            ->assertOk()
+            ->assertSee('<h1>Аккумуляторы Титан: лучший выбор</h1>', false)
+            ->assertSee('<title>Титан в Уфе — свой title</title>', false)
+            ->assertSee('<meta name="description" content="Свой description бренда">', false)
+            ->assertSee('<p>Текст про Титан</p>', false)
+            ->assertDontSee('Описание раздела');
+    }
+
+    public function test_brand_page_without_own_texts_uses_the_template_and_hides_the_category_description(): void
+    {
+        $this->batteries->update(['description' => '<p>Описание раздела</p>']);
+
+        $this->get(route('category.manufacturer', [$this->batteries, $this->titan]))
+            ->assertOk()
+            ->assertSee('<h1>Аккумуляторы TITAN</h1>', false)
+            ->assertDontSee('Описание раздела');
+
+        $this->get(route('category.show', $this->batteries))->assertSee('Описание раздела');
     }
 
     private function product(string $name, Manufacturer $manufacturer, Category $category): void

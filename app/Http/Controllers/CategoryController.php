@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CatalogFilterRequest;
+use App\Models\BrandPage;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
@@ -76,11 +77,14 @@ class CategoryController extends Controller
             ->paginate($request->perPage())
             ->withQueryString();
 
-        $this->describe($category, $manufacturer, $filter, $products, $breadcrumbs, $brandPages);
+        $brandPage = $manufacturer === null ? null : $brandPages->content($category, $manufacturer);
+
+        $this->describe($category, $manufacturer, $brandPage, $filter, $products, $breadcrumbs, $brandPages);
 
         return view('category', [
             'category' => $category,
             'manufacturer' => $manufacturer,
+            'brandPage' => $brandPage,
             'categoryLinks' => $categoryMenu->subcategoryLinks($category),
             'brandLinks' => $manufacturer === null ? $this->brandLinks($category, $brandPages) : [],
             'guide' => $guides->forCategory($category),
@@ -133,15 +137,15 @@ class CategoryController extends Controller
      * для людей, а не для поиска: noindex, follow, а canonical на ближайшую
      * индексируемую страницу (производитель со своей страницей — она, иначе раздел).
      */
-    private function describe(Category $category, ?Manufacturer $manufacturer, CatalogFilter $filter, LengthAwarePaginator $products, BreadcrumbsSeo $breadcrumbs, BrandPages $brandPages): void
+    private function describe(Category $category, ?Manufacturer $manufacturer, ?BrandPage $brandPage, CatalogFilter $filter, LengthAwarePaginator $products, BreadcrumbsSeo $breadcrumbs, BrandPages $brandPages): void
     {
         $page = $products->currentPage();
         $name = $manufacturer === null ? $category->name : "{$category->name} {$manufacturer->name}";
-        $title = $manufacturer === null ? ($category->meta_title ?: $category->name) : $name.' — купить в Уфе';
-        $ownTitle = $manufacturer === null && $category->meta_title;
+        $ownTitle = $manufacturer === null ? $category->meta_title : $brandPage?->meta_title;
+        $title = $ownTitle ?: ($manufacturer === null ? $category->name : $name.' — купить в Уфе');
 
         SEOTools::setTitle($page > 1 ? "{$title} — страница {$page}" : $title, appendDefault: ! $ownTitle);
-        SEOTools::setDescription(($manufacturer === null ? $category->meta_description : null) ?: "{$name} — купить в Уфе в магазине ".config('shop.name').'. Цены, характеристики, наличие. Доставка по городу, гарантия.');
+        SEOTools::setDescription(($manufacturer === null ? $category->meta_description : $brandPage?->meta_description) ?: "{$name} — купить в Уфе в магазине ".config('shop.name').'. Цены, характеристики, наличие. Доставка по городу, гарантия.');
 
         $categoryUrl = route('category.show', $category);
         $pageRoute = fn (int $page): string => $manufacturer === null
@@ -156,6 +160,10 @@ class CategoryController extends Controller
         ])));
 
         if ($manufacturer !== null && ! $brandPages->isIndexable($category, $manufacturer)) {
+            SEOMeta::setRobots('noindex, follow');
+        }
+
+        if ($manufacturer === null && ! $filter->isActive() && $products->total() === 0) {
             SEOMeta::setRobots('noindex, follow');
         }
 

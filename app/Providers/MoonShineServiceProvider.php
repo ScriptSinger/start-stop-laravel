@@ -12,6 +12,7 @@ use App\MoonShine\Resources\AttributeValue\AttributeValueResource;
 use App\MoonShine\Resources\AuthLog\AuthLogResource;
 use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use App\MoonShine\Resources\BrandPage\BrandPageResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
@@ -46,6 +47,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 CategoryResource::class,
                 BatteryFitmentResource::class,
                 ManufacturerResource::class,
+                BrandPageResource::class,
                 SupplierResource::class,
                 AttributeResource::class,
                 AttributeValueResource::class,

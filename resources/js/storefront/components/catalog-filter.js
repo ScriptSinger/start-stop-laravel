@@ -23,7 +23,7 @@ const plural = (count, [one, few, many]) => {
 /** Подпись деления шкалы, как у старого сайта: «16 тыс.». */
 const tickLabel = (value) => (value >= 1000 ? `${Math.round(value / 1000)} тыс.` : String(Math.round(value)));
 
-export default ({countUrl, priceMin, priceMax}) => ({
+export default ({countUrl, priceMin, priceMax, brandUrl = null, brandId = null}) => ({
     open: false,
     group: null,
     groupTitle: '',
@@ -146,10 +146,23 @@ export default ({countUrl, priceMin, priceMax}) => ({
         return query.toString();
     },
 
+    /**
+     * На странице производителя, пока отмечен только он, остаёмся на её адресе:
+     * бренд задан адресом, а не параметром.
+     */
     apply() {
-        const query = this.query();
+        const params = new URLSearchParams(this.query());
+        const manufacturers = params.getAll('manufacturer[]');
+        let base = this.$refs.form.action;
 
-        window.location.href = this.$refs.form.action + (query ? `?${query}` : '');
+        if (brandUrl && manufacturers.length === 1 && manufacturers[0] === String(brandId)) {
+            params.delete('manufacturer[]');
+            base = brandUrl;
+        }
+
+        const query = params.toString();
+
+        window.location.href = base + (query ? `?${query}` : '');
     },
 
     anchorPopover(input) {

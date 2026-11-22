@@ -15,6 +15,7 @@ use App\MoonShine\Resources\Attribute\AttributeResource;
 use App\MoonShine\Resources\AuthLog\AuthLogResource;
 use App\MoonShine\Resources\Banner\BannerResource;
 use App\MoonShine\Resources\BatteryFitment\BatteryFitmentResource;
+use App\MoonShine\Resources\BrandPage\BrandPageResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
@@ -81,6 +82,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(SupplierImport::class, 'Прайсы поставщиков')->icon('arrow-up-tray'),
                 MenuItem::make(CategoryResource::class, 'Категории')->icon('rectangle-stack'),
                 MenuItem::make(ManufacturerResource::class, 'Производители')->icon('building-storefront'),
+                MenuItem::make(BrandPageResource::class, 'Страницы производителей')->icon('document-text'),
                 MenuItem::make(AttributeResource::class, 'Характеристики')->icon('adjustments-horizontal'),
                 MenuItem::make(TradeInResource::class, 'Трейд-ин')->icon('arrow-path'),
                 MenuItem::make(BatteryFitmentResource::class, 'Подбор АКБ')->icon('battery-50'),

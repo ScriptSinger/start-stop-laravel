@@ -2,6 +2,7 @@
 
 namespace App\Services\Catalog;
 
+use App\Models\BrandPage;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
@@ -34,6 +35,17 @@ class BrandPages
     public function isIndexable(Category $category, Manufacturer $manufacturer): bool
     {
         return $this->isEnabledFor($category) && $this->productCount($category, $manufacturer) >= $this->minProducts();
+    }
+
+    /**
+     * Свои тексты страницы (H1, мета-теги, описание), если их завели в админке.
+     */
+    public function content(Category $category, Manufacturer $manufacturer): ?BrandPage
+    {
+        return BrandPage::query()
+            ->where('category_id', $category->id)
+            ->where('manufacturer_id', $manufacturer->id)
+            ->first();
     }
 
     /**
