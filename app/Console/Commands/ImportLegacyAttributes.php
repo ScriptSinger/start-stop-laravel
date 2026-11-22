@@ -7,7 +7,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('import:legacy-attributes')]
-#[Description('Импорт характеристик товаров (справочник OCFilter + значения у товаров) из старого проекта')]
+#[Description('Импорт характеристик товаров (справочник OCFilter + значения у товаров) из старого проекта. УСТАРЕЛО: габариты придут с типом в названии, после запуска выполнить trade-in:fill-types, assign-types и clean-dimensions')]
 class ImportLegacyAttributes extends LegacyImportCommand
 {
     /**
