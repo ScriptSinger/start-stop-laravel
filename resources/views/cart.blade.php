@@ -155,6 +155,7 @@
                                                     <div><div class="pickup-facts__title">Срок хранения заказа</div>3 дня</div>
                                                 </li>
                                             </ul>
+                                            <a class="pickup-route btn btn-default" href="https://yandex.ru/maps/?rtext=~{{ implode(',', config('shop.map_coordinates')) }}&rtt=auto" target="_blank" rel="noopener"><i class="fas fa-route" aria-hidden="true"></i> Построить маршрут</a>
                                             <div class="unicheckout__pickup-map" data-yandex-map data-coordinates="{{ json_encode(config('shop.map_coordinates')) }}" data-map-key="{{ config('services.yandex_maps.key') }}"></div>
                                         </div>
                                     </div>
