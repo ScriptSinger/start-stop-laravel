@@ -46,7 +46,7 @@ class CategoryController extends Controller
 
         $manufacturer = Manufacturer::query()->find($filter->manufacturerIds[0]);
 
-        if ($manufacturer === null || ! $brandPages->isAvailable($category, $manufacturer)) {
+        if ($manufacturer === null || ! $brandPages->exists($category, $manufacturer)) {
             return null;
         }
 
@@ -60,7 +60,7 @@ class CategoryController extends Controller
      */
     public function manufacturer(CatalogFilterRequest $request, Category $category, Manufacturer $manufacturer, BrandPages $brandPages, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View
     {
-        abort_unless($brandPages->isAvailable($category, $manufacturer), 404);
+        abort_unless($brandPages->exists($category, $manufacturer), 404);
 
         return $this->page($request, $category, $manufacturer, $brandPages, $facets, $categoryMenu, $breadcrumbs, $guides);
     }
@@ -105,7 +105,7 @@ class CategoryController extends Controller
      */
     private function brandLinks(Category $category, BrandPages $brandPages): array
     {
-        return $brandPages->manufacturers($category)
+        return $brandPages->manufacturers($category, indexableOnly: true)
             ->map(fn (Manufacturer $manufacturer): array => [
                 'title' => $manufacturer->name,
                 'url' => route('category.manufacturer', [$category, $manufacturer]),
@@ -155,6 +155,10 @@ class CategoryController extends Controller
             $manufacturer ? ['name' => $manufacturer->name, 'url' => route('category.manufacturer', [$category, $manufacturer])] : null,
         ])));
 
+        if ($manufacturer !== null && ! $brandPages->isIndexable($category, $manufacturer)) {
+            SEOMeta::setRobots('noindex, follow');
+        }
+
         if ($this->isSelection($filter, $manufacturer)) {
             SEOMeta::setRobots('noindex, follow');
             SEOMeta::setCanonical($this->indexableUrl($category, $manufacturer, $filter, $brandPages));
@@ -188,10 +192,10 @@ class CategoryController extends Controller
     {
         if ($manufacturer === null && count($filter->manufacturerIds) === 1) {
             $candidate = Manufacturer::query()->find($filter->manufacturerIds[0]);
-            $manufacturer = $candidate !== null && $brandPages->isAvailable($category, $candidate) ? $candidate : null;
+            $manufacturer = $candidate !== null && $brandPages->isIndexable($category, $candidate) ? $candidate : null;
         }
 
-        return $manufacturer === null
+        return $manufacturer === null || ! $brandPages->isIndexable($category, $manufacturer)
             ? route('category.show', $category)
             : route('category.manufacturer', [$category, $manufacturer]);
     }

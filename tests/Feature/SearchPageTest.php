@@ -69,7 +69,7 @@ class SearchPageTest extends TestCase
 
         $this->get(route('search', ['search' => 'titan']))
             ->assertSeeInOrder(['Категории', 'Товары', 'Найдено в категориях'])
-            ->assertSee(e(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$titan->id]])), false)
+            ->assertSee(e(route('category.manufacturer', [$this->batteries, $titan])), false)
             ->assertSee(e(route('category.show', ['category' => $this->trucks, 'manufacturer' => [$titan->id]])), false)
             ->assertSee(e(route('search', ['search' => 'titan', 'category_id' => $this->trucks->id])), false);
     }

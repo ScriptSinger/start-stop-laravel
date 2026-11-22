@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "artesaos/seotools": "^1.4",
+        "cviebrock/eloquent-sluggable": "^13.0",
         "laravel/fortify": "^1.40",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",

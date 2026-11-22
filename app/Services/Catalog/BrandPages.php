@@ -10,34 +10,59 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Посадочные страницы «раздел + производитель» (/category/akkumulyatori/titan):
- * в отличие от произвольных фильтров они индексируются. Страница есть только
- * у разделов из конфига и только если у производителя в разделе достаточно
- * товаров — иначе это тонкая страница без пользы для поиска.
+ * Страницы «раздел + производитель» (/category/akkumulyatori/titan).
+ *
+ * Адрес красивый у любого производителя, у которого в разделе есть товар, —
+ * им пользуются люди. В поиск попадают только страницы, где товаров не меньше
+ * brand_pages.min_products: меньше — тонкая страница без пользы для поиска,
+ * она закрыта noindex и не входит в sitemap. Страницы есть только у разделов
+ * из конфига.
  */
 class BrandPages
 {
-    public function isAvailable(Category $category, Manufacturer $manufacturer): bool
+    /**
+     * Страница существует: раздел из конфига и в нём есть товар производителя.
+     */
+    public function exists(Category $category, Manufacturer $manufacturer): bool
     {
-        return $this->isEnabledFor($category)
-            && $this->productCount($category, $manufacturer) >= $this->minProducts();
+        return $this->isEnabledFor($category) && $this->productCount($category, $manufacturer) >= 1;
     }
 
     /**
-     * Производители раздела, у которых есть страница, по алфавиту.
+     * Страница нужна поиску: товаров достаточно, чтобы она была не тонкой.
+     */
+    public function isIndexable(Category $category, Manufacturer $manufacturer): bool
+    {
+        return $this->isEnabledFor($category) && $this->productCount($category, $manufacturer) >= $this->minProducts();
+    }
+
+    /**
+     * Адрес производителя в разделе: своя страница, а если её нет (раздел не
+     * из списка или нет товаров) — раздел с отбором по производителю.
+     */
+    public function url(Category $category, Manufacturer $manufacturer): string
+    {
+        return $this->exists($category, $manufacturer)
+            ? route('category.manufacturer', [$category, $manufacturer])
+            : route('category.show', ['category' => $category, 'manufacturer' => [$manufacturer->id]]);
+    }
+
+    /**
+     * Производители раздела со страницей, по алфавиту. По умолчанию все;
+     * $indexableOnly — только те, что нужны поиску (плитки, sitemap).
      *
      * @return Collection<int, Manufacturer>
      */
-    public function manufacturers(Category $category): Collection
+    public function manufacturers(Category $category, bool $indexableOnly = false): Collection
     {
-        $ids = $this->changedAtByManufacturer($category)->keys();
+        $ids = $this->changedAtByManufacturer($category, $indexableOnly ? $this->minProducts() : 1)->keys();
 
         return Manufacturer::query()->whereIn('id', $ids)->orderBy('name')->get();
     }
 
     /**
-     * Все страницы производителей для sitemap: раздел, производитель и дата
-     * последнего изменения их товаров.
+     * Индексируемые страницы производителей для sitemap: раздел, производитель
+     * и дата последнего изменения их товаров.
      *
      * @return Collection<int, array{category: Category, manufacturer: Manufacturer, changed_at: ?Carbon}>
      */
@@ -51,7 +76,7 @@ class BrandPages
             ->get();
 
         return $categories->flatMap(function (Category $category): Collection {
-            $changedAt = $this->changedAtByManufacturer($category);
+            $changedAt = $this->changedAtByManufacturer($category, $this->minProducts());
             $manufacturers = Manufacturer::query()->whereIn('id', $changedAt->keys())->orderBy('name')->get();
 
             return $manufacturers->map(fn (Manufacturer $manufacturer): array => [
@@ -83,11 +108,11 @@ class BrandPages
 
     /**
      * id производителя → дата изменения его свежего товара в разделе, только
-     * для тех, у кого товаров достаточно для страницы.
+     * для тех, у кого товаров не меньше $minProducts.
      *
      * @return Collection<int, ?Carbon>
      */
-    private function changedAtByManufacturer(Category $category): Collection
+    private function changedAtByManufacturer(Category $category, int $minProducts): Collection
     {
         if (! $this->isEnabledFor($category)) {
             return collect();
@@ -98,7 +123,7 @@ class BrandPages
             ->whereNotNull('manufacturer_id')
             ->inCategoryTree($category)
             ->groupBy('manufacturer_id')
-            ->havingRaw('count(*) >= ?', [$this->minProducts()])
+            ->havingRaw('count(*) >= ?', [$minProducts])
             ->select('manufacturer_id', DB::raw('max(updated_at) as changed_at'))
             ->get()
             ->mapWithKeys(fn (Product $row): array => [$row->manufacturer_id => $row->changed_at === null ? null : Carbon::parse($row->changed_at)]);

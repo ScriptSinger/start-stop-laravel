@@ -12,6 +12,8 @@ use Illuminate\Support\Collection;
  */
 class CategoryWall
 {
+    public function __construct(private readonly BrandPages $brandPages) {}
+
     /**
      * @return Collection<int, array{category: Category, links: list<array{title: string, url: string}>}>
      */
@@ -35,7 +37,7 @@ class CategoryWall
                     ]),
                     ...$category->wallManufacturers->map(fn (Manufacturer $manufacturer): array => [
                         'title' => $manufacturer->name,
-                        'url' => route('category.show', ['category' => $category, 'manufacturer' => [$manufacturer->id]]),
+                        'url' => $this->brandPages->url($category, $manufacturer),
                     ]),
                 ],
             ]);

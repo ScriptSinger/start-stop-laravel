@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Manufacturer;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 #[Signature('import:legacy-brands')]
 #[Description('Перенос категорий-брендов старого проекта (Аккумуляторы → TITAN и т.п.) в производителей')]
@@ -172,25 +172,6 @@ class ImportLegacyBrands extends LegacyImportCommand
             return $manufacturer->id;
         }
 
-        return DB::table('manufacturers')->insertGetId([
-            'name' => $name,
-            'slug' => $this->uniqueSlug($name),
-            'image' => $image,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    private function uniqueSlug(string $name): string
-    {
-        $slug = Str::slug($name) ?: (string) Str::uuid();
-        $original = $slug;
-        $i = 2;
-
-        while (DB::table('manufacturers')->where('slug', $slug)->exists()) {
-            $slug = $original.'-'.$i++;
-        }
-
-        return $slug;
+        return Manufacturer::query()->create(['name' => $name, 'image' => $image])->id;
     }
 }

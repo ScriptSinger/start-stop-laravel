@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasHtmlDescription;
+use App\Models\Concerns\SluggedByName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,7 @@ use Illuminate\Support\Collection;
 class Category extends Model
 {
     use HasHtmlDescription;
+    use SluggedByName;
 
     protected $fillable = [
         'parent_id',

@@ -5,7 +5,6 @@ namespace App\Services\Import;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 /**
  * Разделы для товаров из 1С по названию (OneCProductSpecs). Существующие разделы
@@ -87,22 +86,8 @@ class OneCCategoryAssigner
         return Category::query()->create([
             'parent_id' => $parent?->id,
             'name' => $name,
-            'slug' => $this->uniqueSlug($name),
             'sort_order' => 0,
             'status' => false,
         ]);
-    }
-
-    private function uniqueSlug(string $name): string
-    {
-        $base = Str::slug(strtr($name, ['щ' => 'shch', 'Щ' => 'Shch']), '-', 'ru') ?: (string) Str::uuid();
-        $slug = $base;
-        $suffix = 2;
-
-        while (Category::query()->where('slug', $slug)->exists()) {
-            $slug = $base.'-'.$suffix++;
-        }
-
-        return $slug;
     }
 }

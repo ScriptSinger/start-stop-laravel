@@ -82,7 +82,7 @@ class CatalogFilterTest extends TestCase
 
     public function test_manufacturer_price_and_availability_filters(): void
     {
-        $this->category(['manufacturer' => [$this->varta->id]])
+        $this->get(route('category.manufacturer', [$this->batteries, $this->varta]))->assertOk()
             ->assertSee('VARTA 60 О.П.')
             ->assertDontSee('TITAN 60 О.П.');
 
@@ -204,7 +204,7 @@ class CatalogFilterTest extends TestCase
 
     public function test_value_with_no_results_is_disabled(): void
     {
-        $html = $this->category(['manufacturer' => [$this->varta->id]])->getContent();
+        $html = $this->get(route('category.manufacturer', [$this->batteries, $this->varta]))->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression(
             '/value="'.$this->value('Прямая').'"[^>]*\sdisabled/',

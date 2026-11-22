@@ -119,7 +119,6 @@ class OneCNewProducts
                     $key = $this->normalize($item['manufacturer']['name']);
                     $createdManufacturers[$key] ??= Manufacturer::query()->create([
                         'name' => $item['manufacturer']['name'],
-                        'slug' => $this->uniqueManufacturerSlug($item['manufacturer']['name']),
                     ])->id;
                     $manufacturerId = $createdManufacturers[$key];
                 }
@@ -293,19 +292,6 @@ class OneCNewProducts
         $suffix = 2;
 
         while (isset($taken[$slug]) || Product::withTrashed()->where('slug', $slug)->exists()) {
-            $slug = $base.'-'.$suffix++;
-        }
-
-        return $slug;
-    }
-
-    private function uniqueManufacturerSlug(string $name): string
-    {
-        $base = Str::slug($name) ?: (string) Str::uuid();
-        $slug = $base;
-        $suffix = 2;
-
-        while (Manufacturer::query()->where('slug', $slug)->exists()) {
             $slug = $base.'-'.$suffix++;
         }
 

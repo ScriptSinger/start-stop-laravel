@@ -12,6 +12,8 @@ use Illuminate\Support\Collection;
  */
 class SearchSuggestions
 {
+    public function __construct(private readonly BrandPages $brandPages) {}
+
     /**
      * Плитки «Категории»: разделы, чьё название совпало с запросом, и бренды.
      * На старом сайте бренды АКБ были подкатегориями («Аккумуляторы → TITAN»),
@@ -44,16 +46,19 @@ class SearchSuggestions
             ->join('categories', fn ($join) => $join->on('categories.id', '=', 'category_product.category_id')
                 ->whereNull('categories.parent_id')
                 ->where('categories.status', true))
-            ->select('manufacturers.id', 'manufacturers.name', 'categories.slug as category_slug', 'categories.name as category_name')
+            ->select('manufacturers.id', 'manufacturers.name', 'manufacturers.slug', 'categories.slug as category_slug', 'categories.name as category_name')
             ->distinct()
             ->orderBy('manufacturers.name')
             ->orderBy('categories.name')
-            ->get()
-            ->map(fn (Manufacturer $brand): array => [
-                'title' => $brand->name,
-                'hint' => $brand->category_name,
-                'url' => route('category.show', ['category' => $brand->category_slug, 'manufacturer' => [$brand->id]]),
-            ]);
+            ->get();
+
+        $brandCategories = Category::query()->whereIn('slug', $brands->pluck('category_slug')->unique())->get()->keyBy('slug');
+
+        $brands = $brands->map(fn (Manufacturer $brand): array => [
+            'title' => $brand->name,
+            'hint' => $brand->category_name,
+            'url' => $this->brandPages->url($brandCategories->get($brand->category_slug), $brand),
+        ]);
 
         return $categories->concat($brands)->values()->all();
     }

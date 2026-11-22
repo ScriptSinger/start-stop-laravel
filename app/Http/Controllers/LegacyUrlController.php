@@ -104,7 +104,7 @@ class LegacyUrlController extends Controller
             return null;
         }
 
-        if ($brandPages->isAvailable($category, $manufacturer)) {
+        if ($brandPages->exists($category, $manufacturer)) {
             return route('category.manufacturer', [$category, $manufacturer, ...($request->integer('page') > 1 ? ['page' => $request->integer('page')] : [])]);
         }
 

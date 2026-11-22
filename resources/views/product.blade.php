@@ -31,8 +31,8 @@
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
                 @if ($category)
                     <li><a href="{{ route('category.show', $category) }}">{{ $category->name }}</a></li>
-                    @if ($product->manufacturer)
-                        <li><a href="{{ route('category.show', ['category' => $category, 'manufacturer' => [$product->manufacturer->id]]) }}">{{ $product->manufacturer->name }}</a></li>
+                    @if ($manufacturerUrl)
+                        <li><a href="{{ $manufacturerUrl }}">{{ $product->manufacturer->name }}</a></li>
                     @endif
                 @endif
             </ul>

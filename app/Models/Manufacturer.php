@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SluggedByName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Manufacturer extends Model
 {
+    use SluggedByName;
+
     protected $fillable = [
         'name',
         'slug',

@@ -38,7 +38,7 @@ class ProductPageTest extends TestCase
             ->assertSee('<h1>Аккумулятор ТЮМЕНЬ ASIA 40 Ah П.П.</h1>', false)
             ->assertSee('<title>Аккумулятор ТЮМЕНЬ ASIA в Уфе</title>', false)
             ->assertSee('<meta name="description" content="Купить АКБ">', false)
-            ->assertSee(e(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$tyumen->id]])), false);
+            ->assertSee(e(route('category.manufacturer', [$this->batteries, $tyumen])), false);
     }
 
     public function test_structured_data_has_price_availability_and_breadcrumbs(): void

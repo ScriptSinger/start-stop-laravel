@@ -59,11 +59,23 @@ class CategoryManufacturerPageTest extends TestCase
             ->assertSee('<link rel="canonical" href="'.$url.'">', false);
     }
 
-    public function test_manufacturer_with_too_few_products_has_no_page(): void
+    public function test_manufacturer_with_too_few_products_has_a_noindex_page_with_a_clean_address(): void
     {
         $varta = Manufacturer::query()->where('slug', 'varta')->firstOrFail();
+        $url = route('category.manufacturer', [$this->batteries, $varta]);
 
-        $this->get(route('category.manufacturer', [$this->batteries, $varta]))->assertNotFound();
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('VARTA 60')
+            ->assertSee('<meta name="robots" content="noindex, follow">', false)
+            ->assertSee('<link rel="canonical" href="'.$url.'">', false);
+    }
+
+    public function test_manufacturer_without_products_in_the_category_has_no_page(): void
+    {
+        $nobody = Manufacturer::query()->create(['name' => 'Nobody', 'slug' => 'nobody']);
+
+        $this->get(route('category.manufacturer', [$this->batteries, $nobody]))->assertNotFound();
     }
 
     public function test_category_outside_the_config_list_has_no_brand_pages(): void
@@ -100,11 +112,21 @@ class CategoryManufacturerPageTest extends TestCase
         $this->get(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$this->titan->id, 999]]))->assertOk();
     }
 
-    public function test_manufacturer_filter_without_brand_page_is_not_redirected(): void
+    public function test_single_manufacturer_filter_of_thin_brand_redirects_to_its_clean_address(): void
     {
         $varta = Manufacturer::query()->where('slug', 'varta')->firstOrFail();
 
-        $this->get(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$varta->id]]))->assertOk();
+        $this->get(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$varta->id]]))
+            ->assertStatus(301)
+            ->assertRedirect(route('category.manufacturer', [$this->batteries, $varta]));
+    }
+
+    public function test_manufacturer_filter_in_a_category_without_brand_pages_is_not_redirected(): void
+    {
+        $oils = Category::query()->create(['name' => 'Масла', 'slug' => 'motornoe-maslo']);
+        $this->product('Масло 1', $this->titan, $oils);
+
+        $this->get(route('category.show', ['category' => $oils, 'manufacturer' => [$this->titan->id]]))->assertOk();
     }
 
     public function test_category_page_links_to_brand_pages(): void
@@ -114,16 +136,17 @@ class CategoryManufacturerPageTest extends TestCase
         $this->get(route('category.show', $this->batteries))
             ->assertOk()
             ->assertSee('href="'.$brandUrl.'"', false)
-            ->assertDontSee(route('category.manufacturer', [$this->batteries, 'varta']));
+            // Плитки — внутренние ссылки на индексируемые страницы: бренд с одним товаром в них не входит.
+            ->assertViewHas('brandLinks', fn (array $links): bool => array_column($links, 'title') === ['TITAN']);
     }
 
-    public function test_menu_links_to_brand_page_when_it_exists_and_to_filter_otherwise(): void
+    public function test_menu_links_every_manufacturer_to_its_clean_address(): void
     {
         $varta = Manufacturer::query()->where('slug', 'varta')->firstOrFail();
 
         $this->get(route('home'))
             ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $this->titan]).'"', false)
-            ->assertSee('href="'.route('category.show', ['category' => $this->batteries, 'manufacturer' => [$varta->id]]).'"', false);
+            ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $varta]).'"', false);
     }
 
     public function test_several_manufacturers_are_noindex_with_canonical_on_the_category(): void
@@ -167,6 +190,15 @@ class CategoryManufacturerPageTest extends TestCase
             ->assertSee('<link rel="canonical" href="'.route('category.manufacturer', [$this->batteries, $this->titan]).'">', false);
     }
 
+    public function test_selection_on_top_of_a_thin_brand_points_canonical_to_the_category(): void
+    {
+        $varta = Manufacturer::query()->where('slug', 'varta')->firstOrFail();
+
+        $this->get(route('category.manufacturer', [$this->batteries, $varta]).'?attr[13][]=42')
+            ->assertSee('<meta name="robots" content="noindex, follow">', false)
+            ->assertSee('<link rel="canonical" href="'.route('category.show', $this->batteries).'">', false);
+    }
+
     public function test_price_and_availability_filters_stay_indexable_with_canonical_on_the_category(): void
     {
         $this->get(route('category.show', ['category' => $this->batteries, 'price_from' => 1000, 'available' => 1]))
@@ -179,6 +211,52 @@ class CategoryManufacturerPageTest extends TestCase
     {
         $this->get(route('category.show', $this->batteries))->assertOk()->assertDontSee('noindex');
         $this->get(route('category.manufacturer', [$this->batteries, $this->titan]))->assertOk()->assertDontSee('noindex');
+    }
+
+    public function test_product_breadcrumb_links_to_the_brand_page(): void
+    {
+        $product = Product::query()->where('slug', 'titan-60')->firstOrFail();
+
+        $this->get(route('product.show', $product))
+            ->assertOk()
+            ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $this->titan]).'"', false);
+    }
+
+    public function test_product_breadcrumb_of_thin_brand_links_to_its_clean_address(): void
+    {
+        $varta = Manufacturer::query()->where('slug', 'varta')->firstOrFail();
+        $product = Product::query()->where('slug', 'varta-60')->firstOrFail();
+
+        $this->get(route('product.show', $product))
+            ->assertOk()
+            ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $varta]).'"', false);
+    }
+
+    public function test_product_breadcrumb_falls_back_to_the_filter_in_a_category_without_brand_pages(): void
+    {
+        $oils = Category::query()->create(['name' => 'Масла', 'slug' => 'motornoe-maslo']);
+        $this->product('Масло 1', $this->titan, $oils);
+
+        $this->get(route('product.show', Product::query()->where('slug', 'maslo-1')->firstOrFail()))
+            ->assertOk()
+            ->assertSee('href="'.route('category.show', ['category' => $oils, 'manufacturer' => [$this->titan->id]]).'"', false);
+    }
+
+    public function test_search_brand_tile_links_to_the_brand_page(): void
+    {
+        $this->get(route('search', ['search' => 'TITAN']))
+            ->assertOk()
+            ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $this->titan]).'"', false);
+    }
+
+    public function test_home_wall_manufacturer_links_to_the_brand_page(): void
+    {
+        $this->batteries->update(['home_wall_sort' => 0]);
+        $this->batteries->wallManufacturers()->attach($this->titan, ['sort_order' => 0]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('href="'.route('category.manufacturer', [$this->batteries, $this->titan]).'"', false);
     }
 
     private function product(string $name, Manufacturer $manufacturer, Category $category): void

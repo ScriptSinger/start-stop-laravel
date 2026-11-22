@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\CarLanding\CarLandingCatalog;
+use App\Services\Catalog\BrandPages;
 use App\Services\Catalog\GuideLocator;
 use App\Services\Catalog\SimilarProducts;
 use App\Services\Seo\ProductSeo;
@@ -11,7 +12,7 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function show(Product $product, SimilarProducts $similarProducts, ProductSeo $seo, CarLandingCatalog $carLandings, GuideLocator $guides): View
+    public function show(Product $product, SimilarProducts $similarProducts, ProductSeo $seo, CarLandingCatalog $carLandings, GuideLocator $guides, BrandPages $brandPages): View
     {
         abort_unless($product->status, 404);
 
@@ -20,6 +21,7 @@ class ProductController extends Controller
 
         return view('product', [
             'product' => $product,
+            'manufacturerUrl' => $product->manufacturer && ($category = $product->categories->first()) ? $brandPages->url($category, $product->manufacturer) : null,
             'specifications' => $product->specifications(visibleOnly: true),
             'specificationGroups' => $product->specificationGroups(visibleOnly: true),
             'similarProducts' => $similarProducts->for($product),
