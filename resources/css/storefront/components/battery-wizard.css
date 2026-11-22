@@ -1,5 +1,5 @@
 /* Подбор АКБ по марке авто: карточка, полоса шагов, сетки выбора. */
-.battery-wizard-container {position: relative; margin-bottom: 30px; padding: 24px; overflow: hidden; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px}
+.battery-wizard-container {position: relative; margin: 20px 0 0; padding: 24px; overflow: hidden; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px}
 .w-title {margin: 0; font-size: 26px; font-weight: 700; line-height: 1.25}
 
 /* Загрузка: тонкая бегущая полоса по верхнему краю карточки. */
