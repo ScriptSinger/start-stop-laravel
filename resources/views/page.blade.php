@@ -21,7 +21,7 @@
                 @if (in_array($page->slug, config('shop.pages_with_contacts'), true))
                     <div class="content-bottom">
                         @include('home.reviews')
-                        @include('home.map')
+                        @include('home.contacts')
                     </div>
                 @endif
             </div>

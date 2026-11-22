@@ -29,16 +29,15 @@
             </div>
         </div>
         <div class="content-bottom">
-            @include('home.advantages')
             @include('partials.battery-filter')
             @include('home.category-wall')
             @foreach (App\Enums\ProductSelection::cases() as $selection)
                 @include('home.product-selection', ['selection' => $selection, 'products' => $selections[$selection->value]])
             @endforeach
-            @include('home.callback')
+            @include('home.advantages')
             @include('home.reviews')
             @include('home.about')
-            @include('home.map')
+            @include('home.contacts')
         </div>
     </div>
 @endsection
