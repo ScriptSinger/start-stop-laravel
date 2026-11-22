@@ -35,4 +35,13 @@ class BusinessPageTest extends TestCase
         $this->get(route('home'))
             ->assertSeeInOrder(['id="menu2"', 'href="'.route('business').'"', 'Для организаций'], false);
     }
+
+    public function test_top_menu_marks_the_open_page_as_current(): void
+    {
+        $this->get(route('business'))
+            ->assertSee('menu__level-1-li is-active', false)
+            ->assertSeeInOrder(['href="'.route('business').'"', 'aria-current="page"'], false);
+
+        $this->get(route('home'))->assertDontSee('aria-current="page"', false);
+    }
 }

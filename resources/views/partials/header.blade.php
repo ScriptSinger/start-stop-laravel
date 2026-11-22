@@ -138,12 +138,13 @@
                         <ul class="menu__collapse">
                             @foreach ($mainMenu as $item)
                                 @if ($item->href() === route('contact'))
-                            <li class="menu__level-1-li">
-                                <a class="menu__level-1-a" href="{{ route('business') }}"><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
+                            <li class="menu__level-1-li {{ url()->current() === route('business') ? 'is-active' : '' }}">
+                                <a class="menu__level-1-a" href="{{ route('business') }}" @if (url()->current() === route('business')) aria-current="page" @endif><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
                             </li>
                                 @endif
-                                <li class="menu__level-1-li {{ $item->children->isNotEmpty() ? 'has-children' : '' }}">
-                                    <a class="menu__level-1-a" @if ($item->href()) href="{{ $item->href() }}" @endif>@if ($item->icon)<i class="menu__level-1-icon {{ $item->icon }} fa-fw"></i> @endif{{ $item->title }}</a>
+                                @php($isCurrent = $item->href() !== null && url()->current() === strtok($item->href(), '?'))
+                                <li class="menu__level-1-li {{ $item->children->isNotEmpty() ? 'has-children' : '' }} {{ $isCurrent ? 'is-active' : '' }}">
+                                    <a class="menu__level-1-a" @if ($item->href()) href="{{ $item->href() }}" @endif @if ($isCurrent) aria-current="page" @endif>@if ($item->icon)<i class="menu__level-1-icon {{ $item->icon }} fa-fw"></i> @endif{{ $item->title }}</a>
                                     @if ($item->children->isNotEmpty())
                                         <span class="menu__pm menu__level-1-pm visible-xs visible-sm"><i class="fa fa-plus"></i><i class="fa fa-minus"></i></span>
                                         <div class="menu__level-2 column-1">
@@ -157,8 +158,8 @@
                                 </li>
                             @endforeach
                             @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
-                            <li class="menu__level-1-li">
-                                <a class="menu__level-1-a" href="{{ route('business') }}"><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
+                            <li class="menu__level-1-li {{ url()->current() === route('business') ? 'is-active' : '' }}">
+                                <a class="menu__level-1-a" href="{{ route('business') }}" @if (url()->current() === route('business')) aria-current="page" @endif><i class="menu__level-1-icon fas fa-briefcase fa-fw" aria-hidden="true"></i>Для организаций</a>
                             </li>
                             @endif
                         </ul>
@@ -176,10 +177,10 @@
                         <span class="business-mobile-nav__heading">Разделы сайта</span>
                         @foreach ($mainMenu as $item)
                             @if ($item->href() === route('contact'))
-                                <a href="{{ route('business') }}">Для организаций</a>
+                                <a href="{{ route('business') }}" @class(['is-active' => url()->current() === route('business')])>Для организаций</a>
                             @endif
                             @if ($item->href())
-                                <a href="{{ $item->href() }}">{{ $item->title }}</a>
+                                <a href="{{ $item->href() }}" @class(['is-active' => url()->current() === strtok($item->href(), '?')])>{{ $item->title }}</a>
                             @else
                                 <span class="business-mobile-nav__heading">{{ $item->title }}</span>
                             @endif
@@ -188,7 +189,7 @@
                             @endforeach
                         @endforeach
                         @if (! $mainMenu->contains(fn ($item) => $item->href() === route('contact')))
-                            <a href="{{ route('business') }}">Для организаций</a>
+                            <a href="{{ route('business') }}" @class(['is-active' => url()->current() === route('business')])>Для организаций</a>
                         @endif
                         <span class="business-mobile-nav__heading">Информация</span>
                         @foreach ($topLinks as $link)

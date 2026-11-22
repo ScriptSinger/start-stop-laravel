@@ -1,2 +1,7 @@
-/* Стили блоков страницы из темы UniShop2 — как старый сайт подключал их на этой странице. */
-@import '../../../theme/stylesheet/contact-page.css';
+.contact-page .business-page__card a {color: inherit; font-weight: 600}
+.contact-page .business-page__card p + p {margin-top: 6px}
+.contact-page__map {height: 420px; overflow: hidden; border: 1px solid #e8e8e8; border-radius: 6px; background: #f7f7f7}
+.contact-page .business-page__contact {margin-top: 40px}
+@media (max-width: 767px) {
+    .contact-page__map {height: 320px}
+}

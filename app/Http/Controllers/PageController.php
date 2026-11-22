@@ -18,7 +18,11 @@ class PageController extends Controller
         SEOTools::setTitle($page->meta_title ?: $page->title, appendDefault: ! $page->meta_title);
         SEOTools::setDescription($page->meta_description ?: $this->description($page, $content));
 
-        return view($page->slug === 'uslugi' ? 'services' : 'page', [
+        return view(match ($page->slug) {
+            'uslugi' => 'services',
+            'dostavka-i-oplata' => 'delivery',
+            default => 'page',
+        }, [
             'page' => $page,
             'content' => $content,
         ]);

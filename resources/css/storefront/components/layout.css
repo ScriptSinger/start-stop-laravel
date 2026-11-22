@@ -161,3 +161,8 @@ body.modal-open jdiv, body.modal-open .fly-block {visibility: hidden !important}
 /* Иконки контактов: один размер, тема уменьшает fa-phone-alt. */
 #contact-page .contact-list__icon.fa-phone-alt,
 ul.footer__contacts .footer__contacts-icon.fa-phone-alt {font-size: inherit}
+
+/* Верхнее меню: открытая страница выделена, как нажатая вкладка. */
+.menu-right .menu__level-1-li.is-active {background: #fff; box-shadow: inset 0 -3px 0 var(--btn-primary-bg)}
+.menu-right .menu__level-1-li.is-active .menu__level-1-a {color: var(--btn-primary-bg); font-weight: 700}
+.business-mobile-nav nav a.is-active {color: var(--btn-primary-bg); font-weight: 700; box-shadow: inset 3px 0 0 var(--btn-primary-bg)}

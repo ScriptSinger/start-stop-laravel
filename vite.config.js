@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/css/storefront/pages/contact.css',
                 'resources/css/storefront/pages/business.css',
                 'resources/css/storefront/pages/services.css',
+                'resources/css/storefront/pages/delivery.css',
                 'resources/css/storefront/pages/compare.css',
                 'resources/css/storefront/pages/account.css',
                 'resources/js/storefront/app.js',
