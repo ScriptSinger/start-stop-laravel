@@ -27,6 +27,7 @@ use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\Supplier\SupplierResource;
+use App\MoonShine\Resources\TradeIn\TradeInResource;
 use Illuminate\Support\Facades\Vite;
 use MoonShine\AssetManager\Css;
 use MoonShine\AssetManager\Js;
@@ -81,6 +82,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(CategoryResource::class, 'Категории')->icon('rectangle-stack'),
                 MenuItem::make(ManufacturerResource::class, 'Производители')->icon('building-storefront'),
                 MenuItem::make(AttributeResource::class, 'Характеристики')->icon('adjustments-horizontal'),
+                MenuItem::make(TradeInResource::class, 'Трейд-ин')->icon('arrow-path'),
                 MenuItem::make(BatteryFitmentResource::class, 'Подбор АКБ')->icon('battery-50'),
             ])->icon('squares-2x2'),
             MenuGroup::make('Сайт', [

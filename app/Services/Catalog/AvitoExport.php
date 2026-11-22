@@ -48,7 +48,7 @@ class AvitoExport
         $manufacturers = Manufacturer::query()->pluck('name', 'id');
         $categories = Category::query()->get(['id', 'parent_id', 'name'])->keyBy('id');
 
-        foreach (Product::query()->available()->with('categories:id')->orderBy('id')->lazyById() as $product) {
+        foreach (Product::query()->available()->with(['categories:id', 'tradeInType'])->orderBy('id')->lazyById() as $product) {
             yield $this->row($product, $manufacturers, $categories);
         }
     }
@@ -104,7 +104,7 @@ class AvitoExport
             $product->external_id,
             $product->id,
             (float) $product->price,
-            $product->hasTradeIn() ? (float) $product->trade_in_discount : null,
+            $product->hasTradeIn() ? $product->tradeInDiscount() : null,
             $product->name,
             $product->displayPrice(),
             $product->quantity,

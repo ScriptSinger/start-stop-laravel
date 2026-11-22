@@ -57,7 +57,7 @@
                                                     <div class="sticker__item special">Ваша скидка: {{ App\Support\Price::format($product->specialDiscount()) }}</div>
                                                 @endif
                                                 @if ($product->hasTradeIn())
-                                                    <div class="sticker__item ean">Трейд-ин {{ App\Support\Price::format((float) $product->trade_in_discount) }}</div>
+                                                    <div class="sticker__item ean">Трейд-ин {{ App\Support\Price::format($product->tradeInDiscount()) }}</div>
                                                 @endif
                                                 @if ($product->is_pickup_only)
                                                     <div class="sticker__item jan">Только самовывоз</div>
@@ -87,7 +87,7 @@
                                 </div>
 
                                 {{-- livePrice: трейд-ин и количество пересчитывают цену с анимацией, как в теме. --}}
-                                <div class="product-block col-sm-6" x-data="livePrice({price: {{ $product->hasSpecial() ? (float) $product->price : $product->displayPrice() }}, special: {{ $product->hasSpecial() ? $product->displayPrice() : 'null' }}, tradeInDiscount: {{ (float) $product->trade_in_discount }}})" @quantity-changed="quantity = $event.detail">
+                                <div class="product-block col-sm-6" x-data="livePrice({price: {{ $product->hasSpecial() ? (float) $product->price : $product->displayPrice() }}, special: {{ $product->hasSpecial() ? $product->displayPrice() : 'null' }}, tradeInDiscount: {{ $product->tradeInDiscount() }}})" @quantity-changed="quantity = $event.detail">
                                     <div class="product-data">
                                         @if ($product->code)
                                             <div class="product-data__item"><div class="product-data__item-div">Код товара:</div> {{ $product->code }}</div>
@@ -119,7 +119,7 @@
                                                 <div class="option__group col-xs-12">
                                                     <label class="option__group-name">Выберите:</label>
                                                     <div>
-                                                        <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format((float) $product->trade_in_discount) }}">
+                                                        <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format($product->tradeInDiscount()) }}">
                                                             <input type="checkbox" name="trade_in" value="1" x-model="tradeIn" />
                                                             <span class="option__name"><i class="fa fa-recycle fa-fw"></i> <span class="option__tit">Трейд-ин</span> <span class="option__val"> {{ App\Support\Price::format($product->priceFor(true)) }} </span></span>
                                                         </label>
@@ -153,7 +153,13 @@
                                         <div class="product-page__short-attribute product-data">
                                             @foreach ($specificationGroups->take(6) as $name => $values)
                                                 <div class="product-data__item"><div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div><x-spec-values :values="$values" /></div>
+                                                @if ($caseType && $name === $caseTypeAfter)
+                                                    <x-case-type-row :code="$caseType" />
+                                                @endif
                                             @endforeach
+                                            @if ($caseType && $caseTypeAfter === false)
+                                                <x-case-type-row :code="$caseType" />
+                                            @endif
                                         </div>
                                         <a class="product-page__more-attr" href="#tab-specification" @click.prevent="$showTab('#tab-specification')">Все характеристики</a>
                                     @endif
@@ -203,7 +209,13 @@
                                                 <div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div>
                                                 <div class="product-data__item-div"><x-spec-values :values="$values" /></div>
                                             </div>
+                                            @if ($caseType && $name === $caseTypeAfter)
+                                                <x-case-type-row :code="$caseType" layout="tab" />
+                                            @endif
                                         @endforeach
+                                        @if ($caseType && $caseTypeAfter === false)
+                                            <x-case-type-row :code="$caseType" layout="tab" />
+                                        @endif
                                     </div>
                                 </div>
                             @endif

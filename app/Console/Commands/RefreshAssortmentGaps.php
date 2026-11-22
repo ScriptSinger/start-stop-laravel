@@ -18,7 +18,7 @@ class RefreshAssortmentGaps extends Command
         $this->info("Машин без подходящего АКБ: {$summary['without_batteries']} из {$summary['cars']}");
 
         foreach (array_slice($summary['sizes'], 0, 5) as $size) {
-            $this->line("  {$size['size']}, {$size['polarity']} — {$size['cars']}");
+            $this->line('  '.AssortmentGaps::label($size)." — {$size['cars']}");
         }
 
         return self::SUCCESS;

@@ -3,9 +3,11 @@
 namespace App\Services\Catalog;
 
 use App\Models\Attribute;
+use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +35,25 @@ class CatalogFacets
     }
 
     /**
+     * Типы корпуса, которые есть у товаров категории, и сколько товаров будет при выборе
+     * каждого (с учётом остальных условий). Типы без товаров в категории не показываются.
+     *
+     * @return Collection<int, TradeInType> с атрибутом count
+     */
+    public function caseTypes(Category $category, CatalogFilter $filter): Collection
+    {
+        $inCategory = $this->activeProductIds($category);
+        $matching = $this->activeProductIds($category)->catalogFilter($filter->withoutCaseTypes());
+
+        return TradeInType::query()
+            ->active()
+            ->whereHas('products', fn (Builder $products) => $products->whereIn('products.id', $inCategory))
+            ->withCount(['products as count' => fn (Builder $products) => $products->whereIn('products.id', $matching)])
+            ->ordered()
+            ->get();
+    }
+
+    /**
      * Характеристики, привязанные к категории и отмеченные «Показывать в
      * фильтре», только со значениями, которые есть у товаров категории.
      *
@@ -50,10 +71,20 @@ class CatalogFacets
             ->each(function (Attribute $attribute) use ($category, $filter, $inCategory): void {
                 $matching = $this->activeProductIds($category)->catalogFilter($filter->withoutAttribute($attribute->id));
 
-                $attribute->setRelation('values', $attribute->values()
+                $values = $attribute->values()
                     ->whereHas('products', fn (Builder $products) => $products->whereIn('products.id', $inCategory))
                     ->withCount(['products as count' => fn (Builder $products) => $products->whereIn('products.id', $matching)])
-                    ->get());
+                    ->get();
+
+                // Габариты — по размеру (длина, ширина, высота), а не в порядке старого справочника;
+                // то, что не разобралось как размеры, в конце.
+                if ($attribute->id === (int) config('shop.battery_fitment.attributes.dimensions')) {
+                    $values = $values->sortBy(fn (AttributeValue $value): string => ($size = TradeInTypeMatcher::parseDimensions($value->value)) === null
+                        ? '~'.$value->value
+                        : sprintf('%04d%04d%04d', ...$size))->values();
+                }
+
+                $attribute->setRelation('values', $values);
             })
             ->filter(fn (Attribute $attribute): bool => $attribute->values->isNotEmpty())
             ->values();

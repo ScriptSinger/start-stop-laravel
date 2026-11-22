@@ -23,7 +23,7 @@ final readonly class CartLine
     public function tradeInDiscount(): ?float
     {
         return $this->tradeIn && $this->product->hasTradeIn()
-            ? (float) $this->product->trade_in_discount
+            ? $this->product->tradeInDiscount()
             : null;
     }
 

@@ -30,9 +30,9 @@ class CartCheckoutTest extends TestCase
             'slug' => 'titan-60',
             'price' => 7000,
             'quantity' => 3,
-            'trade_in_discount' => 1000,
             'status' => true,
         ]);
+        $this->giveTradeIn($this->battery, 1000);
 
         $this->terminal = Product::query()->create([
             'name' => 'Клемма "+"',

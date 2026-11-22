@@ -77,7 +77,7 @@
                                                         @if ($line->product->hasTradeIn())
                                                             <label class="checkout-cart__option checkout-cart__trade-in">
                                                                 <input type="checkbox" name="trade_in" value="1" @checked($line->tradeIn) @change="$el.form.requestSubmit()" />
-                                                                Трейд-ин: сдаю старый АКБ (−{{ App\Support\Price::format((float) $line->product->trade_in_discount) }})
+                                                                Трейд-ин: сдаю старый АКБ (−{{ App\Support\Price::format($line->product->tradeInDiscount()) }})
                                                             </label>
                                                         @endif
                                                     </div>

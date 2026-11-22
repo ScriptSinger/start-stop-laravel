@@ -15,7 +15,7 @@ class ProductController extends Controller
     {
         abort_unless($product->status, 404);
 
-        $product->load(['manufacturer', 'categories', 'images', 'attributeValues.attribute']);
+        $product->load(['manufacturer', 'categories', 'images', 'attributeValues.attribute', 'tradeInType']);
         $seo->apply($product);
 
         return view('product', [
@@ -25,6 +25,10 @@ class ProductController extends Controller
             'similarProducts' => $similarProducts->for($product),
             'carLinks' => $carLandings->linksForProduct($product->id),
             'guide' => $guides->forProduct($product),
+            'caseType' => $product->tradeInType?->code,
+            // После какой характеристики показывать «Тип корпуса»: после «Габаритов»; нет их — в конце.
+            'caseTypeAfter' => $product->specificationGroups(visibleOnly: true)
+                ->search(fn ($values): bool => $values->first()->attribute_id === (int) config('shop.battery_fitment.attributes.dimensions')),
         ]);
     }
 }

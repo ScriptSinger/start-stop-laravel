@@ -10,6 +10,7 @@ use App\MoonShine\Fields\ProductPhoto;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\Product\ProductResource;
+use App\Support\Price;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
@@ -52,7 +53,8 @@ class ProductDetailPage extends DetailPage
             Number::make('Остаток', 'quantity'),
             Number::make('Остаток у поставщика', 'supplier_quantity'),
             Money::make('Цена под заказ', 'supplier_price'),
-            Money::make('Скидка при обмене (трейд-ин)', 'trade_in_discount'),
+            Text::make('Тип корпуса', 'id', fn (Product $product): string => $product->tradeInType?->name ?? 'не задан'),
+            Text::make('Скидка при обмене (трейд-ин)', 'id', fn (Product $product): string => $product->hasTradeIn() ? Price::format($product->tradeInDiscount()) : 'нет'),
             Switcher::make('Только самовывоз', 'is_pickup_only'),
             Textarea::make('Описание', 'description'),
             Switcher::make('Активен', 'status'),

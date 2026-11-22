@@ -9,6 +9,7 @@ use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Fields\ProductPhoto;
 use App\MoonShine\Resources\Category\CategoryResource;
@@ -71,6 +72,11 @@ class ProductIndexPage extends IndexPage
                     Manufacturer::query()->select('name')->whereColumn('manufacturers.id', 'products.manufacturer_id'),
                     $direction,
                 )),
+            // Габариты (только размеры) и тип корпуса — два отдельных свойства. По коду типа
+            // фильтр списка и скидка за трейд-ин.
+            Text::make('Габариты (мм)', 'id', fn (Product $product): string => $product->attributeValues
+                ->firstWhere('attribute_id', (int) config('shop.battery_fitment.attributes.dimensions'))?->value ?? '—'),
+            Text::make('Тип корпуса', 'trade_in_type_id', fn (Product $product): string => $product->tradeInType?->code ?? '—'),
             // Сортировка — по названию категории (у товара в нескольких — по первой
             // по алфавиту), внутри категории — по названию товара.
             BelongsToMany::make('Категории', 'categories', resource: CategoryResource::class)
@@ -340,6 +346,12 @@ class ProductIndexPage extends IndexPage
             Select::make('Статус', 'status')
                 ->options(['1' => 'Активные', '0' => 'Неактивные'])
                 ->nullable(),
+            Select::make('Тип корпуса', 'trade_in_type')
+                ->options(['none' => 'Не задан', ...TradeInType::query()->ordered()->pluck('name', 'id')->all()])
+                ->nullable()
+                ->onApply(fn (Builder $query, mixed $value): Builder => $value === 'none'
+                    ? $query->whereNull('trade_in_type_id')
+                    : $query->where('trade_in_type_id', $value)),
             Select::make('Наличие', 'stock')
                 ->options(['in' => 'В наличии', 'order' => 'Под заказ', 'out' => 'Нет в наличии'])
                 ->nullable()

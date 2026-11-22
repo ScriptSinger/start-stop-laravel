@@ -11,6 +11,7 @@ final readonly class CatalogFilter
     /**
      * @param  list<int>  $manufacturerIds
      * @param  array<int, list<int>>  $attributeValueIds  id характеристики → id выбранных значений
+     * @param  list<int>  $caseTypeIds  id типов корпуса (поле товара «Тип корпуса»)
      */
     public function __construct(
         public array $manufacturerIds = [],
@@ -18,6 +19,7 @@ final readonly class CatalogFilter
         public ?float $priceFrom = null,
         public ?float $priceTo = null,
         public bool $onlyAvailable = false,
+        public array $caseTypeIds = [],
     ) {}
 
     public function isActive(): bool
@@ -26,7 +28,8 @@ final readonly class CatalogFilter
             || $this->attributeValueIds !== []
             || $this->priceFrom !== null
             || $this->priceTo !== null
-            || $this->onlyAvailable;
+            || $this->onlyAvailable
+            || $this->caseTypeIds !== [];
     }
 
     /**
@@ -43,7 +46,15 @@ final readonly class CatalogFilter
      */
     public function withoutManufacturers(): self
     {
-        return new self([], $this->attributeValueIds, $this->priceFrom, $this->priceTo, $this->onlyAvailable);
+        return new self([], $this->attributeValueIds, $this->priceFrom, $this->priceTo, $this->onlyAvailable, $this->caseTypeIds);
+    }
+
+    /**
+     * Тот же фильтр без условия по типу корпуса — для счётчиков в блоке «Тип корпуса».
+     */
+    public function withoutCaseTypes(): self
+    {
+        return new self($this->manufacturerIds, $this->attributeValueIds, $this->priceFrom, $this->priceTo, $this->onlyAvailable);
     }
 
     /**
@@ -54,6 +65,6 @@ final readonly class CatalogFilter
         $attributeValueIds = $this->attributeValueIds;
         unset($attributeValueIds[$attributeId]);
 
-        return new self($this->manufacturerIds, $attributeValueIds, $this->priceFrom, $this->priceTo, $this->onlyAvailable);
+        return new self($this->manufacturerIds, $attributeValueIds, $this->priceFrom, $this->priceTo, $this->onlyAvailable, $this->caseTypeIds);
     }
 }

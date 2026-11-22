@@ -9,7 +9,7 @@
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="trade_in" value="1" @checked(old('trade_in'))>
-                    Сдаю старый аккумулятор: −{{ App\Support\Price::format((float) $product->trade_in_discount) }} (цена {{ App\Support\Price::format($product->priceFor(true)) }})
+                    Сдаю старый аккумулятор: −{{ App\Support\Price::format($product->tradeInDiscount()) }} (цена {{ App\Support\Price::format($product->priceFor(true)) }})
                 </label>
             </div>
         @endif

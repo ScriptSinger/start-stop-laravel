@@ -8,6 +8,7 @@ use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\Services\Catalog\AssortmentGaps;
 use App\Services\Catalog\StockSummary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,6 +72,8 @@ class CatalogStockSummaryTest extends TestCase
         $battery = Product::query()->where('name', 'В наличии')->first();
         $battery->attributeValues()->attach(AttributeValue::query()->whereIn('value', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)'])->pluck('id'));
 
+        TradeInType::factory()->dimensions(242, 175, 190)->create(['code' => 'L2']);
+        TradeInType::factory()->dimensions(234, 127, 227)->create(['code' => 'B24']);
         BatteryFitment::query()->create(['brand' => 'Kia', 'model' => 'Rio', 'capacity' => '60 Ач', 'polarity' => 'Обратная', 'dims' => '242x175x190']);
         BatteryFitment::query()->create(['brand' => 'Honda', 'model' => 'Fit', 'capacity' => '60 Ач', 'polarity' => 'Обратная', 'dims' => '236x128x220']);
         BatteryFitment::query()->create(['brand' => 'Honda', 'model' => 'Jazz', 'capacity' => '60 Ач', 'polarity' => 'Обратная', 'dims' => '236x128x220']);
@@ -80,8 +83,11 @@ class CatalogStockSummaryTest extends TestCase
         $this->assertSame([
             'cars' => 3,
             'without_batteries' => 2,
-            'sizes' => [['size' => 'Азия B24 (234 x 127 x 227 мм)', 'polarity' => 'Обратная', 'cars' => 2]],
+            'sizes' => [['type' => 'B24', 'dimensions' => '236 x 128 x 220', 'capacity' => null, 'polarity' => 'Обратная', 'cars' => 2]],
         ], app(AssortmentGaps::class)->refresh());
+
+        $this->assertSame('B24, 236 x 128 x 220 мм, Обратная', AssortmentGaps::label(app(AssortmentGaps::class)->summary()['sizes'][0]));
+        $this->assertSame('Ёмкость 190 Ач, Обратная', AssortmentGaps::label(['type' => null, 'dimensions' => null, 'capacity' => '190', 'polarity' => 'Обратная']));
 
         $this->artisan('assortment:gaps')->expectsOutputToContain('Машин без подходящего АКБ: 2 из 3')->assertSuccessful();
     }

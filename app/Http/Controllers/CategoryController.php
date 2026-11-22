@@ -41,6 +41,7 @@ class CategoryController extends Controller
             'sort' => $request->sort(),
             'perPage' => $request->perPage(),
             'manufacturerFacet' => $facets->manufacturers($category, $filter),
+            'caseTypeFacet' => $facets->caseTypes($category, $filter),
             'attributeFacets' => $facets->attributes($category, $filter),
             // Границы шкалы цены — целыми рублями, наружу.
             'priceMin' => (int) floor($priceBounds['min']),

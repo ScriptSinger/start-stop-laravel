@@ -256,7 +256,7 @@ class Dashboard extends Page
             [$count = $active()->withPriceProblem()->count(), $this->plural($count, 'товар|товара|товаров').' с ошибкой в цене — нулевая цена или акция не ниже обычной', $productsUrl('price_problem')],
             [$count = $active()->available()->where(fn ($query) => $query->whereNull('description')->orWhere('description', ''))->count(), $this->plural($count, 'товар|товара|товаров').' в продаже без описания — площадки и поисковики такие показывают хуже', $productsUrl('without_description')],
             [$count = Product::query()->where('status', false)->where('quantity', '>', 0)->count(), $this->plural($count, 'товар лежит|товара лежат|товаров лежат').' на складе, но скрыты с сайта', $this->pageUrl(ProductIndexPage::class, ProductResource::class, ['filter' => ['status' => '0', 'stock' => 'in']])],
-            [$topGap['cars'] ?? 0, $topGap ? "{$topGap['size']}, {$topGap['polarity']} — нужен ".$this->plural($topGap['cars'], 'машине|машинам|машинам').', в ассортименте нет' : '', null],
+            [$topGap['cars'] ?? 0, $topGap ? AssortmentGaps::label($topGap).' — нужен '.$this->plural($topGap['cars'], 'машине|машинам|машинам').', в ассортименте нет' : '', null],
         ])->filter(fn (array $item): bool => $item[0] > 0);
 
         return Box::make('Требует внимания', $items->isEmpty()

@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\Services\Import\OneCNewProducts;
 use App\Services\Import\OneCProductSpecs;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -128,6 +129,8 @@ class CreateProductsFromOneCTest extends TestCase
     public function test_force_creates_hidden_products_with_category_manufacturer_and_attributes(): void
     {
         $this->seedCatalog();
+        config(['shop.battery_fitment.attributes.dimensions' => Attribute::query()->where('name', 'Габариты (мм)')->value('id')]);
+        TradeInType::factory()->dimensions(242, 175, 190)->create(['code' => 'L2', 'amount' => 1000]);
 
         $this->artisan('products:create-from-onec', [...$this->arguments(['1466', '1472', 'РТ-1']), '--force' => true])
             ->expectsOutputToContain('Создано скрытых товаров: 3')
@@ -140,7 +143,9 @@ class CreateProductsFromOneCTest extends TestCase
         $this->assertSame('L2', $battery->code);
         $this->assertSame(7000.0, (float) $battery->price);
         $this->assertSame(2, $battery->quantity);
-        $this->assertSame(1500.0, (float) $battery->trade_in_discount);
+        // Тип корпуса (а с ним скидка) подобран по «Габаритам», у товара своей суммы нет.
+        $this->assertSame('L2', $battery->tradeInType?->code);
+        $this->assertSame(1000.0, $battery->tradeInDiscount());
         $this->assertSame('EDCON', $battery->manufacturer->name);
         $this->assertSame(['Аккумуляторы'], $battery->categories->pluck('name')->all());
 
@@ -149,7 +154,7 @@ class CreateProductsFromOneCTest extends TestCase
 
         $brush = Product::query()->where('external_id', '1472')->firstOrFail();
         $this->assertSame('shchetka-stekloochistitelya-alca-winter-16-zimnyaya-400mm', $brush->slug);
-        $this->assertNull($brush->trade_in_discount);
+        $this->assertSame(0.0, $brush->tradeInDiscount());
         $this->assertSame('066 000', $brush->sku);
         $this->assertSame('ALCA', $brush->manufacturer->name);
         $this->assertSame(['Стеклоочистители'], $brush->categories->pluck('name')->all());
@@ -276,7 +281,7 @@ class CreateProductsFromOneCTest extends TestCase
         $this->attribute(12, 'Напряжение', ['6V', '12V']);
         $this->attribute(13, 'Полярность', ['Обратная', 'Прямая']);
         $this->attribute(15, 'Емкость', ['60 Ah']);
-        $this->attribute(16, 'Габариты', ['Евро L2 (242 x 175 x 190 мм)']);
+        $this->attribute(16, 'Габариты (мм)', ['Евро L2 (242 x 175 x 190 мм)']);
         $this->attribute(17, 'Ток холодной прокрутки', ['640А']);
         $this->attribute(20, 'Ёмкость (Ah)', ['55 - 65 Ah', '66 - 77 Ah']);
     }

@@ -11,7 +11,7 @@
 })
 
 {{-- livePrice: отметили трейд-ин — цена пересчитывается с анимацией, как в теме. --}}
-<div class="product-thumb uni-item" x-data="livePrice({price: {{ $product->hasSpecial() ? (float) $product->price : $product->displayPrice() }}, special: {{ $product->hasSpecial() ? $product->displayPrice() : 'null' }}, tradeInDiscount: {{ (float) $product->trade_in_discount }}})">
+<div class="product-thumb uni-item" x-data="livePrice({price: {{ $product->hasSpecial() ? (float) $product->price : $product->displayPrice() }}, special: {{ $product->hasSpecial() ? $product->displayPrice() : 'null' }}, tradeInDiscount: {{ $product->tradeInDiscount() }}})">
     <div class="product-thumb__image">
         @if ($product->hasSpecial() || $product->hasTradeIn() || $product->is_pickup_only)
             <div class="sticker">
@@ -19,7 +19,7 @@
                     <div class="sticker__item special">Ваша скидка: {{ App\Support\Price::format($product->specialDiscount()) }}</div>
                 @endif
                 @if ($product->hasTradeIn())
-                    <div class="sticker__item ean">Трейд-ин {{ App\Support\Price::format((float) $product->trade_in_discount) }}</div>
+                    <div class="sticker__item ean">Трейд-ин {{ App\Support\Price::format($product->tradeInDiscount()) }}</div>
                 @endif
                 @if ($product->is_pickup_only)
                     <div class="sticker__item jan">Только самовывоз</div>
@@ -46,7 +46,7 @@
                  старого АКБ учитывается уже при добавлении из каталога. --}}
             <div class="product-thumb__option option">
                 <div class="option__group">
-                    <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format((float) $product->trade_in_discount) }}">
+                    <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format($product->tradeInDiscount()) }}">
                         <input type="checkbox" name="trade_in" value="1" form="{{ $cardFormId }}" x-model="tradeIn" />
                         <span class="option__name"><i class="fa fa-recycle fa-fw" aria-hidden="true"></i> <span class="option__tit">С обменом</span> <span class="option__val"> {{ App\Support\Price::format($product->priceFor(true)) }} </span></span>
                     </label>

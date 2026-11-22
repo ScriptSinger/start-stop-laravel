@@ -16,7 +16,7 @@
             <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs hidden-sm"></aside>
             <div id="content" class="col-sm-12 col-md-9 col-lg-9 col-xxl-16">
                 <div class="article_description uni-wrapper">
-                    {!! $page->description !!}
+                    {!! $content !!}
                 </div>
                 @if (in_array($page->slug, config('shop.pages_with_contacts'), true))
                     <div class="content-bottom">

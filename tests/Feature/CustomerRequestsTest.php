@@ -57,7 +57,7 @@ class CustomerRequestsTest extends TestCase
 
     public function test_quick_order_creates_order_for_one_product(): void
     {
-        $product = Product::query()->create(['name' => 'TITAN 60Ah', 'slug' => 'titan', 'price' => 7000, 'trade_in_discount' => 1000, 'status' => true]);
+        $product = $this->giveTradeIn(Product::query()->create(['name' => 'TITAN 60Ah', 'slug' => 'titan', 'price' => 7000, 'status' => true]), 1000);
 
         $this->postJson(route('quick-order.store', $product), ['name' => 'Иван', 'phone' => '+7 (987) 000-00-00', 'quantity' => 2, 'trade_in' => 1, 'comment' => 'После 18:00'])
             ->assertOk()

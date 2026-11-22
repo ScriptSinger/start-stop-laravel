@@ -8,6 +8,7 @@ use App\Enums\ProductSelection;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Fields\ProductPhoto;
 use App\MoonShine\Fields\SeoFields;
@@ -79,9 +80,10 @@ class ProductFormPage extends FormPage
                             ->nullable()
                             ->hint('Пусто — под заказ действует обычная цена'),
                         TinyMce::make('Описание', 'description')->locale('ru')->nullable(),
-                        Money::make('Скидка при обмене (трейд-ин)', 'trade_in_discount')
+                        Select::make('Тип корпуса (скидка за трейд-ин)', 'trade_in_type_id')
+                            ->options(TradeInType::query()->ordered()->pluck('name', 'id')->all())
                             ->nullable()
-                            ->hint('Покупатель сдаёт старый АКБ — цена меньше на эту сумму. Пусто — обмена нет'),
+                            ->hint('Определяет скидку за сдачу старого АКБ. Пусто — обмена нет. Сумму и типы меняют в разделе «Трейд-ин»'),
                         Switcher::make('Только самовывоз', 'is_pickup_only')->default(false),
                         Switcher::make('Активен', 'status')->default(true),
                     ]),

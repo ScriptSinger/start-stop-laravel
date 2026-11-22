@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Product;
 
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Handlers\AvitoExportHandler;
 use App\MoonShine\Handlers\SafeImportHandler;
@@ -46,7 +47,7 @@ class ProductResource extends ModelResource implements HasImportExportContract
 
     protected string $column = 'name';
 
-    protected array $with = ['manufacturer', 'categories'];
+    protected array $with = ['manufacturer', 'categories', 'tradeInType', 'attributeValues'];
 
     /**
      * Ошибка загрузки галереи не должна оставлять частично сохранённую карточку.
@@ -144,6 +145,19 @@ class ProductResource extends ModelResource implements HasImportExportContract
             // курсором, без загрузки связей.
             Text::make('Производитель', 'manufacturer_id')
                 ->modifyRawValue(fn (mixed $id): string => (string) once(fn () => Manufacturer::query()->pluck('name', 'id'))->get($id)),
+            // Тип корпуса (код, например L3) задаёт скидку за сдачу старого АКБ: его можно
+            // править в файле и загрузить обратно. Сама скидка (колонка ниже) только для сверки:
+            // сумму меняют в разделе «Трейд-ин».
+            // Габариты (размеры) — только для сверки: у типа и у габаритов разные данные.
+            Text::make('Габариты (мм)', 'id')
+                ->modifyRawValue(fn (mixed $id): string => (string) (once(fn () => DB::table('attribute_value_product')
+                    ->join('attribute_values', 'attribute_values.id', '=', 'attribute_value_product.attribute_value_id')
+                    ->where('attribute_values.attribute_id', config('shop.battery_fitment.attributes.dimensions'))
+                    ->pluck('attribute_values.value', 'attribute_value_product.product_id'))->get($id) ?? '')),
+            Text::make('Тип корпуса', 'trade_in_type_id')
+                ->modifyRawValue(fn (mixed $typeId): string => (string) (once(fn () => TradeInType::query()->pluck('code', 'id'))->get($typeId) ?? '')),
+            Text::make('Скидка за трейд-ин', 'trade_in_type_id')
+                ->modifyRawValue(fn (mixed $typeId): string => (string) (once(fn () => TradeInType::query()->active()->where('amount', '>', 0)->pluck('amount', 'id'))->get($typeId) ?? '')),
             ...$this->editableFields(),
         ];
     }
@@ -161,6 +175,8 @@ class ProductResource extends ModelResource implements HasImportExportContract
             Text::make('Название', 'name'),
             Text::make('Код товара', 'code')->nullable(),
             Text::make('Артикул', 'sku')->nullable(),
+            // Код типа корпуса (L3, Груз A…): преобразуется в тип в beforeImportFilling().
+            Text::make('Тип корпуса', 'trade_in_type_id')->nullable(),
             ...$this->editableFields(),
         ];
     }
@@ -178,7 +194,6 @@ class ProductResource extends ModelResource implements HasImportExportContract
             Number::make('Остаток', 'quantity')->default(0),
             Number::make('Остаток у поставщика', 'supplier_quantity')->default(0),
             Money::make('Цена под заказ', 'supplier_price')->nullable(),
-            Money::make('Скидка за трейд-ин', 'trade_in_discount')->nullable(),
             Switcher::make('Только самовывоз', 'is_pickup_only')->default(false),
             Switcher::make('Активен', 'status')->default(false),
         ];
@@ -201,7 +216,27 @@ class ProductResource extends ModelResource implements HasImportExportContract
             throw new RuntimeException("товара с ID {$data['id']} нет в базе");
         }
 
+        if (array_key_exists('trade_in_type_id', $data)) {
+            $data['trade_in_type_id'] = $this->tradeInTypeIdByCode($data['id'], $data['trade_in_type_id']);
+        }
+
         return $data;
+    }
+
+    /**
+     * Код типа корпуса из файла → id типа; пусто — тип не задан.
+     */
+    private function tradeInTypeIdByCode(mixed $productId, mixed $code): ?int
+    {
+        $code = trim((string) $code);
+
+        if ($code === '') {
+            return null;
+        }
+
+        $type = TradeInType::query()->whereRaw('LOWER(code) = ?', [mb_strtolower($code)])->first();
+
+        return $type?->id ?? throw new RuntimeException("у товара {$productId} указан неизвестный тип корпуса «{$code}»");
     }
 
     /**

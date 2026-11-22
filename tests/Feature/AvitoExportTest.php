@@ -76,9 +76,10 @@ class AvitoExportTest extends TestCase
         $brand = Manufacturer::query()->create(['name' => 'ZUBR', 'slug' => 'zubr']);
         $product = Product::query()->create([
             'name' => 'ZUBR 60Ah', 'slug' => 'zubr-60', 'sku' => 'Z60', 'external_id' => '1C-1',
-            'price' => 7600, 'special_price' => 7000, 'trade_in_discount' => 1000,
+            'price' => 7600, 'special_price' => 7000,
             'quantity' => 2, 'supplier_quantity' => 5, 'manufacturer_id' => $brand->id, 'image' => 'products/zubr.jpg',
         ]);
+        $this->giveTradeIn($product, 1000);
 
         $row = $this->exportedRows()[0];
 

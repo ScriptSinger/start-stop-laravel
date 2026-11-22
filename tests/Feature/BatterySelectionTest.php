@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\BatteryFitment;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\Services\BatterySelection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -193,16 +194,19 @@ class BatterySelectionTest extends TestCase
             ->assertSee('Подходящих аккумуляторов сейчас нет');
     }
 
-    public function test_battery_with_size_group_instead_of_dimensions_is_matched_by_capacity_and_polarity(): void
+    public function test_truck_type_without_dimensions_is_matched_by_capacity_and_polarity(): void
     {
         $this->fitment(['generation' => 'Грузовик', 'capacity' => '190 Ач, 180 Ач', 'dims' => '513x223x217']);
-        $this->battery('Грузовой 190Ah', ['Обратная', '180 - 190 Ah', 'Груз B (180 - 190 Ah)']);
-        $this->battery('Грузовой прямой', ['Прямая', '180 - 190 Ah', 'Груз B (180 - 190 Ah)']);
+        $truckType = TradeInType::query()->create(['code' => 'Груз B', 'name' => 'Груз B', 'amount' => 2000]);
+        $this->battery('Грузовой 190Ah', ['Обратная', '180 - 190 Ah'], ['trade_in_type_id' => $truckType->id]);
+        $this->battery('Грузовой прямой', ['Прямая', '180 - 190 Ah'], ['trade_in_type_id' => $truckType->id]);
+        $this->battery('Без габаритов и типа', ['Обратная', '180 - 190 Ah']);
 
         $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Грузовик']))
             ->assertOk()
             ->assertSee('Грузовой 190Ah')
-            ->assertDontSee('Грузовой прямой');
+            ->assertDontSee('Грузовой прямой')
+            ->assertDontSee('Без габаритов и типа');
     }
 
     public function test_default_generation_label_finds_fitment_without_generation(): void

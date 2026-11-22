@@ -24,11 +24,13 @@ use Illuminate\Support\Facades\DB;
 class ProductAttributeFiller
 {
     /** Характеристики, значения которых при отсутствии в справочнике создаются. */
-    private const OPEN = ['Емкость', 'Ток холодной прокрутки', 'Габариты', 'Вязкость', 'Объем'];
+    private const OPEN = ['Емкость', 'Ток холодной прокрутки', 'Габариты (мм)', 'Вязкость', 'Объем'];
+
+    public function __construct(private readonly TradeInTypeMatcher $typeMatcher) {}
 
     private const NAMES = [
         'voltage' => 'Напряжение', 'polarity' => 'Полярность', 'country' => 'Производство', 'capacity' => 'Емкость',
-        'dimensions' => 'Габариты', 'cca' => 'Ток холодной прокрутки', 'technology' => 'Технология', 'terminals' => 'Токовыводы',
+        'dimensions' => 'Габариты (мм)', 'cca' => 'Ток холодной прокрутки', 'technology' => 'Технология', 'terminals' => 'Токовыводы',
         'capacity_range' => 'Ёмкость (Ah)', 'cca_range' => 'Ток холодного пуска (А)', 'viscosity' => 'Вязкость', 'acea' => 'ACEA',
         'api' => 'API', 'composition' => 'Состав', 'volume' => 'Объем',
     ];
@@ -119,10 +121,29 @@ class ProductAttributeFiller
                     'attribute_value_id' => $id,
                     'product_id' => $item['product']->id,
                 ])->all());
+
+                $this->assignTradeInType($item['product']);
             }
         });
 
         return $plan->count();
+    }
+
+    /**
+     * Тип корпуса — по «Габаритам», если у товара его ещё нет (скидка за старый АКБ идёт из типа).
+     * Не подобрался — поле остаётся пустым, существующий тип не меняется.
+     */
+    private function assignTradeInType(Product $product): void
+    {
+        if ($product->trade_in_type_id !== null) {
+            return;
+        }
+
+        $type = $this->typeMatcher->typeForProduct($product->load('attributeValues'));
+
+        if ($type !== null) {
+            $product->update(['trade_in_type_id' => $type->id]);
+        }
     }
 
     /**
@@ -168,7 +189,7 @@ class ProductAttributeFiller
         }
 
         if ($dims = $first('/(\d{2,3})\s*[xх×]\s*(\d{2,3})\s*[xх×]\s*(\d{2,3})/u')) {
-            $derived['dimensions'] = ["{$dims[1]}x{$dims[2]}x{$dims[3]}"];
+            $derived['dimensions'] = [TradeInTypeMatcher::formatDimensions("{$dims[1]}x{$dims[2]}x{$dims[3]}")];
         }
 
         $derived['technology'] = match (true) {

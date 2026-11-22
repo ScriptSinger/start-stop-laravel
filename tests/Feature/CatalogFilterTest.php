@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -96,6 +97,74 @@ class CatalogFilterTest extends TestCase
             ->assertSee('TITAN 60 О.П.')
             ->assertSee('VARTA 60 О.П.')
             ->assertDontSee('TITAN 75 О.П.');
+    }
+
+    public function test_case_type_is_its_own_filter_with_counts_and_or_semantics(): void
+    {
+        $l2 = TradeInType::query()->create(['code' => 'L2', 'name' => 'L2', 'amount' => 1000, 'sort_order' => 1]);
+        $l3 = TradeInType::query()->create(['code' => 'L3', 'name' => 'L3', 'amount' => 1200, 'sort_order' => 2]);
+        TradeInType::query()->create(['code' => 'D31', 'name' => 'D31', 'amount' => 1500, 'sort_order' => 3]);
+        TradeInType::query()->create(['code' => 'LB2', 'name' => 'LB2', 'amount' => null, 'is_active' => false, 'sort_order' => 4]);
+        Product::query()->where('name', 'TITAN 60 О.П.')->update(['trade_in_type_id' => $l2->id]);
+        Product::query()->where('name', 'TITAN 60 П.П.')->update(['trade_in_type_id' => $l2->id]);
+        Product::query()->where('name', 'TITAN 75 О.П.')->update(['trade_in_type_id' => $l3->id]);
+
+        // Блок «Тип корпуса»: только типы, у которых есть товары в категории, и только активные; код типа, не название.
+        $block = $this->filterBlock($this->category());
+        $this->assertStringContainsString('Тип корпуса', $block);
+        $this->assertStringContainsString('name="case_type[]"', $block);
+        $this->assertStringNotContainsString('D31', $block, 'Нет товаров в категории');
+        $this->assertStringNotContainsString('LB2', $block, 'Тип выключен');
+
+        $this->assertFacetCount($this->category(), 'L2', 2);
+        $this->assertFacetCount($this->category(), 'L3', 1);
+
+        $this->category(['case_type' => [$l2->id]])
+            ->assertSee('TITAN 60 О.П.')
+            ->assertSee('TITAN 60 П.П.')
+            ->assertDontSee('TITAN 75 О.П.')
+            ->assertDontSee('VARTA 60 О.П.');
+
+        // Внутри условия значения через «ИЛИ».
+        $this->category(['case_type' => [$l2->id, $l3->id]])
+            ->assertSee('TITAN 75 О.П.')
+            ->assertSee('TITAN 60 О.П.')
+            ->assertDontSee('VARTA 60 О.П.');
+
+        // С другими условиями — «И»; счётчик типа учитывает остальные выбранные условия.
+        $this->category(['case_type' => [$l2->id], 'attr' => [$this->polarity->id => [$this->value('Обратная')]]])
+            ->assertSee('TITAN 60 О.П.')
+            ->assertDontSee('TITAN 60 П.П.');
+        $this->assertFacetCount($this->category(['attr' => [$this->polarity->id => [$this->value('Прямая')]]]), 'L2', 1);
+        $this->assertFacetCount($this->category(['attr' => [$this->polarity->id => [$this->value('Прямая')]]]), 'L3', 0);
+
+        $this->getJson(route('category.count', ['category' => $this->batteries, 'case_type' => [$l2->id]]))->assertExactJson(['count' => 2]);
+    }
+
+    public function test_long_filter_group_lists_available_values_first_and_dimensions_by_size(): void
+    {
+        config(['shop.battery_fitment.attributes.dimensions' => 0]);
+        $sizes = $this->attribute('Габариты', ['400 x 100 x 100 мм', '65-750 (302x182x192)', '100 x 100 x 100 мм', '200 x 100 x 100 мм', '10 x 10 x 10 мм', '11 x 10 x 10 мм', '12 x 10 x 10 мм', '13 x 10 x 10 мм', '14 x 10 x 10 мм', '15 x 10 x 10 мм']);
+        config(['shop.battery_fitment.attributes.dimensions' => $sizes->id]);
+        // Доступны только два значения; остальные в категории есть у других товаров, но при выбранной полярности (0).
+        $titanAndVarta = Product::query()->whereIn('name', ['TITAN 60 О.П.', 'VARTA 60 О.П.'])->get();
+        $titanAndVarta[0]->attributeValues()->attach($this->value('400 x 100 x 100 мм'));
+        $titanAndVarta[1]->attributeValues()->attach($this->value('200 x 100 x 100 мм'));
+        $other = Product::query()->where('name', 'TITAN 60 П.П.')->first();
+        foreach (['10 x 10 x 10 мм', '11 x 10 x 10 мм', '12 x 10 x 10 мм', '13 x 10 x 10 мм', '14 x 10 x 10 мм', '15 x 10 x 10 мм', '100 x 100 x 100 мм', '65-750 (302x182x192)'] as $value) {
+            $other->attributeValues()->attach($this->value($value));
+        }
+
+        $block = $this->filterBlock($this->category(['attr' => [$this->polarity->id => [$this->value('Обратная')]]]));
+        $position = fn (string $label): int => strpos($block, "data-label=\"{$label}\"");
+
+        // Доступные (с товарами при выбранной полярности) выше недоступных, внутри — по размеру.
+        $this->assertLessThan($position('10 x 10 x 10 мм'), $position('200 x 100 x 100 мм'));
+        $this->assertLessThan($position('400 x 100 x 100 мм'), $position('200 x 100 x 100 мм'), 'По размеру: 200 раньше 400');
+        $this->assertLessThan($position('10 x 10 x 10 мм'), $position('400 x 100 x 100 мм'));
+        // Недоступные тоже по размеру, а «65-750 (…)» в самом конце.
+        $this->assertLessThan($position('11 x 10 x 10 мм'), $position('10 x 10 x 10 мм'));
+        $this->assertLessThan($position('65-750 (302x182x192)'), $position('100 x 100 x 100 мм'));
     }
 
     public function test_price_filters_and_bounds_use_displayed_prices(): void

@@ -91,6 +91,7 @@ class Cart
         return Product::query()
             ->whereIn('id', array_keys($items))
             ->where('status', true)
+            ->with('tradeInType')
             ->get()
             ->map(fn (Product $product): CartLine => new CartLine(
                 $product,

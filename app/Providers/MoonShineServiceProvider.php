@@ -26,6 +26,7 @@ use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\ProductImage\ProductImageResource;
 use App\MoonShine\Resources\Supplier\SupplierResource;
+use App\MoonShine\Resources\TradeIn\TradeInResource;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Laravel\DependencyInjection\MoonShineConfigurator;
@@ -53,6 +54,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 CustomerResource::class,
                 PageResource::class,
                 GuideResource::class,
+                TradeInResource::class,
                 ProductImageResource::class,
                 MenuItemResource::class,
                 CustomerRequestResource::class,

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Console\Commands\LegacyImportCommand;
+use App\Services\Catalog\TradeInTypeMatcher;
 use App\View\Composers\BatteryFilterComposer;
 use App\View\Composers\FooterComposer;
 use App\View\Composers\HeaderCartComposer;
@@ -21,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(TradeInTypeMatcher::class);
         //
     }
 

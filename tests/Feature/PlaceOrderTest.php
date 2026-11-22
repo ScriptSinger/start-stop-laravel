@@ -18,7 +18,7 @@ class PlaceOrderTest extends TestCase
 
     public function test_places_order_with_snapshot_of_lines(): void
     {
-        $battery = Product::query()->create(['name' => 'TITAN 60Ah', 'slug' => 'titan', 'price' => 7000, 'trade_in_discount' => 1000]);
+        $battery = $this->giveTradeIn(Product::query()->create(['name' => 'TITAN 60Ah', 'slug' => 'titan', 'price' => 7000]), 1000);
         $terminal = Product::query()->create(['name' => 'Клемма', 'slug' => 'klemma', 'price' => 500]);
 
         $order = app(PlaceOrder::class)->handle(

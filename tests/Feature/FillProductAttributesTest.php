@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -38,7 +39,7 @@ class FillProductAttributesTest extends TestCase
         $this->oils = Category::query()->create(['name' => 'Моторное масло', 'slug' => 'motornoe-maslo']);
         config(['shop.battery_fitment.category_ids' => [$this->batteries->id]]);
 
-        $battery = ['Напряжение' => ['6V', '12V'], 'Полярность' => ['Обратная', 'Прямая'], 'Емкость' => ['60 Ah'], 'Габариты' => ['Евро L2 (242 x 175 x 190 мм)'],
+        $battery = ['Напряжение' => ['6V', '12V'], 'Полярность' => ['Обратная', 'Прямая'], 'Емкость' => ['60 Ah'], 'Габариты (мм)' => ['Евро L2 (242 x 175 x 190 мм)'],
             'Ток холодной прокрутки' => ['640А'], 'Технология' => ['AGM', 'EFB', 'Gel'], 'Ёмкость (Ah)' => ['55 - 65 Ah', '60 - 70 Ah'], 'Ток холодного пуска (А)' => ['600 - 690 A'], 'Производство' => ['Китай', 'Россия']];
         $oil = ['Вязкость' => ['5W30'], 'Объем' => ['1л.'], 'Состав' => ['Синтетические', 'Полусинтетические'], 'API' => ['SN', 'CF'], 'ACEA' => ['C3']];
 
@@ -91,9 +92,24 @@ class FillProductAttributesTest extends TestCase
 
         $values = $this->values($product);
         $this->assertContains('Ток холодной прокрутки: 640А', $values);
-        $this->assertContains('Габариты: Евро L2 (242 x 175 x 190 мм)', $values);
+        $this->assertContains('Габариты (мм): Евро L2 (242 x 175 x 190 мм)', $values);
         $this->assertContains('Ток холодного пуска (А): 600 - 690 A', $values);
-        $this->assertSame(1, AttributeValue::query()->where('attribute_id', $this->attributeId('Габариты'))->count());
+        $this->assertSame(1, AttributeValue::query()->where('attribute_id', $this->attributeId('Габариты (мм)'))->count());
+    }
+
+    public function test_trade_in_type_is_assigned_by_dimensions_and_existing_type_is_kept(): void
+    {
+        $type = TradeInType::query()->create(['code' => 'L2', 'name' => 'L2 - Евро до 65 Ah', 'amount' => 1000, 'length_min' => 240, 'length_max' => 244, 'width_min' => 173, 'width_max' => 177, 'height_min' => 188, 'height_max' => 192]);
+        $other = TradeInType::query()->create(['code' => 'X9', 'name' => 'X9', 'amount' => 300]);
+        $priceList = $this->priceList("РТ-1;;\"Аккумулятор TITAN 60Ah о.п. 640A L2 242x175x190\";;7000.00\r\nРТ-2;;\"Аккумулятор TITAN 62Ah о.п. 640A L2 242x175x190\";;7000.00");
+        config(['shop.battery_fitment.attributes.dimensions' => $this->attributeId('Габариты (мм)')]);
+        $new = $this->battery('TITAN 60Ah О.П.', ['external_id' => 'РТ-1']);
+        $kept = $this->battery('TITAN 62Ah О.П.', ['external_id' => 'РТ-2', 'trade_in_type_id' => $other->id]);
+
+        $this->artisan('products:fill-attributes', ['--price-list' => $priceList, '--force' => true])->assertSuccessful();
+
+        $this->assertSame($type->id, $new->fresh()->trade_in_type_id);
+        $this->assertSame($other->id, $kept->fresh()->trade_in_type_id);
     }
 
     public function test_new_dictionary_values_are_created_for_open_attributes(): void
@@ -106,7 +122,7 @@ class FillProductAttributesTest extends TestCase
         $values = $this->values($product);
         $this->assertContains('Емкость: 75 Ah', $values);
         $this->assertContains('Ток холодной прокрутки: 720A', $values);
-        $this->assertContains('Габариты: 278x175x190', $values);
+        $this->assertContains('Габариты (мм): 278 x 175 x 190', $values);
     }
 
     public function test_technology_from_name_and_closed_dictionaries_are_not_extended(): void

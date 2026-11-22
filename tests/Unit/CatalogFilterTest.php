@@ -31,6 +31,14 @@ class CatalogFilterTest extends TestCase
         $this->assertSame([], $withoutManufacturers->manufacturerIds);
         $this->assertSame([13 => [1], 20 => [7, 8]], $withoutManufacturers->attributeValueIds);
 
+        $typed = new CatalogFilter(manufacturerIds: [5], caseTypeIds: [3, 4]);
+        $this->assertTrue($typed->isActive());
+        $this->assertTrue((new CatalogFilter(caseTypeIds: [3]))->isActive());
+        $this->assertSame([], $typed->withoutCaseTypes()->caseTypeIds);
+        $this->assertSame([5], $typed->withoutCaseTypes()->manufacturerIds);
+        $this->assertSame([3, 4], $typed->withoutManufacturers()->caseTypeIds, 'Тип сохраняется при сбросе других условий');
+        $this->assertSame([3, 4], $typed->withoutAttribute(13)->caseTypeIds);
+
         // Исходный фильтр не меняется.
         $this->assertSame([5], $filter->manufacturerIds);
         $this->assertSame([7, 8], $filter->selectedValueIds(20));

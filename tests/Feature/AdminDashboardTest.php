@@ -205,18 +205,18 @@ class AdminDashboardTest extends TestCase
 
     public function test_shows_top_assortment_gap(): void
     {
-        Cache::put('assortment-gaps', ['cars' => 120, 'without_batteries' => 7, 'sizes' => [
-            ['size' => 'Азия B24 (234 x 127 x 227 мм)', 'polarity' => 'Обратная', 'cars' => 5],
+        Cache::put('assortment-gaps-v2', ['cars' => 120, 'without_batteries' => 7, 'sizes' => [
+            ['type' => 'B24', 'dimensions' => '234 x 127 x 227', 'capacity' => null, 'polarity' => 'Обратная', 'cars' => 5],
         ]]);
 
         $this->dashboard()
-            ->assertSee('Азия B24 (234 x 127 x 227 мм), Обратная — нужен 5 машинам, в ассортименте нет')
+            ->assertSee('B24, 234 x 127 x 227 мм, Обратная — нужен 5 машинам, в ассортименте нет')
             ->assertDontSee('stock-report');
     }
 
     public function test_empty_shop_is_all_good(): void
     {
-        Cache::put('assortment-gaps', ['cars' => 0, 'without_batteries' => 0, 'sizes' => []]);
+        Cache::put('assortment-gaps-v2', ['cars' => 0, 'without_batteries' => 0, 'sizes' => []]);
 
         $this->dashboard()->assertSee('Всё в порядке');
         $this->dashboard()->assertSee('Заказы и заявки за 30 дней');

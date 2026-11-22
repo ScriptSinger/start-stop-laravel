@@ -46,6 +46,7 @@ class Product extends Model
 
     protected $fillable = [
         'manufacturer_id',
+        'trade_in_type_id',
         'name',
         'heading',
         'meta_title',
@@ -61,7 +62,6 @@ class Product extends Model
         'supplier_quantity',
         'supplier_price',
         'supplier_id',
-        'trade_in_discount',
         'is_pickup_only',
         'image',
         'status',
@@ -71,7 +71,6 @@ class Product extends Model
         'price' => 'decimal:4',
         'special_price' => 'decimal:4',
         'supplier_price' => 'decimal:4',
-        'trade_in_discount' => 'decimal:4',
         'is_pickup_only' => 'boolean',
         'status' => 'boolean',
     ];
@@ -150,7 +149,7 @@ class Product extends Model
     #[Scope]
     protected function withCardData(Builder $query): void
     {
-        $query->with('attributeValues.attribute');
+        $query->with(['attributeValues.attribute', 'tradeInType']);
     }
 
     /**
@@ -167,10 +166,21 @@ class Product extends Model
     #[Scope]
     protected function fitsBattery(Builder $query, BatteryFitment $fitment): void
     {
+        $criteria = $fitment->matchingAttributeValueIds();
+        $dimensionIds = $criteria['dimensions'] ?? null;
+        unset($criteria['dimensions']);
+
         $query
             ->whereHas('categories', fn (Builder $categories) => $categories
                 ->whereIn('categories.id', config('shop.battery_fitment.category_ids')))
-            ->withAttributeValues($fitment->matchingAttributeValueIds())
+            ->withAttributeValues($criteria)
+            // Габариты — размеры корпуса. Типы без размеров (грузовые Груз A/B/C) ими не
+            // ограничиваются: такой АКБ подбирается по ёмкости и полярности. Тип берётся
+            // из поля «Тип корпуса», а не из названия значения «Габаритов».
+            ->when($dimensionIds !== null, fn (Builder $query) => $query
+                ->where(fn (Builder $query) => $query
+                    ->whereHas('attributeValues', fn (Builder $values) => $values->whereIn('attribute_values.id', $dimensionIds))
+                    ->orWhereHas('tradeInType', fn (Builder $type) => $type->whereNull('length_min'))))
             // Клеммы проверяем, только если у АКБ указаны «Токовыводы». Пустой
             // список — подходящих клемм нет ни у одного товара: только АКБ без них.
             ->when(($valueIds = $fitment->terminalValueIds()) !== null, fn (Builder $query) => $query
@@ -235,6 +245,10 @@ class Product extends Model
     {
         if ($filter->manufacturerIds !== []) {
             $query->whereIn('manufacturer_id', $filter->manufacturerIds);
+        }
+
+        if ($filter->caseTypeIds !== []) {
+            $query->whereIn('trade_in_type_id', $filter->caseTypeIds);
         }
 
         $query->withAttributeValues($filter->attributeValueIds);
@@ -345,9 +359,19 @@ class Product extends Model
             ->orWhere(fn (Builder $query) => $query->whereNotNull('special_price')->whereColumn('special_price', '>=', 'price')));
     }
 
+    /**
+     * Скидка за сдачу старого АКБ — из типа корпуса товара (поле «Тип корпуса»).
+     * Единственный источник суммы — таблица типов (админка → Трейд-ин); у товара
+     * своей скидки нет. Нужна связь tradeInType (см. withCardData()).
+     */
+    public function tradeInDiscount(): float
+    {
+        return $this->tradeInType?->is_active ? max((float) $this->tradeInType->amount, 0.0) : 0.0;
+    }
+
     public function hasTradeIn(): bool
     {
-        return $this->trade_in_discount !== null && (float) $this->trade_in_discount > 0;
+        return $this->tradeInDiscount() > 0;
     }
 
     /**
@@ -358,7 +382,7 @@ class Product extends Model
         $price = $this->displayPrice();
 
         if ($withTradeIn && $this->hasTradeIn()) {
-            $price -= (float) $this->trade_in_discount;
+            $price -= $this->tradeInDiscount();
         }
 
         return max($price, 0.0);
@@ -379,6 +403,11 @@ class Product extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function tradeInType(): BelongsTo
+    {
+        return $this->belongsTo(TradeInType::class);
     }
 
     public function manufacturer(): BelongsTo

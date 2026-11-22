@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Параметры фильтра каталога из адресной строки:
- * ?manufacturer[]=5&attr[13][]=42&attr[20][]=7&price_from=5000&price_to=9000&available=1
+ * ?manufacturer[]=5&case_type[]=3&attr[13][]=42&attr[20][]=7&price_from=5000&price_to=9000&available=1
  *
  * Фильтр — обычная GET-ссылка, которую могут исказить вручную или боты,
  * поэтому мусор не валидируется с ошибкой, а просто отбрасывается.
@@ -54,6 +54,7 @@ class CatalogFilterRequest extends FormRequest
             priceFrom: self::price($this->query('price_from')),
             priceTo: self::price($this->query('price_to')),
             onlyAvailable: $this->boolean('available'),
+            caseTypeIds: self::positiveInts($this->query('case_type')),
         );
     }
 

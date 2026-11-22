@@ -8,7 +8,7 @@ use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
 use App\Services\Catalog\BulkAttributeAssigner;
-use App\Services\Catalog\TradeInDiscount;
+use App\Services\Catalog\TradeInTypeMatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -29,7 +29,7 @@ class OneCNewProducts
     private const ATTRIBUTE_NAMES = [
         'voltage' => 'Напряжение',
         'polarity' => 'Полярность',
-        'dimensions' => 'Габариты',
+        'dimensions' => 'Габариты (мм)',
         'cca' => 'Ток холодной прокрутки',
     ];
 
@@ -58,7 +58,7 @@ class OneCNewProducts
         private readonly OneCProductSpecs $specs,
         private readonly BulkAttributeAssigner $assigner,
         private readonly OneCCategoryAssigner $categoryAssigner,
-        private readonly TradeInDiscount $tradeIn,
+        private readonly TradeInTypeMatcher $typeMatcher,
     ) {}
 
     /**
@@ -133,7 +133,6 @@ class OneCNewProducts
                     'code' => $item['code'],
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
-                    'trade_in_discount' => $this->tradeInDiscount($item),
                     'status' => false,
                 ]);
 
@@ -144,6 +143,7 @@ class OneCNewProducts
                 }
 
                 $this->assignAttributes($product, $item['attributes']);
+                $this->assignTradeInType($product);
             }
 
             return $plan->count();
@@ -151,18 +151,16 @@ class OneCNewProducts
     }
 
     /**
-     * Скидка за обмен у легковых и грузовых аккумуляторов по ёмкости; у мото и
-     * остальных товаров её нет.
-     *
-     * @param  array<string, mixed>  $item
+     * Тип корпуса новому товару — по его «Габаритам»; не подобрался — поле пустое,
+     * тип проставит менеджер (скидки до этого нет).
      */
-    private function tradeInDiscount(array $item): ?int
+    private function assignTradeInType(Product $product): void
     {
-        if (! in_array($item['category'], ['Аккумуляторы', 'Грузовые аккумуляторы'], true) || ! isset($item['attributes']['capacity'])) {
-            return null;
-        }
+        $type = $this->typeMatcher->typeForProduct($product->load('attributeValues'));
 
-        return $this->tradeIn->forCapacity((float) str_replace(',', '.', $item['attributes']['capacity']));
+        if ($type !== null) {
+            $product->update(['trade_in_type_id' => $type->id]);
+        }
     }
 
     /**
@@ -202,7 +200,8 @@ class OneCNewProducts
 
         return $existing ?? AttributeValue::query()->create([
             'attribute_id' => $attributeId,
-            'value' => $value,
+            // Размеры — в едином формате «242 x 175 x 190 мм»; тип корпуса хранится отдельно.
+            'value' => $kind === 'dimensions' ? TradeInTypeMatcher::formatDimensions($value) : $value,
             'sort_order' => 0,
         ]);
     }

@@ -1,4 +1,10 @@
 @include('partials.catalog-filter-group-head', ['key' => $key, 'title' => $title])
+    {{-- В длинной группе (окно прокрутки показывает ~10 строк) значения, с которыми что-то найдётся,
+         идут первыми, недоступные (0) — в конце; порядок внутри частей сохраняется. --}}
+    @php($options = collect($options))
+    @if ($options->count() > 9)
+        @php($options = $options->sortBy(fn ($option) => $option['count'] === 0 && ! in_array($option['id'], $selected, true) ? 1 : 0)->values())
+    @endif
     <div class="catalog-filter__values">
         @foreach ($options as $option)
             @php($isChecked = in_array($option['id'], $selected, true))

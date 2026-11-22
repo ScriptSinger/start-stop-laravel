@@ -1,0 +1,26 @@
+/*
+ * Таблица скидок за сдачу старого АКБ на странице «Трейд-ин»
+ * (resources/views/page/trade-in-table.blade.php, метка [[block:trade-in]]).
+ */
+.trade-in-table-wrap {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.trade-in-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.trade-in-table th,
+.trade-in-table td {
+    padding: 10px 14px;
+    border: 1px solid #e1e1e1;
+}
+
+.trade-in-table thead th {
+    background: #bc3a26;
+    color: #fff;
+    font-weight: 700;
+}

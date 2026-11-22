@@ -59,6 +59,20 @@
             ])
         @endif
 
+        @if ($caseTypeFacet->isNotEmpty())
+            @include('partials.catalog-filter-group', [
+                'key' => 'case-type',
+                'title' => 'Тип корпуса',
+                'inputName' => 'case_type[]',
+                'options' => $caseTypeFacet->map(fn ($type) => [
+                    'id' => $type->id,
+                    'label' => $type->code,
+                    'count' => $type->count,
+                ]),
+                'selected' => $filter->caseTypeIds,
+            ])
+        @endif
+
         @foreach ($attributeFacets as $attribute)
             @include('partials.catalog-filter-group', [
                 'key' => 'attr-'.$attribute->id,

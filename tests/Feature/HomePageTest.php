@@ -88,7 +88,7 @@ class HomePageTest extends TestCase
 
     public function test_selections_show_active_products_with_card_details(): void
     {
-        $promo = $this->product('ТЮМЕНЬ ASIA 40 Ah', ['price' => 5400, 'special_price' => 4900, 'trade_in_discount' => 500, 'is_pickup_only' => true]);
+        $promo = $this->giveTradeIn($this->product('ТЮМЕНЬ ASIA 40 Ah', ['price' => 5400, 'special_price' => 4900, 'is_pickup_only' => true]), 500);
         $archived = $this->product('Архивный АКБ', ['status' => false]);
         DB::table('product_selection')->insert([
             ['selection' => ProductSelection::Promo->value, 'product_id' => $promo->id, 'sort_order' => 0],
@@ -111,7 +111,7 @@ class HomePageTest extends TestCase
 
     public function test_special_price_is_charged_in_cart(): void
     {
-        $product = $this->product('ТЮМЕНЬ ASIA 40 Ah', ['price' => 5400, 'special_price' => 4900, 'trade_in_discount' => 500]);
+        $product = $this->giveTradeIn($this->product('ТЮМЕНЬ ASIA 40 Ah', ['price' => 5400, 'special_price' => 4900]), 500);
 
         $this->post(route('cart.store', $product), ['trade_in' => 1]);
 

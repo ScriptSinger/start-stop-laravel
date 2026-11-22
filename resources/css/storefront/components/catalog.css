@@ -53,7 +53,10 @@
 @media (max-width: 767px) {
     .catalog-filter__popover {display: none !important}
 }
-.catalog-filter__values {max-height: 220px; overflow-y: auto; margin-top: 5px}
+/* Список значений: чекбокс Bootstrap выступает на пол-пикселя влево, поэтому у окна прокрутки
+   небольшой отступ слева (иначе левый край квадрата обрезается); полоса прокрутки тонкая и не
+   съедает ширину строки. */
+.catalog-filter__values {max-height: 220px; overflow-x: hidden; overflow-y: auto; margin-top: 5px; padding-left: 2px; scrollbar-width: thin}
 .catalog-filter__values .checkbox {margin: 2px 0}
 
 .category-list__select {margin: 0 0 20px}

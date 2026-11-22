@@ -42,17 +42,6 @@ class ImportLegacyProducts extends LegacyImportCommand
         $knownCategoryIds = DB::table('categories')->pluck('id')->all();
         $knownManufacturerIds = DB::table('manufacturers')->pluck('id')->all();
 
-        // Единственная опция товаров в OpenCart — галочка «Цена при обмене»
-        // (трейд-ин) с надбавкой «-». У 24 неактивных товаров вариантов два
-        // (400 и 500) — берём меньшую скидку, чтобы не пообещать лишнего.
-        $tradeInDiscounts = DB::connection('legacy')
-            ->table('oc_product_option_value')
-            ->where('price_prefix', '-')
-            ->where('price', '>', 0)
-            ->groupBy('product_id')
-            ->selectRaw('product_id, MIN(price) as discount')
-            ->pluck('discount', 'product_id');
-
         $rows = DB::connection('legacy')
             ->table('oc_product as p')
             ->join('oc_product_description as pd', 'pd.product_id', '=', 'p.product_id')
@@ -71,7 +60,7 @@ class ImportLegacyProducts extends LegacyImportCommand
             ->unique('product_id')
             ->pluck('price', 'product_id');
 
-        $this->withProgressBar($rows, function ($row) use ($knownCategoryIds, $knownManufacturerIds, $tradeInDiscounts, $specialPrices): void {
+        $this->withProgressBar($rows, function ($row) use ($knownCategoryIds, $knownManufacturerIds, $specialPrices): void {
             $manufacturerId = in_array($row->manufacturer_id, $knownManufacturerIds, true)
                 ? $row->manufacturer_id
                 : null;
@@ -96,7 +85,6 @@ class ImportLegacyProducts extends LegacyImportCommand
                     // полях: isbn и mpn (логика — в product.twig темы unishop2).
                     'supplier_quantity' => (int) $row->isbn,
                     'supplier_price' => $row->mpn !== '' ? (float) str_replace(',', '.', $row->mpn) : null,
-                    'trade_in_discount' => $tradeInDiscounts[$row->product_id] ?? null,
                     // Пометка жила текстом в чужом поле jan (как и трейд-ин текстом в ean).
                     'is_pickup_only' => trim((string) $row->jan) === 'Только самовывоз',
                     'image' => $this->normalizeImagePath($row->image ?: null),
