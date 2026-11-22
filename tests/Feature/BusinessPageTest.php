@@ -44,4 +44,12 @@ class BusinessPageTest extends TestCase
 
         $this->get(route('home'))->assertDontSee('aria-current="page"', false);
     }
+
+    public function test_header_has_car_selection_button_that_leads_to_a_working_page(): void
+    {
+        $this->get(route('home'))
+            ->assertSee('class="btn btn-primary header-pick" href="'.route('car-landing.index').'"', false);
+
+        $this->get(route('car-landing.index'))->assertOk();
+    }
 }

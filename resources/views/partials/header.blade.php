@@ -64,8 +64,9 @@
                 </div>
             </div>
 
-            <div id="search" class="header-block__item header-block__item-search hidden-xs hidden-sm">
+            <div id="search" class="header-block__item header-block__item-search header-search-row hidden-xs hidden-sm">
                 @include('partials.search-form')
+                <a class="btn btn-primary header-pick" href="{{ route('car-landing.index') }}"><i class="fas fa-car-battery" aria-hidden="true"></i>Подбор по авто</a>
             </div>
 
             <div class="header-block__item header-block__item-telephone">
@@ -166,7 +167,7 @@
                     </nav>
                 </div>
             </div>
-            <div id="search2" class="visible-xs visible-sm">@include('partials.search-form')</div>
+            <div id="search2" class="visible-xs visible-sm">@include('partials.search-form')<a class="btn btn-primary header-pick header-pick--mobile" href="{{ route('car-landing.index') }}"><i class="fas fa-car-battery" aria-hidden="true"></i>Подбор по авто</a></div>
             <div class="business-mobile-nav visible-xs visible-sm">
                 <details class="business-mobile-nav__menu">
                     <summary><span>Меню</span><i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
