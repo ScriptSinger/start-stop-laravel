@@ -13,6 +13,7 @@ use App\Services\Catalog\CatalogFilter;
 use App\Services\Catalog\CategoryMenu;
 use App\Services\Catalog\GuideLocator;
 use App\Services\Seo\BreadcrumbsSeo;
+use App\Services\Seo\TrackingParams;
 use Artesaos\SEOTools\Facades\SEOMeta;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -35,7 +36,7 @@ class CategoryController extends Controller
     /**
      * Фильтр из одного производителя без других условий — та же выборка, что
      * страница производителя: ведём на неё 301-м, чтобы в индексе был один адрес.
-     * Сортировка, число товаров и номер страницы переносятся.
+     * Остальные параметры (сортировка, номер страницы, метки рекламы utm_*, yclid) переносятся.
      */
     private function brandPageRedirect(CatalogFilterRequest $request, Category $category, BrandPages $brandPages): ?RedirectResponse
     {
@@ -51,7 +52,7 @@ class CategoryController extends Controller
             return null;
         }
 
-        return redirect()->route('category.manufacturer', [$category, $manufacturer, ...$request->only(['sort', 'limit', 'page'])], 301);
+        return redirect()->route('category.manufacturer', [$category, $manufacturer, ...$request->only(['sort', 'limit', 'page']), ...TrackingParams::from($request)], 301);
     }
 
     /**

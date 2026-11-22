@@ -7,6 +7,7 @@ use App\Models\Manufacturer;
 use App\Models\Page;
 use App\Models\Product;
 use App\Services\Catalog\BrandPages;
+use App\Services\Seo\TrackingParams;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,26 @@ class LegacyUrlController extends Controller
 
         abort_if($target === null, 404);
 
-        return redirect()->to($target, 301);
+        return redirect()->to($this->withIncomingQuery($target, $request), 301);
+    }
+
+    /**
+     * Метки рекламы со старой ссылки (utm_*, yclid) переносим на новый адрес:
+     * иначе Метрика потеряет источник визита. Прочие параметры отбрасываем,
+     * параметры самого нового адреса главнее.
+     */
+    private function withIncomingQuery(string $target, Request $request): string
+    {
+        $incoming = TrackingParams::from($request);
+
+        if ($incoming === []) {
+            return $target;
+        }
+
+        $parts = explode('?', $target, 2);
+        parse_str($parts[1] ?? '', $own);
+
+        return $parts[0].'?'.http_build_query([...$incoming, ...$own]);
     }
 
     /**

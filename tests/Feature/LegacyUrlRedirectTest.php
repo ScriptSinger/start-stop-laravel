@@ -20,6 +20,15 @@ class LegacyUrlRedirectTest extends TestCase
         $this->get('/zver-60-ah-o-p')->assertStatus(301)->assertRedirect(route('product.show', $product));
     }
 
+    public function test_old_addresses_keep_ad_tags_on_redirect(): void
+    {
+        $product = $this->product('zver-60-ah-o-p');
+
+        $this->get('/zver-60-ah-o-p?utm_source=yandex&yclid=123')
+            ->assertStatus(301)
+            ->assertRedirect(route('product.show', $product).'?utm_source=yandex&yclid=123');
+    }
+
     public function test_old_category_path_redirects_by_its_last_segment(): void
     {
         $parent = Category::query()->create(['name' => 'Автотовары', 'slug' => 'avtotovari']);

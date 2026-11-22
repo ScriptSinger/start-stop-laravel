@@ -113,6 +113,15 @@ class CategoryManufacturerPageTest extends TestCase
         $this->get(route('category.show', ['category' => $this->batteries, 'manufacturer' => [$this->titan->id, 999]]))->assertOk();
     }
 
+    public function test_redirect_to_the_brand_page_keeps_ad_tags(): void
+    {
+        $url = route('category.show', ['category' => $this->batteries, 'manufacturer' => [$this->titan->id], 'utm_source' => 'yandex', 'utm_medium' => 'cpc', 'yclid' => '123']);
+
+        $this->get($url)
+            ->assertStatus(301)
+            ->assertRedirect(route('category.manufacturer', [$this->batteries, $this->titan, 'utm_source' => 'yandex', 'utm_medium' => 'cpc', 'yclid' => '123']));
+    }
+
     public function test_single_manufacturer_filter_of_thin_brand_redirects_to_its_clean_address(): void
     {
         $varta = Manufacturer::query()->where('slug', 'varta')->firstOrFail();
