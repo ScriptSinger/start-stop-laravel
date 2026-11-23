@@ -34,6 +34,7 @@ import flyMenu from './components/fly-menu';
 import livePrice from './components/live-price';
 import catalogFilter from './components/catalog-filter';
 import guideToc from './components/guide-toc';
+import phoneMask from './phone-mask';
 
 // Картинки из resources/images, на которые ссылаются шаблоны через Vite::asset().
 import.meta.glob('../../images/**', {eager: true, query: '?url', import: 'default'});
@@ -58,18 +59,15 @@ Alpine.data('catalogFilter', catalogFilter);
 Alpine.data('guideToc', guideToc);
 
 // Маска телефона, как в формах старого сайта: <input type="tel" x-phone-mask>.
-Alpine.directive('phone-mask', (el) => {
-    $(el).mask('+7 (999) 999-99-99');
-});
+Alpine.directive('phone-mask', (el) => phoneMask(el));
 
-// Вкладка Bootstrap по ссылке «Все характеристики»: $showTab('#tab-specification').
-Alpine.magic('showTab', () => (selector) => {
-    const tab = document.querySelector(`a[data-toggle="tab"][href="${selector}"]`);
+// Вкладка товара по ссылке «Все характеристики»: $showTab('specification').
+Alpine.magic('showTab', () => (name) => {
+    window.dispatchEvent(new CustomEvent('show-tab', {detail: name}));
 
-    if (tab) {
-        $(tab).tab('show');
-        scrollToElement(tab.closest('ul'), 20);
-    }
+    const tabs = document.querySelector('.product-page-tabs');
+
+    if (tabs) scrollToElement(tabs, 20);
 });
 
 window.Alpine = Alpine;

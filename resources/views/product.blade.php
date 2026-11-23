@@ -119,7 +119,7 @@
                                                 <div class="option__group col-xs-12">
                                                     <label class="option__group-name">Выберите:</label>
                                                     <div>
-                                                        <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format($product->tradeInDiscount()) }}">
+                                                        <label class="option__item" title="- {{ App\Support\Price::format($product->tradeInDiscount()) }}">
                                                             <input type="checkbox" name="trade_in" value="1" x-model="tradeIn" />
                                                             <span class="option__name"><i class="fa fa-recycle fa-fw"></i> <span class="option__tit">Трейд-ин</span> <span class="option__val"> {{ App\Support\Price::format($product->priceFor(true)) }} </span></span>
                                                         </label>
@@ -161,7 +161,7 @@
                                                 <x-case-type-row :code="$caseType" />
                                             @endif
                                         </div>
-                                        <a class="product-page__more-attr" href="#tab-specification" @click.prevent="$showTab('#tab-specification')">Все характеристики</a>
+                                        <a class="product-page__more-attr" href="#tab-specification" @click.prevent="$showTab('specification')">Все характеристики</a>
                                     @endif
 
                                     <div class="product-page__share">
@@ -187,22 +187,22 @@
                     </div>
 
                     <div class="product-page__tabs-gap hidden-xs hidden-sm"></div>
-                    <div>
-                        <ul class="product-page-tabs nav nav-tabs">
+                    <div x-data="{tab: @js($product->hasDescription() ? 'description' : ($specifications->isNotEmpty() ? 'specification' : 'question'))}" x-on:show-tab.window="tab = $event.detail">
+                        <ul class="product-page-tabs nav nav-tabs" role="tablist">
                             @if ($product->hasDescription())
-                                <li class="active"><a href="#tab-description" data-toggle="tab">Описание</a></li>
+                                <li :class="{active: tab === 'description'}"><a href="#tab-description" @click.prevent="tab = 'description'">Описание</a></li>
                             @endif
                             @if ($specifications->isNotEmpty())
-                                <li class="{{ $product->hasDescription() ? '' : 'active' }}"><a href="#tab-specification" data-toggle="tab">Характеристики</a></li>
+                                <li :class="{active: tab === 'specification'}"><a href="#tab-specification" @click.prevent="tab = 'specification'">Характеристики</a></li>
                             @endif
-                            <li class="{{ $product->hasDescription() || $specifications->isNotEmpty() ? '' : 'active' }}"><a href="#tab-question" class="tab-question" data-toggle="tab">Вопрос-ответ</a></li>
+                            <li :class="{active: tab === 'question'}"><a href="#tab-question" class="tab-question" @click.prevent="tab = 'question'">Вопрос-ответ</a></li>
                         </ul>
                         <div class="tab-content">
                             @if ($product->hasDescription())
-                                <div class="tab-pane active" id="tab-description">{!! $product->description !!}</div>
+                                <div class="tab-pane" :class="{active: tab === 'description'}" id="tab-description">{!! $product->description !!}</div>
                             @endif
                             @if ($specifications->isNotEmpty())
-                                <div class="tab-pane {{ $product->hasDescription() ? '' : 'active' }}" id="tab-specification">
+                                <div class="tab-pane" :class="{active: tab === 'specification'}" id="tab-specification">
                                     <div class="product-data">
                                         @foreach ($specificationGroups as $name => $values)
                                             <div class="product-data__item">
@@ -219,7 +219,7 @@
                                     </div>
                                 </div>
                             @endif
-                            <div class="tab-pane {{ $product->hasDescription() || $specifications->isNotEmpty() ? '' : 'active' }}" id="tab-question">
+                            <div class="tab-pane" :class="{active: tab === 'question'}" id="tab-question">
                                 <div class="question-info">
                                     <p>Есть вопрос о товаре? Напишите — мы перезвоним и ответим.</p>
                                     <a href="{{ route('product-question.create', $product) }}" class="btn btn-sm btn-primary" @click.prevent="$store.modal.open($el.href, 'Задать вопрос')">Задать вопрос</a>

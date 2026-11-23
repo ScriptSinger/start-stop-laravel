@@ -46,7 +46,7 @@
                  старого АКБ учитывается уже при добавлении из каталога. --}}
             <div class="product-thumb__option option">
                 <div class="option__group">
-                    <label class="option__item" data-toggle="tooltip" title="- {{ App\Support\Price::format($product->tradeInDiscount()) }}">
+                    <label class="option__item" title="- {{ App\Support\Price::format($product->tradeInDiscount()) }}">
                         <input type="checkbox" name="trade_in" value="1" form="{{ $cardFormId }}" x-model="tradeIn" />
                         <span class="option__name"><i class="fa fa-recycle fa-fw" aria-hidden="true"></i> <span class="option__tit">С обменом</span> <span class="option__val"> {{ App\Support\Price::format($product->priceFor(true)) }} </span></span>
                     </label>

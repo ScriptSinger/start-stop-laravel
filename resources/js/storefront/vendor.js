@@ -5,4 +5,3 @@
 import './jquery-global';
 import 'bootstrap/dist/js/bootstrap';
 import 'jquery-menu-aim';
-import 'jquery.maskedinput/src/jquery.maskedinput';

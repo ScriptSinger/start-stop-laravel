@@ -5,11 +5,11 @@
     <div class="container">
         <div class="row row-flex">
             @foreach ($footerColumns as $column)
-                <div class="footer__column col-sm-6 col-md-3">
-                    <button type="button" class="footer__column-heading footer__column-toggle" data-toggle="collapse" data-target=".footer__column-ul-{{ $loop->iteration }}" aria-controls="footer-column-{{ $loop->iteration }}" aria-expanded="false">
+                <div class="footer__column col-sm-6 col-md-3" x-data="{open: false}">
+                    <button type="button" class="footer__column-heading footer__column-toggle" :class="{open: open}" @click="open = !open" aria-controls="footer-column-{{ $loop->iteration }}" :aria-expanded="open.toString()">
                         {{ $column->title }} <i class="fas fa-chevron-down visible-xs"></i>
                     </button>
-                    <ul id="footer-column-{{ $loop->iteration }}" class="footer__column-ul footer__column-ul-{{ $loop->iteration }} collapse list-unstyled">
+                    <ul id="footer-column-{{ $loop->iteration }}" class="footer__column-ul footer__column-ul-{{ $loop->iteration }} collapse list-unstyled" :class="{in: open}">
                         @foreach ($column->children as $link)
                             <li class="footer__column-li"><a href="{{ $link->href() }}" title="{{ $link->title }}" class="footer__column-a">{{ $link->title }}</a></li>
                         @endforeach

@@ -9,8 +9,8 @@
     <div id="top" class="top-menu">
         <div class="container">
             <div class="top-menu__links">
-                <div class="top-links btn-group">
-                    <button class="top-menu__btn dropdown-toggle" aria-label="Меню" data-toggle="dropdown"><i class="fas fa-bars"></i></button>
+                <div class="top-links btn-group" x-data="{open: false}" :class="{open: open}" @click.outside="open = false" @keydown.escape="open = false">
+                    <button class="top-menu__btn dropdown-toggle" aria-label="Меню" aria-haspopup="true" :aria-expanded="open.toString()" @click="open = !open"><i class="fas fa-bars"></i></button>
                     <ul class="top-links__ul dropdown-menu dropdown-menu-left">
                         @foreach ($topLinks as $link)
                             <li class="top-links__li"><a class="top-links__a" href="{{ $link->href() }}" title="{{ $link->title }}">{{ $link->title }}</a></li>
@@ -35,11 +35,11 @@
                 @endif
                 {{-- Личный кабинет — как #account в шапке темы UniShop2. --}}
                 <div class="top-menu__account status-2">
-                    <div id="account" class="btn-group">
+                    <div id="account" class="btn-group" x-data="{open: false}" :class="{open: open}" @click.outside="open = false" @keydown.escape="open = false">
                         @guest
                             <a class="top-menu__btn top-menu__account-link" href="{{ route('login') }}" aria-label="Войти" @click.prevent="$store.modal.open($el.href, 'Авторизация')"><i class="far fa-user" aria-hidden="true"></i><span class="top-menu__btn-text">Войти</span></a>
                         @else
-                            <button class="top-menu__btn dropdown-toggle" aria-label="Личный кабинет" data-toggle="dropdown"><i class="far fa-user" aria-hidden="true"></i><span class="top-menu__btn-text">Личный кабинет</span></button>
+                            <button class="top-menu__btn dropdown-toggle" aria-label="Личный кабинет" aria-haspopup="true" :aria-expanded="open.toString()" @click="open = !open"><i class="far fa-user" aria-hidden="true"></i><span class="top-menu__btn-text">Личный кабинет</span></button>
                             <ul class="dropdown-menu dropdown-menu-right">
                                 <li><a href="{{ route('account') }}"><i class="fas fa-fw fa-user"></i>Личный кабинет</a></li>
                                 <li><a href="{{ route('account.orders') }}"><i class="fas fa-fw fa-clipboard-list"></i>История заказов</a></li>
@@ -70,9 +70,9 @@
             </div>
 
             <div class="header-block__item header-block__item-telephone">
-                <div class="header-phones has-addit">
+                <div class="header-phones has-addit" x-data="{open: false}" :class="{open: open}" @click.outside="open = false" @keydown.escape="open = false">
                     <a class="header-phones__main" href="{{ $phoneHref }}" title="">{{ config('shop.phone') }}</a>
-                    <i class="header-phones__show-phone dropdown-toggle fas fa-chevron-down" data-toggle="dropdown" data-target="header-phones__ul"></i>
+                    <i class="header-phones__show-phone dropdown-toggle fas fa-chevron-down" role="button" tabindex="0" aria-label="Ещё способы связи" aria-haspopup="true" :aria-expanded="open.toString()" @click="open = !open" @keydown.enter="open = !open"></i>
                     <ul class="header-phones__ul dropdown-menu dropdown-menu-right">
                         <li class="header-phones__li">
                             <a href="{{ route('callback.create') }}" class="header-phones__callback" @click.prevent="$store.modal.open($el.href, 'Заказать звонок')">Заказать звонок</a>
