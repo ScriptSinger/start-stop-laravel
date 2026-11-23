@@ -4,84 +4,73 @@
  * при необходимости, data-uni-module-items='{"0":{"items":1},…}'.
  * Карусели — отдельный компонент Alpine scrollCarousel.
  */
-import $ from 'jquery';
 import { touchSupport, itemsOnMobile } from './settings';
 
-const uni_touch_support = touchSupport, items_on_mobile = itemsOnMobile;
+const DEFAULT_ITEMS = {0: {items: itemsOnMobile}, 700: {items: 3}, 992: {items: 4}, 1400: {items: 5}};
 
-	var Modules = {
-		init:function(options, el) {
-            var base = this;
-			
-			base.$elem = $(el);
-			base.$elem2 = $(el).children();
-			base.options = $.extend({}, $.fn.uniModules.options, options);
-			
-			base.load();
-        },
-		load:function() {
-			var base = this;
-			
-			base.wrapper = (base.$elem2.closest('.tab-content').length) ? base.$elem2.closest('.tab-content') : base.$elem;
-			
-			base.$elem2.children().wrap('<div class="uni-module__item" style="width:'+base.items()+'"></div>');
-			
-			base.$elem2.addClass('load-complete');
-			base.responsive();
-		},
-		items:function() {
-			var base = this, match = -1, width = base.wrapper.width();
-			
-			width += (base.wrapper.attr('class') == 'tab-content' && width < 520) ? 10 : 20;
-			
-			$.each(base.options.items, (breakpoint) => {
-				if (breakpoint <= width && breakpoint > match) {
-					match = Number(breakpoint);
-				}
+/** Ширина содержимого — как .width() в jQuery. */
+function contentWidth(el) {
+	const style = getComputedStyle(el);
+
+	return el.getBoundingClientRect().width
+		- parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+		- parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+}
+
+function initModule(element, items) {
+	if (element.dataset.uniModulesInit) return;
+
+	element.dataset.uniModulesInit = 'true';
+
+	const containers = [...element.children];
+	const wrapper = containers[0]?.closest('.tab-content') ?? element;
+
+	// Ширина карточки — доля контейнера по ближайшей подходящей точке.
+	const itemWidth = () => {
+		let width = contentWidth(wrapper);
+		let match = -1;
+
+		width += (wrapper.className === 'tab-content' && width < 520) ? 10 : 20;
+
+		Object.keys(items).forEach((breakpoint) => {
+			if (Number(breakpoint) <= width && Number(breakpoint) > match) match = Number(breakpoint);
+		});
+
+		return `${100 / items[match].items}%`;
+	};
+
+	containers.forEach((container) => {
+		[...container.children].forEach((child) => {
+			const item = document.createElement('div');
+
+			item.className = 'uni-module__item';
+			item.style.width = itemWidth();
+			child.replaceWith(item);
+			item.append(child);
+		});
+
+		container.classList.add('load-complete');
+	});
+
+	let lastWidth = document.documentElement.clientWidth;
+
+	window.addEventListener('resize', () => {
+		if (document.documentElement.clientWidth !== lastWidth || touchSupport) {
+			containers.forEach((container) => {
+				[...container.children].forEach((item) => { item.style.width = itemWidth(); });
 			});
-			
-			const items = base.options.items[match]['items']
-			
-			return 100/items+'%';
-		},
-		responsive:function() {
-            var base = this, lastWindowWidth = $(window).width();
-			
-			base.resizer = () => {
-                if ($(window).width() != lastWindowWidth || uni_touch_support) {
-					base.$elem2.children().css('width', base.items());
-                }
-            };
-			
-			$(window).resize(base.resizer);
-        }
-	};
-	
-	$.fn.uniModules = function(options) {		
-		return this.each(function() {
-            if ($(this).data('uni-modules-init') === true) {
-                return false;
-            }
-			
-            $(this).data('uni-modules-init', true);
-			
-            var module = Object.create(Modules);
-            module.init(options, this);
-        });
-	};
-	
-	
-	$.fn.uniModules.options = {
-		items	   :{0:{items:items_on_mobile},700:{items:3},992:{items:4},1400:{items:5}}
-	};
+		}
+	});
+}
 
 export function initUniModules(root = document) {
-	$(root).find('[data-uni-module]').each(function() {
-		const options = {type: $(this).data('uni-module')};
-		const items = $(this).data('uni-module-items');
+	root.querySelectorAll('[data-uni-module]').forEach((element) => {
+		let items = DEFAULT_ITEMS;
 
-		if (items) options.items = items;
+		if (element.dataset.uniModuleItems) {
+			items = JSON.parse(element.dataset.uniModuleItems);
+		}
 
-		$(this).uniModules(options);
+		initModule(element, items);
 	});
 }

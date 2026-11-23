@@ -1,11 +1,8 @@
 /*
- * Витрина. Тема UniShop2 старого сайта держится на jQuery и Bootstrap 3
- * (меню, вкладки, окна, карусели) — эти части перенесены модулями из её
- * common.js. Всё, что написано для нового сайта, — компоненты Alpine.
+ * Витрина. Поведение темы UniShop2 старого сайта (меню, сетка категорий)
+ * перенесено модулями из её common.js на чистый JS; всё остальное —
+ * компоненты Alpine, окна — нативный <dialog>. jQuery и Bootstrap-JS не нужны.
  */
-import './vendor';
-
-import $ from 'jquery';
 import Alpine from 'alpinejs';
 
 import { uniMenuAim, uniMenuDropdownHeight, uniMenuDropdownPos, uniMenuMobileToggle, uniMenuUpd } from './theme/menu';
