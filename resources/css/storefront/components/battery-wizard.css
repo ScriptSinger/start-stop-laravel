@@ -71,7 +71,9 @@
     .w-stepper__num {width: 28px; height: 28px; font-size: 12px}
     .w-stepper__label, .w-stepper__value {overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
     .w-stepper__item.is-done .w-stepper__label, .w-stepper__item:not(.is-current):not(.is-done) .w-stepper__label {display: none}
-    .w-stepper__item.is-current {flex: 2 1 0}
+    .w-stepper__item + .w-stepper__item {flex: 1 1 auto}
+    .w-stepper__item + .w-stepper__item:before {flex-basis: 12px; min-width: 12px}
+    .w-stepper__item.is-done .w-stepper__value {max-width: 84px}
     .w-stepper__item.is-done .w-stepper__num {display: none}
     .w-stepper__item.is-done .w-stepper__value {color: var(--btn-primary-bg)}
     .w-grid.brands {grid-template-columns: repeat(2, minmax(0, 1fr))}
