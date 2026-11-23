@@ -112,7 +112,7 @@ class YandexFeed
      *
      * @return Collection<int, Category>
      */
-    private function categories(): Collection
+    public function categories(): Collection
     {
         return Category::query()->where('status', true)->orderBy('id')->get(['id', 'parent_id', 'name', 'slug'])->keyBy('id');
     }
@@ -123,7 +123,7 @@ class YandexFeed
      * @param  Collection<int, Category>  $categories
      * @return array<int, true>
      */
-    private function allowedCategoryIds(Collection $categories): array
+    public function allowedCategoryIds(Collection $categories): array
     {
         $ids = (array) config('shop.feed.category_ids', []);
         $slugs = (array) config('shop.feed.category_slugs', []);
@@ -191,7 +191,10 @@ class YandexFeed
 
         $xml->startElement('offer');
         $xml->writeAttribute('id', (string) $product->id);
-        $xml->writeAttribute('available', $product->quantity > 0 ? 'true' : 'false');
+        // Под заказ привозим в течение дня, поэтому в фиде доступны оба вида товара
+        // (иначе Яндекс показывает «Нет в наличии» без цены). Готовые к выгрузке
+        // товары — это в наличии (quantity > 0) и под заказ (Product::isAvailableOnOrder()).
+        $xml->writeAttribute('available', 'true');
 
         $xml->writeElement('url', route('product.show', $product));
         $xml->writeElement('price', $this->formatPrice($price));

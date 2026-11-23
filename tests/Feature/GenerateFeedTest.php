@@ -6,6 +6,7 @@ use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Services\Catalog\YandexFeedReport;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use SimpleXMLElement;
@@ -28,7 +29,7 @@ class GenerateFeedTest extends TestCase
         $this->path = storage_path('framework/testing/yml.xml');
         @mkdir(dirname($this->path), 0777, true);
 
-        config(['shop.feed' => ['category_ids' => [], 'category_slugs' => ['akkumulyatori', 'zaryadnye-ustroystva']]]);
+        config(['shop.feed' => ['category_ids' => [], 'category_slugs' => ['akkumulyatori', 'zaryadnie-ustroystva']]]);
 
         $parent = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori', 'status' => true]);
         $this->category = Category::query()->create(['name' => 'Легковые', 'slug' => 'legkovye', 'parent_id' => $parent->id, 'status' => true]);
@@ -98,7 +99,7 @@ class GenerateFeedTest extends TestCase
         }
 
         $this->assertSame('true', (string) $byUrl[route('product.show', 'in-stock')]['available']);
-        $this->assertSame('false', (string) $byUrl[route('product.show', 'on-order')]['available']);
+        $this->assertSame('true', (string) $byUrl[route('product.show', 'on-order')]['available']);
         $this->assertSame('6500', (string) $byUrl[route('product.show', 'on-order')]->price);
     }
 
@@ -157,7 +158,7 @@ class GenerateFeedTest extends TestCase
 
     public function test_only_allowed_categories_and_their_subcategories_are_exported(): void
     {
-        $chargers = Category::query()->create(['name' => 'Зарядные устройства', 'slug' => 'zaryadnye-ustroystva', 'status' => true]);
+        $chargers = Category::query()->create(['name' => 'Зарядные устройства', 'slug' => 'zaryadnie-ustroystva', 'status' => true]);
         $oils = Category::query()->create(['name' => 'Моторное масло', 'slug' => 'motornoe-maslo', 'status' => true]);
         $wipers = Category::query()->create(['name' => 'Стеклоочистители', 'slug' => 'stekloochistiteli', 'status' => true]);
         $wiperBrand = Category::query()->create(['name' => 'Bosch', 'slug' => 'bosch-wipers', 'parent_id' => $wipers->id, 'status' => true]);
@@ -186,7 +187,7 @@ class GenerateFeedTest extends TestCase
 
     public function test_disabled_allowed_category_products_are_skipped(): void
     {
-        $chargers = Category::query()->create(['name' => 'Зарядные устройства', 'slug' => 'zaryadnye-ustroystva', 'status' => false]);
+        $chargers = Category::query()->create(['name' => 'Зарядные устройства', 'slug' => 'zaryadnie-ustroystva', 'status' => false]);
         $this->product('charger')->categories()->sync([$chargers->id]);
 
         $this->assertCount(0, $this->feed()->shop->offers->offer);
@@ -197,6 +198,58 @@ class GenerateFeedTest extends TestCase
         $this->product('akb-1', ['special_price' => 6500]);
 
         $this->assertSame('6500', (string) $this->feed()->shop->offers->offer[0]->price);
+    }
+
+    public function test_report_attributes_each_skipped_product_to_one_reason(): void
+    {
+        $other = Category::query()->create(['name' => 'Масла', 'slug' => 'masla', 'status' => true]);
+        $traction = Category::query()->create(['name' => 'Тяговые', 'slug' => 'tyagovye', 'status' => true]);
+        Category::query()->create(['name' => 'Лодочные', 'slug' => 'lodochnye', 'parent_id' => $traction->id, 'status' => true]);
+        $disabled = Category::query()->create(['name' => 'Выключен', 'slug' => 'off', 'status' => false]);
+
+        $this->product('ok');
+        $this->product('no-price', ['price' => 0]);
+        $this->product('no-photo', ['image' => null]);
+        $this->product('no-brand', ['manufacturer_id' => null]);
+        $this->product('disabled-category')->categories()->sync([$disabled->id]);
+        $this->product('oil')->categories()->sync([$other->id]);
+        $this->product('boat')->categories()->sync([$traction->children()->firstOrFail()->id]);
+        $this->product('no-stock', ['quantity' => 0, 'supplier_quantity' => 0]);
+        $this->product('draft', ['status' => false, 'price' => 0]);
+
+        $report = $this->app->make(YandexFeedReport::class)->build();
+
+        $this->assertSame(8, $report['total']);
+        $this->assertSame(1, $report['exported']);
+
+        $names = fn (string $reason): array => array_column($report['reasons'][$reason]['examples'], 'name');
+        $this->assertSame(['АКБ no-price'], $names('price'));
+        $this->assertSame(['АКБ no-photo'], $names('photo'));
+        $this->assertSame(['АКБ no-brand'], $names('manufacturer'));
+        $this->assertSame(['АКБ disabled-category'], $names('category'));
+        $this->assertEqualsCanonicalizing(['АКБ oil', 'АКБ boat'], $names('not_allowed'));
+        $this->assertSame(['АКБ no-stock'], $names('stock'));
+        $this->assertSame(0, $report['reasons']['other']['count']);
+
+        $rootNames = array_column($report['skippedRoots'], 'name');
+        $this->assertEqualsCanonicalizing(['Масла', 'Тяговые'], $rootNames);
+
+        $sections = array_column($report['sections'], null, 'name');
+        $this->assertSame(['exported' => 1, 'skipped' => 4], ['exported' => $sections['Легковые']['exported'], 'skipped' => $sections['Легковые']['skipped']]);
+        $this->assertFalse($sections['Масла']['allowed']);
+    }
+
+    public function test_report_option_prints_tables_and_writes_nothing(): void
+    {
+        $this->product('ok');
+        $this->product('no-price', ['price' => 0]);
+
+        $this->artisan('feed:generate', ['--report' => true, '--path' => $this->path])
+            ->expectsOutputToContain('в фиде: 1, отсечено: 1')
+            ->expectsOutputToContain('АКБ no-price')
+            ->assertSuccessful();
+
+        $this->assertFileDoesNotExist($this->path);
     }
 
     public function test_rebuilt_every_night(): void
