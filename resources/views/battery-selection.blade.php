@@ -16,7 +16,7 @@
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
-                <li><a href="{{ route('car-landing.index') }}#battery-wizard">Подбор АКБ</a></li>
+                <li><a href="{{ route('home') }}#battery-wizard">Подбор АКБ</a></li>
                 <li>{{ $carName }}</li>
             </ul>
             <h1>Аккумуляторы для {{ $carName }}</h1>
@@ -68,7 +68,7 @@
                     <li><i class="fas fa-car"></i> <a href="{{ route('car-landing.model', [$landing->brand->slug, $landing->slug]) }}">Все аккумуляторы для {{ $landing->fullName() }}</a></li>
                 @endif
                 <li><i class="fas fa-recycle"></i> Скидка за старый аккумулятор по трейд-ину</li>
-                <li class="car-landing__perks-action"><a href="{{ route('car-landing.index') }}#battery-wizard" class="btn car-landing__other"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</a></li>
+                <li class="car-landing__perks-action"><a href="{{ route('home') }}#battery-wizard" class="btn car-landing__other"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</a></li>
             </ul>
         </div>
 
