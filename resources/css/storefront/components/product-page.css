@@ -30,3 +30,8 @@
 /* Отступ после содержимого любой вкладки, чтобы следующий блок не прилипал. */
 .product-page-tabs + .tab-content {margin-bottom: 30px}
 .product-page-tabs + .tab-content .question-info {margin-bottom: 0}
+
+/* Телефон: колонке названий характеристик чуть больше места, чтобы «Ток холодной прокрутки» умещалось в одну строку. */
+@media (max-width: 767px) {
+    .product-block .product-data__item-div:first-child {width: 64%; min-width: 64%}
+}

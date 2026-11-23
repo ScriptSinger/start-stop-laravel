@@ -7,6 +7,8 @@
     --spec-hint-link-hover: #0f5aa0;
 }
 
+.spec-name__tail {white-space: nowrap}
+
 .spec-hint-trigger {
     display: inline-block;
     margin-left: 4px;
