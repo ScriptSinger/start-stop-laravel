@@ -43,6 +43,13 @@
         </li>
     </ol>
 
+    <p class="w-garage" x-show="$store.garage.car" x-cloak>
+        <i class="fas fa-car" aria-hidden="true"></i>
+        <span>Ваш авто:</span>
+        <a :href="$store.garage.car?.url" x-text="$store.garage.car?.name"></a>
+        <button type="button" class="w-garage__clear" aria-label="Забыть выбранную машину" @click="$store.garage.clear()"><i class="fas fa-times" aria-hidden="true"></i></button>
+    </p>
+
     <p class="w-message" x-show="message" x-cloak role="alert" x-text="message"></p>
 
     <div class="w-step" x-show="step === 1">

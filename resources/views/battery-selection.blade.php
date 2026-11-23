@@ -12,7 +12,7 @@
         $dimensions = collect($fitment->dimensions())->map(fn (array $dims) => implode('×', $dims))->all();
         $total = $products->total();
     @endphp
-    <div class="container car-landing">
+    <div class="container car-landing" x-data x-init="$store.garage.save(@js($carName), @js(request()->fullUrlWithoutQuery(['sort', 'limit', 'page'])))">
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>

@@ -20,6 +20,7 @@ import alerts from './stores/alerts';
 import cart from './stores/cart';
 import saved from './stores/saved';
 import modal from './stores/modal';
+import garage from './stores/garage';
 import search from './stores/search';
 
 import qtySwitch from './components/qty-switch';
@@ -41,6 +42,7 @@ Alpine.store('alerts', alerts);
 Alpine.store('cart', cart);
 Alpine.store('saved', saved);
 Alpine.store('modal', modal);
+Alpine.store('garage', garage);
 Alpine.store('search', search);
 
 Alpine.data('qtySwitch', qtySwitch);

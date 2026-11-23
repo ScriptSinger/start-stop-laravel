@@ -19,6 +19,12 @@
 .modal-battery-wizard {width: 900px}
 .modal .battery-wizard-container--modal .w-brand-heading > div {display: none}
 .modal .battery-wizard-container--modal .w-brand-heading {justify-content: flex-end; margin-bottom: 8px}
+.w-garage {display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 16px; padding: 10px 12px; background: #f8eee9; border-radius: 6px}
+.w-garage i {color: var(--btn-primary-bg)}
+.w-garage a {font-weight: 600; color: #252525}
+.w-garage a:hover {color: var(--btn-primary-bg)}
+.w-garage__clear {margin-left: auto; padding: 4px 6px; color: #888; background: none; border: 0; cursor: pointer}
+.w-garage__clear:hover {color: var(--btn-primary-bg)}
 .w-landings {display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #333; font-weight: 600; text-decoration: none}
 .w-landings:hover {color: var(--btn-primary-bg); text-decoration: none}
 

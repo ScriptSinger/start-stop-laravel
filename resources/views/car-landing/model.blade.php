@@ -6,7 +6,7 @@
      машины, ниже подходящие товары на всю ширину, затем поколения и другие
      модели марки. --}}
 @section('content')
-    <div class="container car-landing">
+    <div class="container car-landing" x-data x-init="$store.garage.save(@js($carName), @js(url()->current()))">
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
