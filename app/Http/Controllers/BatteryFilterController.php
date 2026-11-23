@@ -101,6 +101,7 @@ class BatteryFilterController extends Controller
         return view('battery-selection', [
             'fitment' => $fitment,
             'landing' => $landing,
+            'summary' => $selection->summary($fitment),
             'products' => $selection->products($fitment, $request->sort(), $request->perPage())->withQueryString(),
             'sort' => $request->sort(),
             'perPage' => $request->perPage(),

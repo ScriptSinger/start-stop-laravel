@@ -80,6 +80,17 @@
                     @else
                         @include('partials.product-grid', ['columnClass' => 'col-sm-6 col-md-4 col-lg-4 col-xxl-5'])
                     @endif
+
+                    @if ($seeAlso !== [])
+                        <section class="category-see-also" aria-labelledby="category-see-also-title">
+                            <h2 class="car-landing__title" id="category-see-also-title">Смотрите также</h2>
+                            <ul class="car-landing__chips">
+                                @foreach ($seeAlso as $link)
+                                    <li><a href="{{ $link['url'] }}" class="car-landing__chip">{{ $link['title'] }}</a></li>
+                                @endforeach
+                            </ul>
+                        </section>
+                    @endif
                 </div>
             </div>
         </div>

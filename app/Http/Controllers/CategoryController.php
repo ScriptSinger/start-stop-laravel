@@ -24,6 +24,11 @@ use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
+    /** Сколько товаров в списке считается коротким и сколько ссылок «Смотрите также» показываем. */
+    private const SEE_ALSO_MAX_PRODUCTS = 8;
+
+    private const SEE_ALSO_LIMIT = 12;
+
     public function show(CatalogFilterRequest $request, Category $category, BrandPages $brandPages, CatalogFacets $facets, CategoryMenu $categoryMenu, BreadcrumbsSeo $breadcrumbs, GuideLocator $guides): View|RedirectResponse
     {
         if (($brandPage = $this->brandPageRedirect($request, $category, $brandPages)) !== null) {
@@ -87,6 +92,7 @@ class CategoryController extends Controller
             'manufacturer' => $manufacturer,
             'brandPage' => $brandPage,
             'categoryLinks' => $categoryMenu->subcategoryLinks($category),
+            'seeAlso' => $this->seeAlso($category, $manufacturer, $products, $brandPages),
             'guide' => $guides->forCategory($category),
             'products' => $products,
             'filter' => $filter,
@@ -99,6 +105,45 @@ class CategoryController extends Controller
             'priceMin' => (int) floor($priceBounds['min']),
             'priceMax' => (int) ceil($priceBounds['max']),
         ]);
+    }
+
+    /**
+     * Ссылки «Смотрите также» под коротким списком, чтобы страница не обрывалась:
+     * у страницы производителя — другие производители раздела, у раздела — соседние
+     * разделы. Под длинным списком не нужны.
+     *
+     * @param  LengthAwarePaginator<int, Product>  $products
+     * @return list<array{title: string, url: string}>
+     */
+    private function seeAlso(Category $category, ?Manufacturer $manufacturer, LengthAwarePaginator $products, BrandPages $brandPages): array
+    {
+        if ($products->total() > self::SEE_ALSO_MAX_PRODUCTS) {
+            return [];
+        }
+
+        if ($manufacturer !== null) {
+            return $brandPages->manufacturers($category)
+                ->reject(fn (Manufacturer $other): bool => $other->is($manufacturer))
+                ->take(self::SEE_ALSO_LIMIT)
+                ->map(fn (Manufacturer $other): array => ['title' => $other->name, 'url' => $brandPages->url($category, $other)])
+                ->values()
+                ->all();
+        }
+
+        if ($category->parent_id === null) {
+            return [];
+        }
+
+        return Category::query()
+            ->where('parent_id', $category->parent_id)
+            ->where('status', true)
+            ->whereKeyNot($category->id)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->limit(self::SEE_ALSO_LIMIT)
+            ->get()
+            ->map(fn (Category $sibling): array => ['title' => $sibling->name, 'url' => route('category.show', $sibling)])
+            ->all();
     }
 
     /**

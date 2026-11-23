@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\TradeInType;
 use App\Services\BatterySelection;
+use App\Support\Price;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -51,6 +52,18 @@ class BatterySelectionTest extends TestCase
             ->assertDontSee('Длиннее')
             ->assertDontSee('Неактивный')
             ->assertDontSee('Не из аккумуляторов');
+    }
+
+    public function test_result_page_shows_lowest_price_stock_and_description(): void
+    {
+        $this->battery('Дешёвый', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)'], ['price' => 6500, 'quantity' => 3]);
+        $this->battery('Дорогой', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)'], ['price' => 9000, 'quantity' => 0]);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Kia Rio IV 2017 - 2020']))
+            ->assertOk()
+            ->assertSee('от '.Price::format(6500))
+            ->assertSee('2 варианта, 1 в наличии')
+            ->assertSee('подходят аккумуляторы');
     }
 
     public function test_length_is_compared_with_dimensions_not_any_number(): void

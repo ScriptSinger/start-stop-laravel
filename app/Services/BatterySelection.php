@@ -173,6 +173,26 @@ class BatterySelection
             ->paginate($perPage);
     }
 
+    /**
+     * Сводка по подходящим аккумуляторам: минимальная цена и сколько из них в наличии.
+     *
+     * @return array{priceFrom: ?int, inStock: int}
+     */
+    public function summary(BatteryFitment $fitment): array
+    {
+        $products = Product::query()
+            ->where('status', true)
+            ->fitsBattery($fitment)
+            ->get();
+
+        $price = $products->map(fn (Product $product): float => $product->displayPrice())->min();
+
+        return [
+            'priceFrom' => $price === null ? null : (int) floor($price),
+            'inStock' => $products->where('quantity', '>', 0)->count(),
+        ];
+    }
+
     public function brandLogo(string $brand): string
     {
         return Storage::disk('public')->url($this->logoPath($brand) ?? 'catalog/carslogo/no_image.png');

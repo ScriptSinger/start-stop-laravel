@@ -47,6 +47,14 @@ class CatalogFilterTest extends TestCase
         $this->product('Архивный TITAN', $this->titan, ['Обратная', '100 - 110 Ah'], ['status' => false]);
     }
 
+    public function test_short_brand_page_links_to_other_brands(): void
+    {
+        $this->get(route('category.manufacturer', [$this->batteries, $this->varta]))
+            ->assertOk()
+            ->assertSee('Смотрите также')
+            ->assertSee(route('category.manufacturer', [$this->batteries, $this->titan]), false);
+    }
+
     public function test_without_filter_shows_active_products_and_filter_groups(): void
     {
         $response = $this->category()

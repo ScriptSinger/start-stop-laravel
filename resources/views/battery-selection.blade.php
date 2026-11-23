@@ -24,7 +24,7 @@
 
         {{-- Параметры, по которым шёл подбор, — карточками, как на посадочной модели. --}}
         <div class="car-landing__summary">
-            <div class="car-landing__specs">
+            <div @class(['car-landing__specs', 'car-landing__specs--five' => $fitment->terminalsLabel() !== null])>
                 @if ($capacityText !== null)
                     <div class="car-landing__spec">
                         <i class="car-landing__spec-icon fas fa-car-battery"></i>
@@ -58,10 +58,26 @@
                 @endif
                 <div class="car-landing__spec car-landing__spec_accent">
                     <i class="car-landing__spec-icon fas fa-tags"></i>
-                    <div class="car-landing__spec-value">{{ $total }} <x-plural :count="$total" forms="вариант|варианта|вариантов" /></div>
-                    <div class="car-landing__spec-label">подходят вашей машине</div>
+                    <div class="car-landing__spec-value">{{ $summary['priceFrom'] !== null ? 'от '.App\Support\Price::format($summary['priceFrom']) : $total }}</div>
+                    <div class="car-landing__spec-label">
+                        {{ $total }} <x-plural :count="$total" forms="вариант|варианта|вариантов" />{{ $summary['inStock'] > 0 ? ', '.$summary['inStock'].' в наличии' : '' }}
+                    </div>
                 </div>
             </div>
+
+            @php
+                $polarityCases = ['Обратная' => 'обратной', 'Прямая' => 'прямой', 'Универсальная' => 'универсальной'];
+                $lengths = collect($fitment->dimensions())->pluck(0);
+                $heights = collect($fitment->dimensions())->pluck(2);
+                $details = array_filter([
+                    $capacityText === null ? null : 'ёмкостью '.$capacityText.' Ач',
+                    $polarities === [] ? null : 'с '.collect($polarities)->map(fn (string $polarity) => $polarityCases[$polarity] ?? mb_strtolower($polarity))->implode(' или ').' полярностью',
+                    $lengths->isEmpty() ? null : 'длиной корпуса '.($lengths->min() === $lengths->max() ? $lengths->min() : $lengths->min().'–'.$lengths->max()).' мм и высотой до '.$heights->max().' мм',
+                ]);
+            @endphp
+            @if ($details !== [])
+                <p class="car-landing__text">Для {{ $carName }} подходят аккумуляторы {{ implode(', ', $details) }}. Ниже — все подходящие модели с ценами и наличием в Уфе.</p>
+            @endif
 
             <ul class="car-landing__perks">
                 @if ($landing)
