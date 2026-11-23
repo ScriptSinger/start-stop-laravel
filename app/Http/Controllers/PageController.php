@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DeliveryZone;
 use App\Models\Page;
 use App\Models\ServiceOffer;
+use App\Services\Catalog\ServicePriceTable;
 use App\Services\Catalog\TradeInTable;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Support\Collection;
@@ -17,6 +18,8 @@ class PageController extends Controller
     {
         // Таблица скидок на странице «Трейд-ин» строится из типов корпусов (см. TradeInTable).
         $content = TradeInTable::render((string) $page->description, always: $page->slug === config('shop.trade_in.page_slug'));
+        // Таблица цен на обслуживание строится из service_prices (см. ServicePriceTable).
+        $content = ServicePriceTable::render($content, always: $page->slug === config('shop.service_prices.page_slug'));
 
         SEOTools::setTitle($page->meta_title ?: $page->title, appendDefault: ! $page->meta_title);
         SEOTools::setDescription($page->meta_description ?: $this->description($page, $content));
