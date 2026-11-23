@@ -130,6 +130,30 @@ class ProductSupplierOrderTest extends TestCase
             ->assertSeeInOrder(['Акция дорогая', 'Акция дешёвая', 'Без акции']);
     }
 
+    public function test_admin_index_flags_special_price_that_is_not_below_the_regular_price(): void
+    {
+        $this->actingAs(MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'admin@example.com',
+            'name' => 'Admin',
+            'password' => bcrypt('secret'),
+        ]), 'moonshine');
+
+        $this->makeProduct(['name' => 'Акция выше цены', 'slug' => 'above', 'price' => 5900, 'quantity' => 3, 'special_price' => 6900]);
+
+        $url = '/admin/component/product-index-page/product-resource?_component_name=index-table-product-resource';
+
+        $html = $this->get($url)->assertOk()->getContent();
+        $this->assertSame(1, substr_count($html, 'Акция не ниже обычной цены: на сайте не действует'));
+
+        $this->makeProduct(['name' => 'Акция равна цене', 'slug' => 'equal', 'price' => 6900, 'quantity' => 3, 'special_price' => 6900]);
+        $this->makeProduct(['name' => 'Нормальная акция', 'slug' => 'fine', 'price' => 5000, 'quantity' => 3, 'special_price' => 4500]);
+        $this->makeProduct(['name' => 'Без акции', 'slug' => 'none', 'price' => 5000, 'quantity' => 3]);
+
+        $html = $this->get($url)->getContent();
+        $this->assertSame(2, substr_count($html, 'Акция не ниже обычной цены: на сайте не действует'));
+    }
+
     public function test_price_problem_ignores_on_order_products_with_supplier_price(): void
     {
         $this->makeProduct(['name' => 'Под заказ с ценой', 'slug' => 'on-order-priced', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => 12350]);

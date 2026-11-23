@@ -30,10 +30,12 @@ use MoonShine\Laravel\Http\Responses\MoonShineJsonResponse;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Support\Attributes\AsyncMethod;
 use MoonShine\Support\Enums\Ability;
+use MoonShine\Support\Enums\Color;
 use MoonShine\Support\Enums\TextWrap;
 use MoonShine\Support\Enums\ToastType;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\ActionButton;
+use MoonShine\UI\Components\Badge;
 use MoonShine\UI\Components\Collapse;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
@@ -98,7 +100,16 @@ class ProductIndexPage extends IndexPage
             Number::make('Хар-ки', 'attribute_values_count')->sortable()->columnSelection(hideOnInit: true),
             Money::make('Цена', 'price')->sortable(),
             // Цена по акции: по ней можно отсортировать акционные товары; без акции — в конце списка.
+            // Акция не ниже обычной цены на сайте не действует — такое значение подсвечено красным.
             Money::make('Цена по акции', 'special_price')
+                ->changePreview(function (mixed $value, Money $field): string {
+                    $price = Money::make('', 'special_price')->fill($value)->preview();
+                    $product = $field->getData()?->getOriginal();
+
+                    return $product instanceof Product && $product->special_price !== null && ! $product->hasSpecial()
+                        ? (string) Badge::make((string) $price, Color::RED)->customAttributes(['title' => 'Акция не ниже обычной цены: на сайте не действует'])
+                        : (string) $price;
+                })
                 ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query
                     ->orderByRaw('special_price IS NULL')
                     ->orderBy('special_price', $direction)),
