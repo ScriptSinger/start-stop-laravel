@@ -148,13 +148,12 @@ header .header-action > [class$="__total-items"] {top: 2px; bottom: auto; right:
     .mobile-navigation__item {font-size: 10px; letter-spacing: -.2px}
 }
 
+/* На телефоне плавающая кнопка одна — чат Jivo (его отступ снизу задан в кабинете Jivo,
+   «Дизайн → Мобильная версия»); «наверх» там не нужна: страницу и так листают. */
 @media (max-width: 991px) {
-    .fly-block.fly-block--above-chat {right: 20px; bottom: calc(var(--floating-chat-offset) + var(--floating-button-size) + var(--floating-button-gap) + env(safe-area-inset-bottom, 0px))}
-}
-
-/* При смене размера браузера Jivo может оставить компьютерный ярлык: держим его над навигацией. */
-@media (max-width: 991px) {
-    jdiv.__jivoDesktopButton {bottom: calc(var(--floating-chat-offset) + env(safe-area-inset-bottom, 0px)) !important}
+    .fly-block {display: none}
+    /* Запас внизу страницы: последние строки подвала можно прокрутить выше кнопки чата. */
+    .footer {padding-bottom: 80px}
 }
 
 /* Открытый каталог занимает экран: ярлык чата не должен перекрывать его пункты. */
