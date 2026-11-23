@@ -54,6 +54,16 @@ class BatterySelectionTest extends TestCase
             ->assertDontSee('Не из аккумуляторов');
     }
 
+    public function test_breadcrumb_selection_crumb_leads_to_the_car_brand_selection_page(): void
+    {
+        $this->battery('Подходящий', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)']);
+
+        $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Kia Rio IV 2017 - 2020']))
+            ->assertOk()
+            ->assertSee('<a href="'.route('car-landing.index').'">Подбор АКБ</a>', false)
+            ->assertDontSee(route('home').'#battery-wizard', false);
+    }
+
     public function test_result_page_shows_lowest_price_stock_and_description(): void
     {
         $this->battery('Дешёвый', ['Обратная', '55 - 65 Ah', 'Евро L2 (242 x 175 x 190 мм)'], ['price' => 6500, 'quantity' => 3]);

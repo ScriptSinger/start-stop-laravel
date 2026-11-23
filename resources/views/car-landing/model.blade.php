@@ -10,7 +10,7 @@
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
-                <li><a href="{{ route('car-landing.index') }}">По марке авто</a></li>
+                <li><a href="{{ route('car-landing.index') }}">Подбор АКБ</a></li>
                 <li><a href="{{ route('car-landing.brand', $brand->slug) }}">Аккумуляторы для {{ $brand->name }}</a></li>
                 @if ($generation)
                     <li><a href="{{ $model->url() }}">{{ $model->name }}</a></li>

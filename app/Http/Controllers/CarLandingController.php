@@ -115,7 +115,7 @@ class CarLandingController extends Controller
     }
 
     /**
-     * Крошки как в шаблонах: главная, «По марке авто» и страницы ниже по уровню.
+     * Крошки как в шаблонах: главная, «Подбор АКБ» и страницы ниже по уровню.
      *
      * @param  list<array{name: string, url: string}>  $crumbs
      */
@@ -123,7 +123,7 @@ class CarLandingController extends Controller
     {
         $this->breadcrumbs->apply([
             ['name' => config('shop.name'), 'url' => route('home')],
-            ['name' => 'По марке авто', 'url' => route('car-landing.index')],
+            ['name' => 'Подбор АКБ', 'url' => route('car-landing.index')],
             ...$crumbs,
         ]);
     }

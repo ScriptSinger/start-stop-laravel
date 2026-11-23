@@ -16,7 +16,7 @@
         <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
-                <li><a href="{{ route('home') }}#battery-wizard">Подбор АКБ</a></li>
+                <li><a href="{{ route('car-landing.index') }}">Подбор АКБ</a></li>
                 <li>{{ $carName }}</li>
             </ul>
             <h1>Аккумуляторы для {{ $carName }}</h1>

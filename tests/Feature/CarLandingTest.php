@@ -65,7 +65,7 @@ class CarLandingTest extends TestCase
             ->assertSee(route('car-landing.brand', 'lada'));
 
         $this->get(route('car-landing.model', ['lada', 'vesta']))
-            ->assertSee('<a href="'.route('car-landing.index').'">По марке авто</a>', false);
+            ->assertSee('<a href="'.route('car-landing.index').'">Подбор АКБ</a>', false);
     }
 
     public function test_product_page_links_to_popular_car_models_after_nightly_refresh(): void
@@ -137,10 +137,10 @@ class CarLandingTest extends TestCase
             return array_column($breadcrumbs['itemListElement'], 'name');
         };
 
-        $this->assertSame(['Старт-Стоп', 'По марке авто'], $names(route('car-landing.index')));
-        $this->assertSame(['Старт-Стоп', 'По марке авто', 'Аккумуляторы для Lada'], $names(route('car-landing.brand', 'lada')));
-        $this->assertSame(['Старт-Стоп', 'По марке авто', 'Аккумуляторы для Lada', 'Vesta'], $names(route('car-landing.model', ['lada', 'vesta'])));
-        $this->assertSame(['Старт-Стоп', 'По марке авто', 'Аккумуляторы для Lada', '2131 (4x4)', 'I 1993 - 2019'], $names(route('car-landing.generation', ['lada', '2131-4x4', 'i-1993-2019'])));
+        $this->assertSame(['Старт-Стоп', 'Подбор АКБ'], $names(route('car-landing.index')));
+        $this->assertSame(['Старт-Стоп', 'Подбор АКБ', 'Аккумуляторы для Lada'], $names(route('car-landing.brand', 'lada')));
+        $this->assertSame(['Старт-Стоп', 'Подбор АКБ', 'Аккумуляторы для Lada', 'Vesta'], $names(route('car-landing.model', ['lada', 'vesta'])));
+        $this->assertSame(['Старт-Стоп', 'Подбор АКБ', 'Аккумуляторы для Lada', '2131 (4x4)', 'I 1993 - 2019'], $names(route('car-landing.generation', ['lada', '2131-4x4', 'i-1993-2019'])));
     }
 
     public function test_generation_page_offers_engines_when_they_need_different_batteries(): void
