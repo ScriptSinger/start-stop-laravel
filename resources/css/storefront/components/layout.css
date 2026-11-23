@@ -42,7 +42,8 @@
 .business-mobile-nav a:focus-visible {outline: 2px solid var(--btn-primary-bg); outline-offset: 2px}
 
 /* Всплывающее уведомление: одно за раз, под шапкой браузера. */
-.uni-alert {top: 50px}
+/* popover: в верхнем слое, поэтому уведомление видно и над открытым <dialog>. */
+.uni-alert {top: 50px; right: 15px; bottom: auto; left: auto; margin: 0; overflow: visible}
 
 /* Выпадающее меню категорий в прилипающей шапке — под кнопкой, как у темы. */
 .fly-menu__dropdown {position: absolute}

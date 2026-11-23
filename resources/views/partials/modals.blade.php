@@ -27,7 +27,7 @@
 </dialog>
 
 <template x-if="$store.alerts.current">
-    <div class="uni-alert" :class="'alert-' + $store.alerts.current.type" role="alert">
+    <div class="uni-alert" popover="manual" x-init="$el.showPopover()" :class="'alert-' + $store.alerts.current.type" role="alert">
         <i class="uni-alert__icon fa" :class="$store.alerts.current.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
         <div x-text="$store.alerts.current.message"></div>
         <button type="button" class="uni-alert__icon fa-times" aria-label="Закрыть уведомление" @click="$store.alerts.hide()"><i class="fas fa-times" aria-hidden="true"></i></button>

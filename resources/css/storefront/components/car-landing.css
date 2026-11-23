@@ -1,5 +1,5 @@
 /* Посадочные «Аккумулятор для <модель>» (resources/views/car-landing). */
-.car-landing__summary {margin-bottom: 30px; padding: 20px; background: #f7f7f7; border-radius: 10px}
+.car-landing__summary {margin-bottom: 20px; padding: 20px; background: #f7f7f7; border-radius: 10px}
 
 .car-landing__specs {display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px}
 .car-landing__spec {display: flex; flex-direction: column; gap: 4px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0 0 0 / .06)}

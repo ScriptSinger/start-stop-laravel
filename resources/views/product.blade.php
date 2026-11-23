@@ -100,9 +100,6 @@
                                     <div class="qty-indicator" data-text="Наличие:">
                                         <div class="qty-indicator__text {{ $availabilityClass }}"> {{ $availabilityText }} </div>
                                     </div>
-                                    @if ($product->is_pickup_only)
-                                        <div class="text-muted">Только самовывоз</div>
-                                    @endif
 
                                     <div class="product-page__price price">
                                         @if ($product->hasSpecial())
