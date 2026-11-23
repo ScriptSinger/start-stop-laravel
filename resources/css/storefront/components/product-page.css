@@ -31,7 +31,9 @@
 .product-page-tabs + .tab-content {margin-bottom: 30px}
 .product-page-tabs + .tab-content .question-info {margin-bottom: 0}
 
-/* Телефон: колонке названий характеристик чуть больше места, чтобы «Ток холодной прокрутки» умещалось в одну строку. */
-@media (max-width: 767px) {
-    .product-block .product-data__item-div:first-child {width: 64%; min-width: 64%}
-}
+/* Характеристики: колонка названий по самому длинному названию (но не шире 66 %), значения
+   выровнены по одной линии. Раньше колонки были по 60 / 50 % — длинные названия вроде
+   «Ток холодной прокрутки» переносились и ломали строку. */
+.product-page__short-attribute.product-data, #tab-specification .product-data {display: grid; grid-template-columns: fit-content(66%) minmax(0, 1fr); row-gap: 5px}
+.product-page__short-attribute .product-data__item, #tab-specification .product-data__item {display: contents}
+.product-page__short-attribute .product-data__item-div, #tab-specification .product-data__item-div {width: auto; min-width: 0}

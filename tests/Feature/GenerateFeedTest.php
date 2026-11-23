@@ -6,6 +6,7 @@ use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Product;
+use App\Models\TradeInType;
 use App\Services\Catalog\YandexFeedReport;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -250,6 +251,50 @@ class GenerateFeedTest extends TestCase
             ->assertSuccessful();
 
         $this->assertFileDoesNotExist($this->path);
+    }
+
+    public function test_case_type_param_goes_after_dimensions_like_on_the_product_card(): void
+    {
+        $dimensionsId = (int) config('shop.battery_fitment.attributes.dimensions');
+        $voltage = Attribute::query()->create(['name' => 'Напряжение', 'display_sort_order' => 1]);
+        $dimensions = Attribute::query()->forceCreate(['id' => $dimensionsId, 'name' => 'Габариты (мм)', 'display_sort_order' => 2]);
+        $polarity = Attribute::query()->create(['name' => 'Полярность', 'display_sort_order' => 3]);
+
+        $product = $this->product('akb-1', ['trade_in_type_id' => TradeInType::factory()->create(['code' => 'L2'])->id]);
+        $product->attributeValues()->attach([
+            $voltage->values()->create(['value' => '12V'])->id,
+            $dimensions->values()->create(['value' => '242 x 175 x 190'])->id,
+            $polarity->values()->create(['value' => 'Обратная'])->id,
+        ]);
+
+        $offer = $this->feed()->shop->offers->offer[0];
+
+        $this->assertSame(
+            ['Напряжение', 'Габариты (мм)', 'Тип корпуса', 'Полярность'],
+            array_map(fn (SimpleXMLElement $param): string => (string) $param['name'], iterator_to_array($offer->param, false)),
+        );
+        $this->assertSame('L2', (string) $offer->param[2]);
+        $this->assertSame(
+            $product->fresh(['attributeValues.attribute', 'tradeInType'])->cardSpecifications()->keys()->all(),
+            ['Напряжение', 'Габариты (мм)', 'Тип корпуса', 'Полярность'],
+        );
+    }
+
+    public function test_case_type_param_without_dimensions_is_last_and_absent_without_value(): void
+    {
+        $voltage = Attribute::query()->create(['name' => 'Напряжение']);
+
+        $withType = $this->product('with-type', ['trade_in_type_id' => TradeInType::factory()->create(['code' => 'B24'])->id]);
+        $withType->attributeValues()->attach($voltage->values()->create(['value' => '12V'])->id);
+        $this->product('without-type')->attributeValues()->attach($voltage->values()->first()->id);
+
+        $offers = [];
+        foreach ($this->feed()->shop->offers->offer as $offer) {
+            $offers[basename((string) $offer->url)] = array_map(fn (SimpleXMLElement $param): string => (string) $param['name'], iterator_to_array($offer->param, false));
+        }
+
+        $this->assertSame(['Напряжение', 'Тип корпуса'], $offers['with-type']);
+        $this->assertSame(['Напряжение'], $offers['without-type']);
     }
 
     public function test_rebuilt_every_night(): void

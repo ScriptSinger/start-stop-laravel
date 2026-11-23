@@ -85,7 +85,7 @@ class YandexFeed
 
         Product::query()
             ->readyForExport()
-            ->with(['manufacturer:id,name', 'categories:id', 'attributeValues.attribute'])
+            ->with(['manufacturer:id,name', 'categories:id', 'attributeValues.attribute', 'tradeInType:id,code'])
             ->chunkById(self::CHUNK_SIZE, function (Collection $products) use ($xml, $allowedIds, &$count): void {
                 foreach ($products as $product) {
                     $categoryId = $product->categories->pluck('id')->sort()->first(fn (int $id): bool => isset($allowedIds[$id]));
@@ -214,7 +214,7 @@ class YandexFeed
             $xml->writeElement('description', $description);
         }
 
-        foreach ($product->specifications(visibleOnly: true) as $attributeName => $value) {
+        foreach ($product->cardSpecifications() as $attributeName => $value) {
             $xml->startElement('param');
             $xml->writeAttribute('name', $this->clean((string) $attributeName));
             $xml->text($this->clean($value));

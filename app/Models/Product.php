@@ -129,6 +129,35 @@ class Product extends Model
     }
 
     /**
+     * Характеристики в том виде и порядке, как в блоке «Характеристики» карточки
+     * (ProductController::show): видимые покупателю, а «Тип корпуса» (код из
+     * поля товара) — после «Габаритов», нет их — в конце. Без типа корпуса
+     * строки нет. Нужны связи attributeValues.attribute и tradeInType.
+     *
+     * @return Collection<string, string>
+     */
+    public function cardSpecifications(): Collection
+    {
+        $specifications = $this->specifications(visibleOnly: true);
+        $caseType = $this->tradeInType?->code;
+
+        if (blank($caseType)) {
+            return $specifications;
+        }
+
+        $after = $this->specificationGroups(visibleOnly: true)
+            ->search(fn (Collection $values): bool => $values->first()->attribute_id === (int) config('shop.battery_fitment.attributes.dimensions'));
+
+        if ($after === false) {
+            return $specifications->put('Тип корпуса', $caseType);
+        }
+
+        return $specifications->flatMap(fn (string $value, string $name): array => $name === $after
+            ? [$name => $value, 'Тип корпуса' => $caseType]
+            : [$name => $value]);
+    }
+
+    /**
      * Те же характеристики, но со значениями-моделями: страница товара по ним
      * строит значок «i» с подсказкой у названия и у отдельных значений.
      *
