@@ -1,10 +1,8 @@
 @extends('layouts.app')
 
-@section('body_class', 'menu-expanded')
-
 @section('content')
     <div class="container account-layout">
-        <div class="breadcrumb-h1 col-md-offset-3 col-lg-offset-3 col-xxl-offset-4">
+        <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
                 <li>Избранное</li>
@@ -12,9 +10,8 @@
             <h1>Избранное</h1>
         </div>
         <div class="row">
-            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs hidden-sm"></aside>
-            <div id="content" class="col-sm-12 col-md-9 col-lg-9 col-xxl-16">
-                <div class="account-content">
+            <div id="content" class="col-sm-12">
+                <div>
                 @if ($products->isEmpty())
                     <div class="div-text-empty">В избранном пока нет товаров.</div>
                 @else

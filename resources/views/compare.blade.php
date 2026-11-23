@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('body_class', 'menu-expanded')
-
 @push('page-styles')
     @vite('resources/css/storefront/pages/compare.css')
 @endpush
@@ -9,7 +7,7 @@
 {{-- Разметка — 1:1 с product/compare.twig темы UniShop2 старого сайта. --}}
 @section('content')
     <div id="product-compare" class="container account-layout">
-        <div class="breadcrumb-h1 col-md-offset-3 col-lg-offset-3 col-xxl-offset-4">
+        <div class="breadcrumb-h1">
             <ul class="breadcrumb mobile">
                 <li><a href="{{ route('home') }}"><i class="fa fa-home"></i></a></li>
                 <li>Сравнение товаров</li>
@@ -17,9 +15,8 @@
             <h1>Сравнение товаров</h1>
         </div>
         <div class="row">
-            <aside id="column-left" class="col-sm-4 col-md-3 col-lg-3 col-xxl-4 hidden-xs hidden-sm"></aside>
-            <div id="content" class="col-sm-12 col-md-9 col-lg-9 col-xxl-16">
-                <div class="uni-wrapper account-content">
+            <div id="content" class="col-sm-12">
+                <div class="uni-wrapper">
                     <div class="compare-page-wrapper" x-data="{onlyDifferences: true}">
                         @if ($products->isNotEmpty())
                             <label class="compare-attribute-hide-same input {{ $specificationNames->isNotEmpty() ? 'is_visible' : '' }}"><input type="checkbox" value="1" checked="checked" id="compare-hide-same" x-model="onlyDifferences" /> Показывать только отличия</label>
