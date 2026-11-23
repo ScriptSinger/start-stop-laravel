@@ -162,7 +162,15 @@
                                     @endif
 
                                     <div class="product-page__share">
-                                        <div id="goodshare"><div class="vkontakte" data-social="vkontakte"></div><div class="telegram" data-social="telegram"></div></div>
+                                        <div id="goodshare" role="group" aria-label="Поделиться">
+                                            <span class="product-page__share-label">Поделиться:</span>
+                                            <button type="button" class="vkontakte" data-social="vkontakte" title="ВКонтакте" aria-label="Поделиться во ВКонтакте"></button>
+                                            <button type="button" class="telegram" data-social="telegram" title="Telegram" aria-label="Поделиться в Telegram"></button>
+                                            <button type="button" class="whatsapp" data-social="whatsapp" title="WhatsApp" aria-label="Поделиться в WhatsApp"></button>
+                                            <button type="button" class="copy" data-social="copy" title="Копировать ссылку" aria-label="Копировать ссылку"><i class="far fa-copy"></i></button>
+                                            <button type="button" class="share-native" data-social="native" aria-label="Поделиться"><i class="fas fa-share-alt"></i>Поделиться</button>
+                                            <span class="product-page__share-status" role="status" aria-live="polite" data-share-status></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -170,11 +178,14 @@
                         <div class="col-sm-12 col-md-12 col-lg-2">
                             <div class="product-banner row row-flex">
                                 @foreach (config('shop.product_banners') as $banner)
-                                    <div class="col-xs-6 col-sm-4 col-md-4 col-lg-12">
+                                    <div class="col-xs-12 col-sm-6 col-md-3 col-lg-12">
                                         <div class="product-banner__item">
                                             <i class="product-banner__icon {{ $banner['icon'] }} fa-fw"></i>
                                             <div class="product-banner__text">
-                                                <span class="product-banner__text-span">{{ $banner['text'] }}</span>
+                                                <strong class="product-banner__title">{{ $banner['title'] }}</strong>
+                                                @if (filled($banner['text'] ?? null))
+                                                    <span class="product-banner__note">{{ $banner['text'] }}</span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

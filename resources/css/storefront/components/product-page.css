@@ -37,3 +37,21 @@
 .product-page__short-attribute.product-data, #tab-specification .product-data {display: grid; grid-template-columns: fit-content(66%) minmax(0, 1fr); row-gap: 5px}
 .product-page__short-attribute .product-data__item, #tab-specification .product-data__item {display: contents}
 .product-page__short-attribute .product-data__item-div, #tab-specification .product-data__item-div {width: auto; min-width: 0}
+
+/* «Поделиться»: подпись, статус копирования и одна кнопка системного меню на телефонах.
+   Значки соцсетей — спрайт из goodshare.css; кнопка «Копировать ссылку» и системная — своим цветом. */
+.product-page__share-label {font-size: .9em; color: #666}
+.product-page__share-status {font-size: .85em; color: #2b7a3d}
+#goodshare button.copy, #goodshare button.share-native {background: #8a8f98; color: #fff; font-size: 12px; line-height: 22px}
+#goodshare button.share-native {display: none; width: auto; padding: 0 10px}
+#goodshare[data-native] button[data-social]:not(.share-native) {display: none}
+#goodshare[data-native] button.share-native {display: inline-flex; align-items: center; gap: 6px}
+
+/* Плашки преимуществ: заголовок жирным, пояснение мельче; перенос по слогам, а не посреди слова
+   (язык страницы ru, hyphens: auto); на телефоне иконка меньше, чтобы тексту хватало ширины. */
+.product-banner__text {hyphens: auto; overflow-wrap: break-word; word-break: normal; font-weight: 400}
+.product-banner__title {display: block; font-weight: 600; line-height: 1.25}
+.product-banner__note {display: block; margin-top: 2px; font-size: .9em; color: #666}
+@media (max-width: 767px) {
+    .product-banner__icon {min-width: 32px; font-size: 1.6em}
+}
