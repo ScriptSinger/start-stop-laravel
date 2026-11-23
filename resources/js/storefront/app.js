@@ -22,6 +22,7 @@ import search from './stores/search';
 
 import qtySwitch from './components/qty-switch';
 import checkout from './components/checkout';
+import addressSuggest from './components/address-suggest';
 import batteryWizard from './components/battery-wizard';
 import scrollCarousel from './components/scroll-carousel';
 import showMore from './components/show-more';
@@ -45,6 +46,7 @@ Alpine.store('search', search);
 
 Alpine.data('qtySwitch', qtySwitch);
 Alpine.data('checkout', checkout);
+Alpine.data('addressSuggest', addressSuggest);
 Alpine.data('batteryWizard', batteryWizard);
 Alpine.data('scrollCarousel', scrollCarousel);
 Alpine.data('showMore', showMore);

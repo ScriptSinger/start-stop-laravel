@@ -26,6 +26,14 @@ return [
         'key' => env('YANDEX_MAPS_API_KEY'),
     ],
 
+    // Подсказки адреса при оформлении заказа (см. AddressSuggestions). Без ключа поле
+    // адреса остаётся обычным. Подсказки только по Уфе (kladr_id города): доставка у нас по городу.
+    'dadata' => [
+        'key' => env('DADATA_API_KEY'),
+        'url' => 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address',
+        'city_kladr_id' => '0200000100000',
+    ],
+
     'yandex' => [
         'client_id' => env('YANDEX_CLIENT_ID'),
         'client_secret' => env('YANDEX_CLIENT_SECRET'),

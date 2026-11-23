@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AddressSuggestionController;
 use App\Http\Controllers\AttributeHintController;
 use App\Http\Controllers\BatteryFilterController;
 use App\Http\Controllers\BusinessPageController;
@@ -76,6 +77,7 @@ Route::delete('/compare-products/{product}', [CompareController::class, 'destroy
 
 Route::get('/checkout', [CheckoutController::class, 'create'])->middleware('noindex')->name('checkout.create');
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store')->block();
+Route::get('/checkout/address-suggestions', AddressSuggestionController::class)->middleware(['noindex', 'throttle:60,1'])->name('checkout.address-suggestions');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->middleware('noindex')->name('checkout.success');
 
 Route::get('/callback', [CallbackRequestController::class, 'create'])->middleware('noindex')->name('callback.create');

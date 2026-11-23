@@ -162,9 +162,20 @@
                                         <div id="unicheckout-method-city" class="tab-pane {{ $selectedDelivery === DeliveryMethod::City ? 'active' : '' }}" :class="{active: delivery === @js(DeliveryMethod::City->value)}">
                                             <div class="unicheckout__address payment-address">
                                                 <div class="heading">Адрес доставки</div>
-                                                <div class="checkout-address-new row-flex">
-                                                    <input type="text" name="address" value="{{ old('address') }}" placeholder="Ваш адрес *" aria-label="Адрес доставки" autocomplete="street-address" class="checkout-address-new__input form-control @error('address') input-warning @enderror" />
-                                                </div>
+                                                @if ($addressSuggestionsEnabled)
+                                                    <div class="checkout-address-new row-flex address-suggest" x-data="addressSuggest({url: @js(route('checkout.address-suggestions'))})" @click.outside="close()" @keydown.escape="close()">
+                                                        <input type="text" name="address" value="{{ old('address') }}" placeholder="Ваш адрес *" aria-label="Адрес доставки" autocomplete="off" role="combobox" aria-autocomplete="list" :aria-expanded="open.toString()" x-ref="input" @input.debounce.300ms="search()" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)" @keydown.enter="enter($event)" class="checkout-address-new__input form-control @error('address') input-warning @enderror" />
+                                                        <ul class="address-suggest__list" role="listbox" x-show="open" x-cloak>
+                                                            <template x-for="(item, index) in items" :key="item">
+                                                                <li class="address-suggest__item" role="option" :class="{'is-active': index === active}" :aria-selected="(index === active).toString()" x-text="item" @mousedown.prevent="pick(item)"></li>
+                                                            </template>
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <div class="checkout-address-new row-flex">
+                                                        <input type="text" name="address" value="{{ old('address') }}" placeholder="Ваш адрес *" aria-label="Адрес доставки" autocomplete="street-address" class="checkout-address-new__input form-control @error('address') input-warning @enderror" />
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div class="unicheckout__shipping">
                                                 <div class="heading">Способы доставки</div>

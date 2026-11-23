@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Product;
+use App\Services\Address\AddressSuggestions;
 use App\Services\Cart\Cart;
 use App\Services\Cart\CartLine;
 use Artesaos\SEOTools\Facades\SEOTools;
@@ -20,7 +21,7 @@ class CartController extends Controller
         return $this->miniCart($cart)->header('Cache-Control', 'no-store');
     }
 
-    public function index(Request $request, Cart $cart): View
+    public function index(Request $request, Cart $cart, AddressSuggestions $addressSuggestions): View
     {
         $lines = $cart->lines();
         $unavailableCount = $cart->unavailableCount($lines);
@@ -39,6 +40,7 @@ class CartController extends Controller
             'unavailableCount' => $unavailableCount,
             'priceChanged' => $priceChanged,
             'contact' => $this->checkoutContact($request->user()),
+            'addressSuggestionsEnabled' => $addressSuggestions->isEnabled(),
         ]);
     }
 

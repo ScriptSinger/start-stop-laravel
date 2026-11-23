@@ -96,6 +96,12 @@
 .unicheckout__method .unicheckout__address .heading:before, .unicheckout__method .unicheckout__shipping .heading:before {content: none; counter-increment: none}
 .unicheckout__method .unicheckout__address .heading, .unicheckout__method .unicheckout__shipping .heading {font-size: 1.05em}
 
+/* Подсказки адреса доставки под полем (components/address-suggest.js). */
+.address-suggest {position: relative}
+.address-suggest__list {position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin: 4px 0 0; padding: 4px 0; max-height: 280px; overflow-y: auto; list-style: none; background: #fff; border: 1px solid #ececec; border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .12)}
+.address-suggest__item {padding: 8px 14px; cursor: pointer; line-height: 1.35}
+.address-suggest__item.is-active, .address-suggest__item:hover {background: #f5f5f5}
+
 /* Самовывоз / Доставка — переключатель: активный вариант — белая «кнопка» с акцентным текстом, неактивный — приглушённый. */
 .unicheckout__pickup-nav {gap: 4px; padding: 4px; border-radius: 8px}
 .unicheckout__pickup-nav li {flex: 1; justify-content: center; height: var(--store-control-height); padding: 0; border-radius: 6px}
