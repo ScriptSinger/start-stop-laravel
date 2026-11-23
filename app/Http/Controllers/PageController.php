@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DeliveryZone;
 use App\Models\Page;
+use App\Models\ServiceOffer;
 use App\Services\Catalog\TradeInTable;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Support\Collection;
@@ -28,6 +29,7 @@ class PageController extends Controller
             'page' => $page,
             'content' => $content,
             'zoneGroups' => $page->slug === 'dostavka-i-oplata' ? $this->deliveryZoneGroups() : collect(),
+            'offers' => $page->slug === 'uslugi' ? ServiceOffer::query()->active()->ordered()->get() : collect(),
         ]);
     }
 
@@ -50,7 +52,7 @@ class PageController extends Controller
     {
         // «Услуги» выводят предложения из shop.service_offers, а не текст страницы.
         if ($page->slug === 'uslugi') {
-            $titles = collect(config('shop.service_offers'))->pluck('title')->map(fn (string $title): string => mb_strtolower($title))->implode(', ');
+            $titles = ServiceOffer::query()->active()->ordered()->pluck('title')->map(fn (string $title): string => mb_strtolower($title))->implode(', ');
 
             return Str::limit('Услуги магазина «'.config('shop.name')."» в Уфе: {$titles}.", 200, preserveWords: true);
         }

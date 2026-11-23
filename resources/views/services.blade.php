@@ -15,13 +15,13 @@
         </div>
         <p class="services-page__lead">Проверим аккумулятор и автомобиль, поможем с зарядкой, обслуживанием и установкой. Выберите услугу или позвоните — подскажем, с чего начать.</p>
         <div class="services-page__cards">
-            @foreach (config('shop.service_offers') as $offer)
-                <section class="business-page__card services-page__card" id="{{ $offer['id'] }}" aria-labelledby="{{ $offer['id'] }}-title">
-                    <i class="fas {{ $offer['icon'] }}" aria-hidden="true"></i>
-                    <h2 id="{{ $offer['id'] }}-title">{{ $offer['title'] }}</h2>
-                    <p>{{ $offer['description'] }}</p>
-                    <div class="services-page__terms">{{ $offer['terms'] }}</div>
-                    @if ($offer['id'] === 'maintenance')
+            @foreach ($offers as $offer)
+                <section class="business-page__card services-page__card" id="{{ $offer->slug }}" aria-labelledby="{{ $offer->slug }}-title">
+                    <i class="fas {{ $offer->icon }}" aria-hidden="true"></i>
+                    <h2 id="{{ $offer->slug }}-title">{{ $offer->title }}</h2>
+                    <p>{{ $offer->description }}</p>
+                    <div class="services-page__terms">{{ $offer->priceLabel() }}</div>
+                    @if ($offer->slug === 'maintenance')
                         <a class="services-page__details" href="{{ route('page.show', 'service') }}">Подробнее об обслуживании <i class="fas fa-angle-right" aria-hidden="true"></i></a>
                     @endif
                 </section>
