@@ -52,7 +52,7 @@
                 @if ($dimensions !== [])
                     <div class="car-landing__spec">
                         <i class="car-landing__spec-icon fas fa-ruler-combined"></i>
-                        @include('car-landing.partials.dimensions', ['dimensions' => $dimensions])
+                        @include('car-landing.partials.dimensions', ['dimensions' => $dimensions, 'collapsible' => true])
                         <div class="car-landing__spec-label">Габариты Д×Ш×В, мм</div>
                     </div>
                 @endif
