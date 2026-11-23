@@ -72,6 +72,19 @@ class ServiceOffersTest extends TestCase
         $this->get(route('page.show', 'uslugi'))->assertSee('1 200 ₽');
     }
 
+    public function test_list_lets_edit_the_amount_only_for_types_that_use_it(): void
+    {
+        $this->actingAsAdmin();
+        ServiceOffer::query()->delete();
+        ServiceOffer::factory()->create(['title' => 'Бесплатная услуга']);
+        ServiceOffer::factory()->priced(ServicePriceType::Fixed, 731)->create(['title' => 'Платная услуга']);
+
+        $html = $this->get(self::RESOURCE.'/service-offer-index-page')->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, 'data-field-selector="price"'));
+        $this->assertStringContainsString('value="731"', $html);
+    }
+
     public function test_amount_is_required_only_for_fixed_and_from_types(): void
     {
         $this->actingAsAdmin();

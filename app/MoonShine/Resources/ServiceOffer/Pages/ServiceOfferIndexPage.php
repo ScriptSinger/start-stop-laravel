@@ -31,11 +31,13 @@ class ServiceOfferIndexPage extends IndexPage
         return [
             Text::make('Услуга', 'title')->sortable(),
             Enum::make('Тип цены', 'price_type')->attach(ServicePriceType::class)->sortable(),
-            // Сумма меняется прямо в списке; у типов без суммы она не используется.
+            // Сумма меняется прямо в списке, но только у типов «Фиксированная цена» и «Цена от»:
+            // у остальных она не используется, поэтому поле в такой строке скрыто.
             Number::make('Сумма, ₽', 'price')
                 ->min(0)
                 ->nullable()
                 ->updateOnPreview(condition: $canUpdate)
+                ->canSee(fn (Number $field): bool => $field->getData()?->getOriginal()?->price_type?->needsAmount() === true)
                 ->sortable(),
             Preview::make('Как видит покупатель', 'id', fn (ServiceOffer $offer): string => e($offer->priceLabel())),
             Number::make('Порядок', 'sort_order')->sortable(),
