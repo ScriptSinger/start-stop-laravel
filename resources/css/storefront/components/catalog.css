@@ -62,10 +62,6 @@
 .category-list__select {margin: 0 0 20px}
 
 /* Подбор АКБ: параметры автомобиля в левой колонке. */
-.battery-fitment {margin: 0 0 15px}
-.battery-fitment dt {font-weight: 600; margin-top: 10px}
-.battery-fitment dd {margin: 2px 0 0}
-.battery-fitment__landing {display: block; margin-bottom: 12px; font-weight: 600}
 
 .compare-page_empty {margin: 0}
 

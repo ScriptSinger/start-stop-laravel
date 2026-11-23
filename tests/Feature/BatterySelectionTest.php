@@ -121,7 +121,7 @@ class BatterySelectionTest extends TestCase
 
         $this->get(route('battery-selection', ['brand' => 'Kia', 'model' => 'Rio', 'gen' => 'Узкие клеммы']))
             ->assertOk()
-            ->assertSee('Клеммы</dt>', false)
+            ->assertSee('car-landing__spec-label">Клеммы<', false)
             ->assertSee('Узкие (азиатские)')
             ->assertSee('Тонкие клеммы')
             ->assertSee('Клеммы не указаны')

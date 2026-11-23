@@ -13,7 +13,9 @@
             <span class="section-heading__eyebrow">Быстрый подбор</span>
             <h2 class="w-title w-title--section">Аккумулятор для вашего автомобиля</h2>
         </div>
-        <a class="w-landings" href="{{ route('car-landing.index') }}">Все марки и модели <span aria-hidden="true">→</span></a>
+        @unless ($hideLandings ?? false)
+            <a class="w-landings" href="{{ route('car-landing.index') }}">Все марки и модели <span aria-hidden="true">→</span></a>
+        @endunless
     </div>
 
     <ol class="w-stepper" aria-label="Шаги подбора">

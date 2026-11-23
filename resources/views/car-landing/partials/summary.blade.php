@@ -60,6 +60,6 @@
         <li><i class="fas fa-shipping-fast"></i> Доставка по Уфе и самовывоз</li>
         <li><i class="fas fa-recycle"></i> Скидка за старый аккумулятор по трейд-ину</li>
         <li><i class="fas fa-phone"></i> Поможем с выбором: <a href="{{ $phoneHref }}">{{ config('shop.phone') }}</a></li>
-        <li class="car-landing__perks-action"><a href="{{ route('home') }}#battery-wizard" class="btn btn-default">Другая машина</a></li>
+        <li class="car-landing__perks-action"><a href="{{ route('car-landing.index') }}#battery-wizard" class="btn car-landing__other"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</a></li>
     </ul>
 </div>

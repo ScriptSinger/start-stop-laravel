@@ -11,6 +11,8 @@
             <h1>Аккумуляторы по марке автомобиля</h1>
         </div>
         <p class="car-landing__intro">Выберите марку и модель — покажем аккумуляторы, которые подходят по ёмкости, полярности, размерам и клеммам, с ценами и наличием в Уфе. Не нашли свою машину — позвоните, подберём.</p>
+        @include('partials.battery-filter', ['hideLandings' => true])
+        <h2 class="car-landing__title">Все марки</h2>
         <ul class="car-landing__brands">
             @foreach ($brands as $brand)
                 <li>
