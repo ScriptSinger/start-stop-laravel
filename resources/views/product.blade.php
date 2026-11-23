@@ -149,7 +149,7 @@
                                     @if (($shortSpecifications = $specifications->take(6))->isNotEmpty())
                                         <div class="product-page__short-attribute product-data">
                                             @foreach ($specificationGroups->take(6) as $name => $values)
-                                                <div class="product-data__item"><div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div><x-spec-values :values="$values" /></div>
+                                                <div class="product-data__item"><div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div><div class="product-data__item-div"><span><x-spec-values :values="$values" /></span></div></div>
                                                 @if ($caseType && $name === $caseTypeAfter)
                                                     <x-case-type-row :code="$caseType" />
                                                 @endif
@@ -204,7 +204,7 @@
                                         @foreach ($specificationGroups as $name => $values)
                                             <div class="product-data__item">
                                                 <div class="product-data__item-div"><x-spec-name :attribute="$values->first()->attribute" /></div>
-                                                <div class="product-data__item-div"><x-spec-values :values="$values" /></div>
+                                                <div class="product-data__item-div"><span><x-spec-values :values="$values" /></span></div>
                                             </div>
                                             @if ($caseType && $name === $caseTypeAfter)
                                                 <x-case-type-row :code="$caseType" layout="tab" />
