@@ -24,6 +24,7 @@
                 </div>
             </div>
             <div class="fly-menu__search hidden-xs hidden-sm">@include('partials.search-form')</div>
+            <a class="btn btn-primary header-pick fly-menu__pick hidden-xs hidden-sm" href="{{ route('car-landing.index') }}"><i class="fas fa-car-battery" aria-hidden="true"></i>Подбор по авто</a>
             <div class="fly-menu__phone uni-href hidden-xs hidden-sm" data-href="tel:+{{ preg_replace('/\D/', '', config('shop.phone')) }}">{{ config('shop.phone') }}</div>
 
             <div class="fly-menu__block fly-menu__home uni-href visible-xs visible-sm" data-href="{{ route('home') }}"><i class="fly-menu__icon fly-menu__icon-menu fas fa-home"></i></div>
