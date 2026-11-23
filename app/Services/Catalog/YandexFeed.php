@@ -76,7 +76,9 @@ class YandexFeed
         $xml->endElement();
         $xml->endElement();
 
-        $categories = $this->writeCategories($xml);
+        $categories = $this->categories();
+        $allowedIds = $this->allowedCategoryIds($categories);
+        $this->writeCategories($xml, $categories, $allowedIds);
 
         $count = 0;
         $xml->startElement('offers');
@@ -84,9 +86,9 @@ class YandexFeed
         Product::query()
             ->readyForExport()
             ->with(['manufacturer:id,name', 'categories:id', 'attributeValues.attribute'])
-            ->chunkById(self::CHUNK_SIZE, function (Collection $products) use ($xml, $categories, &$count): void {
+            ->chunkById(self::CHUNK_SIZE, function (Collection $products) use ($xml, $allowedIds, &$count): void {
                 foreach ($products as $product) {
-                    $categoryId = $product->categories->pluck('id')->sort()->first(fn (int $id): bool => $categories->has($id));
+                    $categoryId = $product->categories->pluck('id')->sort()->first(fn (int $id): bool => isset($allowedIds[$id]));
 
                     if ($categoryId === null || ! $this->writeOffer($xml, $product, $categoryId)) {
                         continue;
@@ -106,21 +108,68 @@ class YandexFeed
     }
 
     /**
-     * Включённые разделы; parentId — только если родитель тоже в фиде.
+     * Все включённые разделы.
      *
      * @return Collection<int, Category>
      */
-    private function writeCategories(XMLWriter $xml): Collection
+    private function categories(): Collection
     {
-        $categories = Category::query()->where('status', true)->orderBy('id')->get(['id', 'parent_id', 'name'])->keyBy('id');
+        return Category::query()->where('status', true)->orderBy('id')->get(['id', 'parent_id', 'name', 'slug'])->keyBy('id');
+    }
+
+    /**
+     * Разрешённые разделы (shop.feed) и все их включённые подразделы.
+     *
+     * @param  Collection<int, Category>  $categories
+     * @return array<int, true>
+     */
+    private function allowedCategoryIds(Collection $categories): array
+    {
+        $ids = (array) config('shop.feed.category_ids', []);
+        $slugs = (array) config('shop.feed.category_slugs', []);
+
+        $allowed = [];
+
+        foreach ($categories as $category) {
+            $root = $category;
+
+            for ($depth = 0; $root !== null && $depth < 10; $depth++) {
+                if (in_array($root->id, $ids, true) || in_array($root->slug, $slugs, true)) {
+                    $allowed[$category->id] = true;
+
+                    break;
+                }
+
+                $root = $categories->get($root->parent_id);
+            }
+        }
+
+        return $allowed;
+    }
+
+    /**
+     * Разрешённые разделы и их родители; parentId — только если родитель в фиде.
+     *
+     * @param  Collection<int, Category>  $categories
+     * @param  array<int, true>  $allowedIds
+     */
+    private function writeCategories(XMLWriter $xml, Collection $categories, array $allowedIds): void
+    {
+        $included = $allowedIds;
+
+        foreach (array_keys($allowedIds) as $id) {
+            for ($parentId = $categories->get($id)?->parent_id, $depth = 0; $parentId !== null && $categories->has($parentId) && $depth < 10; $parentId = $categories->get($parentId)->parent_id, $depth++) {
+                $included[$parentId] = true;
+            }
+        }
 
         $xml->startElement('categories');
 
-        foreach ($categories as $category) {
+        foreach ($categories->only(array_keys($included)) as $category) {
             $xml->startElement('category');
             $xml->writeAttribute('id', (string) $category->id);
 
-            if ($category->parent_id !== null && $categories->has($category->parent_id) && $category->parent_id !== $category->id) {
+            if ($category->parent_id !== null && isset($included[$category->parent_id]) && $category->parent_id !== $category->id) {
                 $xml->writeAttribute('parentId', (string) $category->parent_id);
             }
 
@@ -129,8 +178,6 @@ class YandexFeed
         }
 
         $xml->endElement();
-
-        return $categories;
     }
 
     private function writeOffer(XMLWriter $xml, Product $product, int $categoryId): bool

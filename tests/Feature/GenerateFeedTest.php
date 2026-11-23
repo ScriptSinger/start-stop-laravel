@@ -28,6 +28,8 @@ class GenerateFeedTest extends TestCase
         $this->path = storage_path('framework/testing/yml.xml');
         @mkdir(dirname($this->path), 0777, true);
 
+        config(['shop.feed' => ['category_ids' => [], 'category_slugs' => ['akkumulyatori', 'zaryadnye-ustroystva']]]);
+
         $parent = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori', 'status' => true]);
         $this->category = Category::query()->create(['name' => 'Легковые', 'slug' => 'legkovye', 'parent_id' => $parent->id, 'status' => true]);
         $this->brand = Manufacturer::query()->create(['name' => 'Tyumen', 'slug' => 'tyumen']);
@@ -151,6 +153,43 @@ class GenerateFeedTest extends TestCase
 
         $this->assertCount(1, $offers);
         $this->assertSame(route('product.show', 'priced'), (string) $offers[0]->url);
+    }
+
+    public function test_only_allowed_categories_and_their_subcategories_are_exported(): void
+    {
+        $chargers = Category::query()->create(['name' => 'Зарядные устройства', 'slug' => 'zaryadnye-ustroystva', 'status' => true]);
+        $oils = Category::query()->create(['name' => 'Моторное масло', 'slug' => 'motornoe-maslo', 'status' => true]);
+        $wipers = Category::query()->create(['name' => 'Стеклоочистители', 'slug' => 'stekloochistiteli', 'status' => true]);
+        $wiperBrand = Category::query()->create(['name' => 'Bosch', 'slug' => 'bosch-wipers', 'parent_id' => $wipers->id, 'status' => true]);
+
+        $this->product('battery');
+        $this->product('charger')->categories()->sync([$chargers->id]);
+        $this->product('oil')->categories()->sync([$oils->id]);
+        $this->product('wiper')->categories()->sync([$wiperBrand->id]);
+        $this->product('mixed')->categories()->sync([$oils->id, $this->category->id]);
+
+        $xml = $this->feed()->shop;
+        $urls = array_map(fn (SimpleXMLElement $offer): string => (string) $offer->url, iterator_to_array($xml->offers->offer, false));
+
+        $this->assertEqualsCanonicalizing([
+            route('product.show', 'battery'),
+            route('product.show', 'charger'),
+            route('product.show', 'mixed'),
+        ], $urls);
+
+        $mixed = collect(iterator_to_array($xml->offers->offer, false))->first(fn ($offer) => str_ends_with((string) $offer->url, '/mixed'));
+        $this->assertSame((string) $this->category->id, (string) $mixed->categoryId);
+
+        $names = array_map('strval', iterator_to_array($xml->categories->category, false));
+        $this->assertEqualsCanonicalizing(['Аккумуляторы', 'Легковые', 'Зарядные устройства'], $names);
+    }
+
+    public function test_disabled_allowed_category_products_are_skipped(): void
+    {
+        $chargers = Category::query()->create(['name' => 'Зарядные устройства', 'slug' => 'zaryadnye-ustroystva', 'status' => false]);
+        $this->product('charger')->categories()->sync([$chargers->id]);
+
+        $this->assertCount(0, $this->feed()->shop->offers->offer);
     }
 
     public function test_special_price_is_the_offer_price(): void
