@@ -93,7 +93,7 @@
                                             <div class="product-data__item"><div class="product-data__item-div">Код товара:</div> {{ $product->code }}</div>
                                         @endif
                                         @if ($product->manufacturer)
-                                            <div class="product-data__item"><div class="product-data__item-div">Производитель:</div> {{ $product->manufacturer->name }}</div>
+                                            <div class="product-data__item"><div class="product-data__item-div">Производитель:</div> @if ($manufacturerUrl)<a href="{{ $manufacturerUrl }}" class="product-data__manufacturer">{{ $product->manufacturer->name }}</a>@else{{ $product->manufacturer->name }}@endif</div>
                                         @endif
                                     </div>
 

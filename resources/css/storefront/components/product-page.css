@@ -55,3 +55,7 @@
 @media (max-width: 767px) {
     .product-banner__icon {min-width: 32px; font-size: 1.6em}
 }
+
+/* Производитель — ссылка на его страницу в разделе, цвет как у значений-терминов в характеристиках. */
+.product-data__manufacturer {color: var(--spec-hint-link, #1776c9); text-decoration: none}
+.product-data__manufacturer:hover, .product-data__manufacturer:focus-visible {color: var(--spec-hint-link-hover, #0f5aa0); text-decoration: underline}
