@@ -44,6 +44,7 @@
         @endif
 
         @include('car-landing.partials.summary')
+        @include('partials.battery-wizard-modal')
 
         <div class="uni-wrapper">
             @include('partials.catalog-sorts')

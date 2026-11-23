@@ -3,7 +3,7 @@
      Заголовок один на все шаги, ход подбора показывает полоса шагов: пройденный шаг
      подписан выбранным значением и возвращает назад. Заголовки шагов — для скринридера. --}}
 @php($phoneHref = 'tel:+'.preg_replace('/\D/', '', config('shop.phone')))
-<div class="battery-wizard-container" id="battery-wizard"
+<div class="battery-wizard-container @if ($inModal ?? false) battery-wizard-container--modal @endif" id="battery-wizard"
      x-data="batteryWizard({modelsUrl: @js(route('battery-filter.models')), generationsUrl: @js(route('battery-filter.generations')), enginesUrl: @js(route('battery-filter.engines')), resultUrl: @js(route('battery-filter.result'))})"
      x-init="$watch('step', value => $nextTick(() => requestAnimationFrame(() => $el.querySelectorAll('.w-step')[value - 1]?.querySelector('h3')?.focus())))">
     <div class="w-progress" x-show="loading" x-cloak role="status" aria-label="Загружаем данные"></div>

@@ -15,6 +15,10 @@
 
 .w-brand-heading {display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px}
 .battery-wizard-container {scroll-margin-top: 80px}
+.modal .battery-wizard-container--modal {margin: 0; padding: 0; border: 0}
+.modal-battery-wizard {width: 900px}
+.modal .battery-wizard-container--modal .w-brand-heading > div {display: none}
+.modal .battery-wizard-container--modal .w-brand-heading {justify-content: flex-end; margin-bottom: 8px}
 .w-landings {display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #333; font-weight: 600; text-decoration: none}
 .w-landings:hover {color: var(--btn-primary-bg); text-decoration: none}
 
@@ -62,6 +66,11 @@
 .w-help a {color: #252525; font-weight: 600; white-space: nowrap}
 
 @media (max-width: 767px) {
+    /* Подбор в окне: на телефоне — на весь экран, крупные зоны нажатия. */
+    #modal-battery-wizard {text-align: left}
+    #modal-battery-wizard .modal-battery-wizard {display: block; width: 100%; max-width: 100%; min-height: 100%; margin: 0}
+    #modal-battery-wizard .modal-content {min-height: 100vh; border: 0; border-radius: 0; box-shadow: none}
+    #modal-battery-wizard .modal-body {padding: 16px}
     .battery-wizard-container {padding: 18px}
     .w-title {font-size: 22px}
     .w-brand-heading {align-items: flex-start; flex-direction: column; gap: 4px; margin-bottom: 16px}
