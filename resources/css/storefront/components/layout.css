@@ -9,6 +9,12 @@
     .menu-expanded header .menu1 .menu__collapse {display: block !important}
 }
 
+/* Там, где меню раскрывается поверх страницы, оно должно читаться как отдельный слой:
+   без рамки и тени список сливался с заголовком и карточками под ним. */
+@media (min-width: 992px) {
+    body:not(.menu-expanded) header .menu1 .menu__collapse {background: #fff; border: 1px solid #e5e5e5; border-top: 0; border-radius: 0 0 8px 8px; box-shadow: 0 12px 28px rgba(0, 0, 0, .18); overflow: hidden}
+}
+
 /* Отступы, которые в теме были пустыми div со style="height:…". */
 .footer__payments-gap {height: 15px}
 
