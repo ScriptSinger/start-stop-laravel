@@ -60,6 +60,6 @@
         <li><i class="fas fa-shipping-fast"></i> Доставка по Уфе и самовывоз</li>
         <li><i class="fas fa-recycle"></i> Скидка за старый аккумулятор по трейд-ину</li>
         <li><i class="fas fa-phone"></i> Поможем с выбором: <a href="{{ $phoneHref }}">{{ config('shop.phone') }}</a></li>
-        <li class="car-landing__perks-action"><button type="button" class="btn car-landing__other" data-toggle="modal" data-target="#modal-battery-wizard"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</button></li>
+        <li class="car-landing__perks-action"><button type="button" class="btn car-landing__other" @click="$refs.wizardDialog.showModal()"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</button></li>
     </ul>
 </div>

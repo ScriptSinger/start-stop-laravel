@@ -15,10 +15,18 @@
 
 .w-brand-heading {display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px}
 .battery-wizard-container {scroll-margin-top: 80px}
-.modal .battery-wizard-container--modal {margin: 0; padding: 0; border: 0}
-.modal-battery-wizard {width: 900px}
-.modal .battery-wizard-container--modal .w-brand-heading > div {display: none}
-.modal .battery-wizard-container--modal .w-brand-heading {justify-content: flex-end; margin-bottom: 8px}
+/* Подбор в окне: нативный <dialog>. */
+.wizard-dialog {width: min(900px, 95vw); max-height: 92vh; padding: 0; border: 0; border-radius: 10px; box-shadow: 0 10px 40px rgba(0, 0, 0, .25)}
+.wizard-dialog::backdrop {background: rgba(0, 0, 0, .5)}
+.wizard-dialog__header {display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #e8e8e8}
+.wizard-dialog__title {margin: 0; font-size: 18px; font-weight: 700}
+.wizard-dialog__close {width: 40px; height: 40px; color: #666; font-size: 18px; background: none; border: 0; cursor: pointer}
+.wizard-dialog__close:hover {color: var(--btn-primary-bg)}
+.wizard-dialog__body {padding: 20px}
+.wizard-dialog .battery-wizard-container--modal {margin: 0; padding: 0; border: 0}
+.wizard-dialog .battery-wizard-container--modal .w-brand-heading > div {display: none}
+.wizard-dialog .battery-wizard-container--modal .w-brand-heading {justify-content: flex-end; margin-bottom: 8px}
+body:has(dialog[open]) {overflow: hidden}
 .w-garage {display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 16px; padding: 10px 12px; background: #f8eee9; border-radius: 6px}
 .w-garage i {color: var(--btn-primary-bg)}
 .w-garage a {font-weight: 600; color: #252525}
@@ -72,11 +80,8 @@
 .w-help a {color: #252525; font-weight: 600; white-space: nowrap}
 
 @media (max-width: 767px) {
-    /* Подбор в окне: на телефоне — на весь экран, крупные зоны нажатия. */
-    #modal-battery-wizard {text-align: left}
-    #modal-battery-wizard .modal-battery-wizard {display: block; width: 100%; max-width: 100%; min-height: 100%; margin: 0}
-    #modal-battery-wizard .modal-content {min-height: 100vh; border: 0; border-radius: 0; box-shadow: none}
-    #modal-battery-wizard .modal-body {padding: 16px}
+    .wizard-dialog {width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0}
+    .wizard-dialog__body {padding: 16px}
     .battery-wizard-container {padding: 18px}
     .w-title {font-size: 22px}
     .w-brand-heading {align-items: flex-start; flex-direction: column; gap: 4px; margin-bottom: 16px}

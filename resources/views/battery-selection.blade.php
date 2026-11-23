@@ -68,7 +68,7 @@
                     <li><a href="{{ route('car-landing.model', [$landing->brand->slug, $landing->slug]) }}">Все аккумуляторы для {{ $landing->fullName() }} <span aria-hidden="true">→</span></a></li>
                 @endif
                 <li><i class="fas fa-recycle"></i> Скидка за старый аккумулятор по трейд-ину</li>
-                <li class="car-landing__perks-action"><button type="button" class="btn car-landing__other" data-toggle="modal" data-target="#modal-battery-wizard"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</button></li>
+                <li class="car-landing__perks-action"><button type="button" class="btn car-landing__other" @click="$refs.wizardDialog.showModal()"><i class="fas fa-car" aria-hidden="true"></i> Другая машина</button></li>
             </ul>
         </div>
 
