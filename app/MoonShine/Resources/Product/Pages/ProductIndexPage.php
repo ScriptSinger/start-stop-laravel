@@ -97,6 +97,11 @@ class ProductIndexPage extends IndexPage
             // Сколько значений характеристик у товара; сами они — в просмотре товара.
             Number::make('Хар-ки', 'attribute_values_count')->sortable()->columnSelection(hideOnInit: true),
             Money::make('Цена', 'price')->sortable(),
+            // Цена по акции: по ней можно отсортировать акционные товары; без акции — в конце списка.
+            Money::make('Цена по акции', 'special_price')
+                ->sortable(fn (Builder $query, string $column, string $direction): Builder => $query
+                    ->orderByRaw('special_price IS NULL')
+                    ->orderBy('special_price', $direction)),
             // Цена, которую видит покупатель: акция, цена под заказ или обычная.
             Money::make('Цена на сайте', 'display_price')
                 ->changePreview(fn (mixed $value, Money $field): string => Money::make('', 'display_price')

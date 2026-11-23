@@ -107,6 +107,29 @@ class ProductSupplierOrderTest extends TestCase
         ]))->assertOk()->assertSee('Цена на сайте')->assertSee('12 350 ₽');
     }
 
+    public function test_admin_index_shows_special_price_and_sorts_by_it_with_regular_products_last(): void
+    {
+        $this->actingAs(MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'admin@example.com',
+            'name' => 'Admin',
+            'password' => bcrypt('secret'),
+        ]), 'moonshine');
+
+        $this->makeProduct(['name' => 'Без акции', 'slug' => 'regular', 'price' => 5000, 'quantity' => 3]);
+        $this->makeProduct(['name' => 'Акция дорогая', 'slug' => 'special-high', 'price' => 9000, 'quantity' => 3, 'special_price' => 8100]);
+        $this->makeProduct(['name' => 'Акция дешёвая', 'slug' => 'special-low', 'price' => 4000, 'quantity' => 3, 'special_price' => 3300]);
+
+        $url = '/admin/component/product-index-page/product-resource?_component_name=index-table-product-resource';
+
+        $this->get($url.'&sort=special_price')
+            ->assertOk()
+            ->assertSee('Цена по акции')
+            ->assertSeeInOrder(['Акция дешёвая', 'Акция дорогая', 'Без акции']);
+        $this->get($url.'&sort=-special_price')
+            ->assertSeeInOrder(['Акция дорогая', 'Акция дешёвая', 'Без акции']);
+    }
+
     public function test_price_problem_ignores_on_order_products_with_supplier_price(): void
     {
         $this->makeProduct(['name' => 'Под заказ с ценой', 'slug' => 'on-order-priced', 'price' => 0, 'supplier_quantity' => 6, 'supplier_price' => 12350]);
