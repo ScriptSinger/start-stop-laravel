@@ -16,6 +16,7 @@ use App\MoonShine\Resources\BrandPage\BrandPageResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
+use App\MoonShine\Resources\DeliveryZone\DeliveryZoneResource;
 use App\MoonShine\Resources\Guide\GuideResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\MenuItem\MenuItemResource;
@@ -57,6 +58,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 PageResource::class,
                 GuideResource::class,
                 TradeInResource::class,
+                DeliveryZoneResource::class,
                 ProductImageResource::class,
                 MenuItemResource::class,
                 CustomerRequestResource::class,

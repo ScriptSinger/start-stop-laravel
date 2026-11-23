@@ -19,6 +19,7 @@ use App\MoonShine\Resources\BrandPage\BrandPageResource;
 use App\MoonShine\Resources\Category\CategoryResource;
 use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\CustomerRequest\CustomerRequestResource;
+use App\MoonShine\Resources\DeliveryZone\DeliveryZoneResource;
 use App\MoonShine\Resources\Guide\GuideResource;
 use App\MoonShine\Resources\Manufacturer\ManufacturerResource;
 use App\MoonShine\Resources\MenuItem\MenuItemResource;
@@ -92,6 +93,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(GuideResource::class, 'Гайды')->icon('book-open'),
                 MenuItem::make(MenuItemResource::class, 'Меню сайта')->icon('bars-3'),
                 MenuItem::make(BannerResource::class, 'Баннеры')->icon('photo'),
+                MenuItem::make(DeliveryZoneResource::class, 'Зоны доставки')->icon('truck'),
             ])->icon('globe-alt'),
             MenuGroup::make('Система', [
                 MenuItem::make(MoonShineUserResource::class, 'Администраторы')->icon('user-group'),

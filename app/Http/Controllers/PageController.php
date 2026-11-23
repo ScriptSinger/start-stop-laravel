@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DeliveryZone;
 use App\Models\Page;
 use App\Services\Catalog\TradeInTable;
 use Artesaos\SEOTools\Facades\SEOTools;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -25,7 +27,19 @@ class PageController extends Controller
         }, [
             'page' => $page,
             'content' => $content,
+            'zoneGroups' => $page->slug === 'dostavka-i-oplata' ? $this->deliveryZoneGroups() : collect(),
         ]);
+    }
+
+    /**
+     * Районы доставки, сгруппированные по цене: сначала бесплатные, дальше
+     * по возрастанию. Внутри группы порядок районов задан в админке.
+     *
+     * @return Collection<int, Collection<int, DeliveryZone>>
+     */
+    private function deliveryZoneGroups(): Collection
+    {
+        return DeliveryZone::query()->active()->ordered()->get()->groupBy('price')->sortKeys();
     }
 
     /**

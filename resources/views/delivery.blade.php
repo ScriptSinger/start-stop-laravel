@@ -6,9 +6,6 @@
 
 @php
     $phoneHref = 'tel:+'.preg_replace('/\D/', '', config('shop.phone'));
-    $zones = collect(config('shop.delivery_zones'));
-    $freeZones = $zones->filter(fn (int $price): bool => $price === 0)->keys();
-    $paidZones = $zones->filter(fn (int $price): bool => $price > 0);
 @endphp
 
 @section('content')
@@ -52,20 +49,12 @@
                 <h2 id="delivery-zones-title">Стоимость по районам</h2>
             </div>
             <div class="delivery-page__zones">
-                <div class="delivery-page__zone-group">
-                    <h3>Бесплатно</h3>
-                    <ul>
-                        @foreach ($freeZones as $zone)
-                            <li>{{ $zone }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @foreach ($paidZones->unique()->values() as $price)
+                @foreach ($zoneGroups as $price => $zones)
                     <div class="delivery-page__zone-group">
-                        <h3>{{ number_format($price, 0, ',', ' ') }} ₽</h3>
+                        <h3>{{ $price === 0 ? 'Бесплатно' : number_format($price, 0, ',', ' ').' ₽' }}</h3>
                         <ul>
-                            @foreach ($paidZones->filter(fn (int $zonePrice): bool => $zonePrice === $price)->keys() as $zone)
-                                <li>{{ $zone }}</li>
+                            @foreach ($zones as $zone)
+                                <li>{{ $zone->name }}</li>
                             @endforeach
                         </ul>
                     </div>
