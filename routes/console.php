@@ -21,6 +21,10 @@ Schedule::command('assortment:gaps')->dailyAt('03:30')->timezone('Asia/Yekaterin
 Schedule::command('sitemap:generate')->dailyAt('03:15')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::error('Ночная пересборка sitemap.xml не выполнена.'));
 
+// Ночная пересборка public/yml.xml — YML-фид для Яндекса (Бизнес «Товары», Маркет, Директ).
+Schedule::command('feed:generate')->dailyAt('03:45')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
+    ->onFailure(fn () => Log::error('Ночная пересборка yml.xml не выполнена.'));
+
 // Ночная выгрузка для автозагрузки Авито в отдельный бакет Яндекс S3 (диск avito).
 Schedule::command('avito:export --disk=avito --path=avito.xlsx')->dailyAt('04:00')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::error('Ночная выгрузка для Авито в S3 не выполнена — см. вывод avito:export.'));
