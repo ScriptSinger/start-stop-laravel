@@ -13,7 +13,7 @@ export default ({reload = false} = {}) => ({
     sending: false,
 
     async submit(event) {
-        if (!this.$el.closest('.modal')) {
+        if (!this.$el.closest('dialog')) {
             return;
         }
 

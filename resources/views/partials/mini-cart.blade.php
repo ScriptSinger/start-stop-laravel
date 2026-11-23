@@ -53,7 +53,7 @@
         </div>
     </div>
     <div class="header-cart__buttons">
-        <button type="button" class="btn btn-lg btn-default" data-dismiss="modal">Продолжить покупки</button>
+        <button type="button" class="btn btn-lg btn-default" @click="$el.closest('dialog')?.close()">Продолжить покупки</button>
         <a href="{{ route('cart.index') }}" class="btn btn-lg btn-primary">Перейти к оформлению заказа</a>
     </div>
 @else

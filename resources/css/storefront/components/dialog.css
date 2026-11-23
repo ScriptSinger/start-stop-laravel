@@ -1,0 +1,20 @@
+/* Окна сайта — нативный <dialog>: корзина, формы, подбор другой машины. */
+.store-dialog {width: min(var(--dialog-width, 600px), 95vw); max-height: 92vh; padding: 0; overflow: hidden; border: 0; border-radius: 6px; box-shadow: 0 10px 40px rgba(0, 0, 0, .25)}
+.store-dialog[open] {display: flex; flex-direction: column}
+.store-dialog::backdrop {background: rgba(0, 0, 0, .5)}
+.store-dialog--cart {--dialog-width: 740px}
+.store-dialog--wizard {--dialog-width: 900px; border-radius: 10px}
+.store-dialog__header {display: flex; flex: none; align-items: center; justify-content: space-between; padding: 0 0 0 20px; background: #f7f7f7}
+.store-dialog__title {margin: 0; padding: 14px 0; font-size: 18px; font-weight: 700}
+.store-dialog__close {width: 46px; height: 46px; color: #666; font-size: 18px; background: none; border: 0; cursor: pointer}
+.store-dialog__close:hover {color: var(--btn-primary-bg)}
+.store-dialog__body {padding: 15px; overflow-y: auto; overscroll-behavior: contain; background: #fff}
+.store-dialog--wizard .store-dialog__body {padding: 20px}
+body:has(dialog[open]) {overflow: hidden}
+body:has(dialog[open]) jdiv, body:has(dialog[open]) .fly-block {visibility: hidden !important}
+
+@media (max-width: 767px) {
+    .store-dialog--cart {width: calc(100vw - 20px); max-height: calc(100dvh - 20px)}
+    .store-dialog--wizard {width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0}
+    .store-dialog--wizard .store-dialog__body {padding: 16px}
+}

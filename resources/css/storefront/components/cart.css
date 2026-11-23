@@ -30,9 +30,6 @@
 .header-cart__remove-btn, .checkout-cart__remove-btn {min-width: 44px; min-height: 44px}
 
 @media (max-width: 767px) {
-    #modal-cart .modal-dialog {width: auto; margin: 10px}
-    #modal-cart .modal-content {max-height: calc(100dvh - 20px); display: flex; flex-direction: column}
-    #modal-cart .modal-body {overflow-y: auto; overscroll-behavior: contain}
     .header-cart__buttons {flex-direction: column; gap: 10px}
     .header-cart__buttons .btn-default {display: block}
     .header-cart__buttons .btn {width: 100%; white-space: normal}

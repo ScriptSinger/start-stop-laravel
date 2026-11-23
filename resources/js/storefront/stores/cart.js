@@ -3,7 +3,6 @@
  * Начальное состояние — из разметки шапки, дальше — из ответов сервера:
  * {count, products, html} (CartController::miniCart()).
  */
-import $ from 'jquery';
 import Alpine from 'alpinejs';
 import { postJson } from '../utils';
 
@@ -11,16 +10,11 @@ export default {
     count: 0,
     products: [],
     html: '',
-    opener: null,
     busy: false,
     syncPending: false,
     stateUrl: '',
 
     init() {
-        $('#modal-cart').on('hidden.bs.modal', () => {
-            this.opener?.focus();
-            this.opener = null;
-        });
         const dropdown = document.querySelector('[data-mini-cart-html]');
 
         this.stateUrl = dropdown?.dataset.stateUrl ?? '';
@@ -53,17 +47,15 @@ export default {
     },
 
     open() {
-        if (!$('#modal-cart').hasClass('in') && !this.opener) {
-            this.opener = document.activeElement;
-        }
-        $('#modal-cart').modal('show');
+        const dialog = document.getElementById('modal-cart');
+
+        if (!dialog.open) dialog.showModal();
     },
 
     /** «В корзину» из карточки или со страницы товара. */
     async add(form) {
         if (this.busy) return;
 
-        this.opener = document.activeElement;
         this.setBusy(true);
         const buttons = [...form.querySelectorAll('button[type="submit"]')];
         buttons.forEach((button) => { button.disabled = true; });
