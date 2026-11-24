@@ -27,7 +27,7 @@ class GenerateSitemapTest extends TestCase
 
     protected function tearDown(): void
     {
-        array_map('unlink', glob(dirname($this->path).'/sitemap*.xml'));
+        array_map('unlink', glob(dirname($this->path).'/sitemap*'));
 
         parent::tearDown();
     }
@@ -46,7 +46,7 @@ class GenerateSitemapTest extends TestCase
 
         $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
 
-        $xml = $this->allSitemaps();
+        $xml = file_get_contents($this->path);
 
         $this->assertStringContainsString('<loc>'.route('product.show', 'kompressor').'</loc>', $xml);
         $this->assertStringContainsString('<loc>'.route('category.show', $compressors).'</loc>', $xml);
@@ -60,22 +60,31 @@ class GenerateSitemapTest extends TestCase
         $this->assertStringNotContainsString('chernovik', $xml);
     }
 
-    public function test_index_lists_files_by_type(): void
+    public function test_writes_one_file_with_all_page_types(): void
     {
         $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
 
-        $index = file_get_contents($this->path);
+        $xml = file_get_contents($this->path);
 
-        foreach (['categories', 'brands', 'products', 'pages', 'cars'] as $type) {
-            $this->assertStringContainsString('<loc>'.url("sitemap-{$type}.xml").'</loc>', $index);
-            $this->assertFileExists(dirname($this->path)."/sitemap-{$type}.xml");
-        }
-
-        // Адреса страниц лежат в файлах по типам, а не в индексе.
-        $this->assertStringNotContainsString(route('home'), str_replace(url('sitemap-'), '', $index));
+        $this->assertStringContainsString('<urlset', $xml);
+        $this->assertStringNotContainsString('<sitemapindex', $xml);
+        $this->assertStringContainsString('<loc>'.route('home').'</loc>', $xml);
+        $this->assertStringContainsString('<loc>'.route('car-landing.index').'</loc>', $xml);
+        $this->assertCount(1, glob(dirname($this->path).'/sitemap*.xml'));
     }
 
-    public function test_brands_file_has_only_brand_pages_with_enough_products(): void
+    public function test_removes_parts_left_by_the_previous_version(): void
+    {
+        foreach (['categories', 'brands', 'products', 'pages', 'cars'] as $type) {
+            file_put_contents(dirname($this->path)."/sitemap-{$type}.xml", '<urlset/>');
+        }
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
+
+        $this->assertSame([$this->path], glob(dirname($this->path).'/sitemap*.xml'));
+    }
+
+    public function test_has_only_brand_pages_with_enough_products(): void
     {
         $batteries = Category::query()->create(['name' => 'Аккумуляторы', 'slug' => 'akkumulyatori', 'status' => true]);
         $oils = Category::query()->create(['name' => 'Масла', 'slug' => 'motornoe-maslo', 'status' => true]);
@@ -91,28 +100,28 @@ class GenerateSitemapTest extends TestCase
 
         $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
 
-        $brands = file_get_contents(dirname($this->path).'/sitemap-brands.xml');
+        $xml = file_get_contents($this->path);
 
-        $this->assertStringContainsString('<loc>'.route('category.manufacturer', [$batteries, $titan]).'</loc>', $brands);
+        $this->assertStringContainsString('<loc>'.route('category.manufacturer', [$batteries, $titan]).'</loc>', $xml);
         // Мало товаров, раздел вне списка и адреса с параметрами в карту не попадают.
-        $this->assertStringNotContainsString('varta', $brands);
-        $this->assertStringNotContainsString('motornoe-maslo', $brands);
-        $this->assertDoesNotMatchRegularExpression('/<loc>[^<]*\\?[^<]*<\\/loc>/', $brands);
+        $this->assertStringNotContainsString('<loc>'.route('category.manufacturer', [$batteries, $varta]).'</loc>', $xml);
+        $this->assertStringNotContainsString('<loc>'.route('category.manufacturer', [$oils, $titan]).'</loc>', $xml);
+        $this->assertDoesNotMatchRegularExpression('/<loc>[^<]*\\?[^<]*<\\/loc>/', $xml);
     }
 
-    public function test_pages_file_has_only_active_guides(): void
+    public function test_has_only_active_guides(): void
     {
         $live = Guide::factory()->create(['slug' => 'live']);
         $hidden = Guide::factory()->create(['slug' => 'hidden', 'status' => false]);
 
         $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
 
-        $pages = file_get_contents(dirname($this->path).'/sitemap-pages.xml');
-        $this->assertStringContainsString('<loc>'.route('guide.show', $live).'</loc>', $pages);
-        $this->assertStringNotContainsString(route('guide.show', $hidden), $pages);
+        $xml = file_get_contents($this->path);
+        $this->assertStringContainsString('<loc>'.route('guide.show', $live).'</loc>', $xml);
+        $this->assertStringNotContainsString(route('guide.show', $hidden), $xml);
     }
 
-    public function test_pages_file_has_main_pages_and_lastmod_follows_catalog(): void
+    public function test_has_main_pages_and_lastmod_follows_catalog(): void
     {
         Product::query()->create(['name' => 'Товар', 'slug' => 'tovar', 'price' => 1, 'status' => true]);
         $this->travelTo(now()->addDays(3)->startOfSecond());
@@ -121,19 +130,46 @@ class GenerateSitemapTest extends TestCase
 
         $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
 
-        $pages = file_get_contents(dirname($this->path).'/sitemap-pages.xml');
-        $cars = file_get_contents(dirname($this->path).'/sitemap-cars.xml');
+        $xml = file_get_contents($this->path);
 
         foreach ([route('home'), route('contact'), route('business')] as $location) {
-            $this->assertStringContainsString("<loc>{$location}</loc>", $pages);
+            $this->assertStringContainsString("<loc>{$location}</loc>", $xml);
         }
 
-        $this->assertMatchesRegularExpression('#<loc>'.preg_quote(route('home'), '#').'</loc>\s*<lastmod>'.preg_quote($changedAt->toAtomString(), '#').'</lastmod>#', $pages);
+        $this->assertMatchesRegularExpression('#<loc>'.preg_quote(route('home'), '#').'</loc>\s*<lastmod>'.preg_quote($changedAt->toAtomString(), '#').'</lastmod>#', $xml);
         // Без параметров машины подбор отдаёт 404 — в карте ему не место.
-        $this->assertStringNotContainsString('podbor-akb', $cars);
-        $this->assertStringContainsString('<loc>'.route('car-landing.index').'</loc>', $cars);
+        $this->assertStringNotContainsString('podbor-akb', $xml);
+        $this->assertStringContainsString('<loc>'.route('car-landing.index').'</loc>', $xml);
         // У контактов своей даты изменения нет — не выдумываем.
-        $this->assertDoesNotMatchRegularExpression('#<loc>'.preg_quote(route('contact'), '#').'</loc>\s*<lastmod>#', $pages);
+        $this->assertDoesNotMatchRegularExpression('#<loc>'.preg_quote(route('contact'), '#').'</loc>\s*<lastmod>#', $xml);
+    }
+
+    public function test_does_not_overwrite_the_map_when_it_shrinks_sharply(): void
+    {
+        $category = Category::query()->create(['name' => 'Автотовары', 'slug' => 'avtotovari', 'status' => true]);
+        $category->products()->attach(Product::query()->create(['name' => 'Компрессор', 'slug' => 'kompressor', 'price' => 1, 'status' => true]));
+
+        // Прежняя карта на сто адресов, а в базе осталось несколько — это похоже на сбой, а не на правку каталога.
+        $previous = '<urlset>'.str_repeat('<url><loc>https://example.test/x</loc></url>', 100).'</urlset>';
+        file_put_contents($this->path, $previous);
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertFailed();
+
+        $this->assertSame($previous, file_get_contents($this->path));
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path, '--force' => true])->assertSuccessful();
+
+        $this->assertStringContainsString(route('product.show', 'kompressor'), file_get_contents($this->path));
+    }
+
+    public function test_leaves_no_temporary_file_and_replaces_the_old_map(): void
+    {
+        file_put_contents($this->path, '<urlset><url><loc>https://example.test/old</loc></url></urlset>');
+
+        $this->artisan('sitemap:generate', ['--path' => $this->path])->assertSuccessful();
+
+        $this->assertStringNotContainsString('example.test/old', file_get_contents($this->path));
+        $this->assertSame([$this->path], glob(dirname($this->path).'/sitemap*'));
     }
 
     public function test_rebuilt_every_night(): void
@@ -144,10 +180,5 @@ class GenerateSitemapTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame('15 3 * * *', $event->expression);
         $this->assertSame('Asia/Yekaterinburg', $event->timezone);
-    }
-
-    private function allSitemaps(): string
-    {
-        return collect(glob(dirname($this->path).'/sitemap*.xml'))->map(file_get_contents(...))->implode("\n");
     }
 }

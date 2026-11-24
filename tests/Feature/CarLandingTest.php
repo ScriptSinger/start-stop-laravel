@@ -322,7 +322,7 @@ class CarLandingTest extends TestCase
 
         $this->artisan('sitemap:generate', ['--path' => "{$directory}/sitemap.xml"])->assertSuccessful();
 
-        $xml = file_get_contents("{$directory}/sitemap-cars.xml");
+        $xml = file_get_contents("{$directory}/sitemap.xml");
         array_map('unlink', glob("{$directory}/*.xml"));
         rmdir($directory);
 

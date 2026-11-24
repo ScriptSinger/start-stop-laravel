@@ -18,54 +18,67 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Spatie\Sitemap\Sitemap;
-use Spatie\Sitemap\SitemapIndex;
-use Spatie\Sitemap\Tags\Sitemap as SitemapTag;
 use Spatie\Sitemap\Tags\Url;
 
-#[Signature('sitemap:generate {--path= : Куда записать индекс (по умолчанию public/sitemap.xml); файлы по типам лягут рядом}')]
-#[Description('Собрать sitemap.xml из базы: индекс и файлы по типам — только включённые товары, страницы и разделы с товарами')]
+#[Signature('sitemap:generate {--path= : Куда записать файл (по умолчанию public/sitemap.xml)} {--force : Записать, даже если адресов стало меньше половины}')]
+#[Description('Собрать sitemap.xml из базы: только включённые товары, страницы и разделы с товарами')]
 class GenerateSitemap extends Command
 {
+    /**
+     * Старые части карты (индекс и файлы по типам), которые писала прежняя версия
+     * команды. После перехода на один файл их удаляют, чтобы на сервере не лежали
+     * устаревшие адреса.
+     */
+    private const LEGACY_PARTS = ['categories', 'brands', 'products', 'pages', 'cars'];
+
     /**
      * Карта пересобирается каждую ночь (routes/console.php) и после импорта,
      * поэтому выключенный товар уходит из неё не позже чем через сутки.
      * На старом сайте файл выгрузили один раз в 2024 году — к 2026-му
      * половина адресов в нём отдавала 404.
      *
-     * sitemap.xml — индекс, сами адреса лежат в sitemap-categories.xml,
-     * sitemap-brands.xml, sitemap-products.xml, sitemap-pages.xml и sitemap-cars.xml: так в
-     * Вебмастере и Search Console видно, какой тип страниц не индексируется.
+     * Все адреса лежат в одном sitemap.xml: их около шести тысяч, а лимит
+     * протокола — 50 000 адресов и 50 МБ на файл.
+     *
+     * Запись атомарная (временный файл и переименование): поисковый робот,
+     * пришедший во время пересборки, получает целую карту, а не обрывок.
+     * Если адресов стало меньше половины прежнего, карта не перезаписывается:
+     * так пустая или неполная база не заставит поисковики выбросить страницы.
      */
     public function handle(CarLandingCatalog $carLandings, BrandPages $brandPages): int
     {
         $path = $this->option('path') ?: public_path('sitemap.xml');
-        $directory = dirname($path);
 
         // Дата свежего товара — «изменение» главной, подбора и посадочных по авто:
         // их содержимое (цены, наличие, список аккумуляторов) собирается из товаров.
         $catalogChangedAt = $this->catalogChangedAt();
 
-        [$categorySitemap, $categories] = $this->categorySitemap();
-        [$brandSitemap, $brands] = $this->brandSitemap($brandPages);
-        [$productSitemap, $products] = $this->productSitemap();
-        [$pageSitemap, $pages] = $this->pageSitemap($catalogChangedAt);
-        [$carSitemap, $carPages] = $this->carSitemap($carLandings, $catalogChangedAt);
+        $sitemap = Sitemap::create();
 
-        $index = SitemapIndex::create();
+        $pages = $this->addPages($sitemap, $catalogChangedAt);
+        $categories = $this->addCategories($sitemap);
+        $brands = $this->addBrands($sitemap, $brandPages);
+        $products = $this->addProducts($sitemap);
+        $carPages = $this->addCarLandings($sitemap, $carLandings, $catalogChangedAt);
 
-        foreach ([
-            'sitemap-categories.xml' => $categorySitemap,
-            'sitemap-brands.xml' => $brandSitemap,
-            'sitemap-products.xml' => $productSitemap,
-            'sitemap-pages.xml' => $pageSitemap,
-            'sitemap-cars.xml' => $carSitemap,
-        ] as $file => $sitemap) {
-            $sitemap->writeToFile("{$directory}/{$file}");
-            $index->add(SitemapTag::create(url($file))->setLastModificationDate(now()));
+        $urls = count($sitemap->getTags());
+        $previous = is_file($path) ? substr_count((string) file_get_contents($path), '<loc>') : 0;
+
+        if (! $this->option('force') && $previous > 0 && $urls * 2 < $previous) {
+            $this->error("sitemap.xml не перезаписан: адресов {$urls} вместо прежних {$previous}. Проверьте базу или запустите с --force.");
+
+            return self::FAILURE;
         }
 
-        $index->writeToFile($path);
+        $temporary = "{$path}.tmp";
+        $sitemap->writeToFile($temporary);
+        File::move($temporary, $path);
+
+        foreach (self::LEGACY_PARTS as $type) {
+            File::delete(dirname($path)."/sitemap-{$type}.xml");
+        }
 
         $this->info("sitemap.xml: разделов {$categories}, страниц производителей {$brands}, товаров {$products}, страниц {$pages}, подбор по авто {$carPages} → {$path}");
 
@@ -73,44 +86,39 @@ class GenerateSitemap extends Command
     }
 
     /**
-     * @return array{Sitemap, int}
+     * Включённые разделы с товарами. Возвращает число добавленных адресов.
      */
-    private function categorySitemap(): array
+    private function addCategories(Sitemap $sitemap): int
     {
-        $sitemap = Sitemap::create();
         $categories = $this->categoriesWithProducts();
 
         $categories->each(fn (Category $category) => $sitemap->add(
             Url::create(route('category.show', $category))->setLastModificationDate($category->updated_at),
         ));
 
-        return [$sitemap, $categories->count()];
+        return $categories->count();
     }
 
     /**
      * Страницы «раздел + производитель»: только пары с достаточным числом
-     * товаров, без адресов с фильтрами.
-     *
-     * @return array{Sitemap, int}
+     * товаров, без адресов с фильтрами. Возвращает число добавленных адресов.
      */
-    private function brandSitemap(BrandPages $brandPages): array
+    private function addBrands(Sitemap $sitemap, BrandPages $brandPages): int
     {
-        $sitemap = Sitemap::create();
         $pages = $brandPages->pages();
 
         $pages->each(fn (array $page) => $sitemap->add(
-            Url::create(route('category.manufacturer', [$page['category'], $page['manufacturer']]))->setLastModificationDate($page['changed_at'] ?? now()),
+            $this->url(route('category.manufacturer', [$page['category'], $page['manufacturer']]), $page['changed_at'] ?? null),
         ));
 
-        return [$sitemap, $pages->count()];
+        return $pages->count();
     }
 
     /**
-     * @return array{Sitemap, int}
+     * Включённые товары. Возвращает число добавленных адресов.
      */
-    private function productSitemap(): array
+    private function addProducts(Sitemap $sitemap): int
     {
-        $sitemap = Sitemap::create();
         $products = 0;
 
         Product::query()
@@ -124,17 +132,16 @@ class GenerateSitemap extends Command
                 $products += $chunk->count();
             });
 
-        return [$sitemap, $products];
+        return $products;
     }
 
     /**
      * Главная, контакты, страница для организаций и инфостраницы.
-     *
-     * @return array{Sitemap, int}
+     * Возвращает число добавленных адресов.
      */
-    private function pageSitemap(?Carbon $catalogChangedAt): array
+    private function addPages(Sitemap $sitemap, ?Carbon $catalogChangedAt): int
     {
-        $sitemap = Sitemap::create()
+        $sitemap
             ->add($this->url(route('home'), $catalogChangedAt))
             ->add(Url::create(route('contact')))
             ->add(Url::create(route('business')));
@@ -149,23 +156,20 @@ class GenerateSitemap extends Command
             Url::create(route('guide.show', $guide))->setLastModificationDate($guide->updated_at),
         ));
 
-        return [$sitemap, $pages->count() + $guides->count() + 3];
+        return $pages->count() + $guides->count() + 3;
     }
 
     /**
      * Посадочные «Аккумулятор для …» — только включённые марки и модели
-     * с товарами.
-     *
-     * @return array{Sitemap, int}
+     * с товарами. Возвращает число добавленных адресов.
      */
-    private function carSitemap(CarLandingCatalog $carLandings, ?Carbon $catalogChangedAt): array
+    private function addCarLandings(Sitemap $sitemap, CarLandingCatalog $carLandings, ?Carbon $catalogChangedAt): int
     {
         $changedAt = $this->latest($catalogChangedAt, BatteryFitment::query()->max('updated_at'));
 
         // /podbor-akb сюда не входит: без параметров машины он отдаёт 404 —
         // это страница результата подбора, а не общая страница.
-        $sitemap = Sitemap::create()
-            ->add($this->url(route('car-landing.index'), $changedAt));
+        $sitemap->add($this->url(route('car-landing.index'), $changedAt));
         $carPages = 1;
 
         $carLandings->brands()->each(function (CarBrand $brand) use ($sitemap, $carLandings, $changedAt, &$carPages): void {
@@ -194,7 +198,7 @@ class GenerateSitemap extends Command
             $carLandings->releaseMemory();
         });
 
-        return [$sitemap, $carPages];
+        return $carPages;
     }
 
     private function url(string $location, ?Carbon $changedAt): Url
