@@ -161,12 +161,13 @@ class CatalogFilterTest extends TestCase
             ->assertSee('TITAN 60 О.П.')
             ->assertDontSee('TITAN 60 П.П.');
         $this->assertFacetCount($this->category(['attr' => [$this->polarity->id => [$this->value('Прямая')]]]), 'L2', 1);
-        $this->assertFacetCount($this->category(['attr' => [$this->polarity->id => [$this->value('Прямая')]]]), 'L3', 0);
+        // L3 при выбранной «Прямой» дал бы 0 результатов — такого значения в списке уже нет.
+        $this->assertStringNotContainsString('L3', $this->filterBlock($this->category(['attr' => [$this->polarity->id => [$this->value('Прямая')]]])));
 
         $this->getJson(route('category.count', ['category' => $this->batteries, 'case_type' => [$l2->id]]))->assertExactJson(['count' => 2]);
     }
 
-    public function test_long_filter_group_lists_available_values_first_and_dimensions_by_size(): void
+    public function test_long_filter_group_lists_only_available_values_by_size(): void
     {
         config(['shop.battery_fitment.attributes.dimensions' => 0]);
         $sizes = $this->attribute('Габариты', ['400 x 100 x 100 мм', '65-750 (302x182x192)', '100 x 100 x 100 мм', '200 x 100 x 100 мм', '10 x 10 x 10 мм', '11 x 10 x 10 мм', '12 x 10 x 10 мм', '13 x 10 x 10 мм', '14 x 10 x 10 мм', '15 x 10 x 10 мм']);
@@ -183,13 +184,10 @@ class CatalogFilterTest extends TestCase
         $block = $this->filterBlock($this->category(['attr' => [$this->polarity->id => [$this->value('Обратная')]]]));
         $position = fn (string $label): int => strpos($block, "data-label=\"{$label}\"");
 
-        // Доступные (с товарами при выбранной полярности) выше недоступных, внутри — по размеру.
-        $this->assertLessThan($position('10 x 10 x 10 мм'), $position('200 x 100 x 100 мм'));
+        // Показаны только доступные (с товарами при выбранной полярности), по размеру: 200 раньше 400.
         $this->assertLessThan($position('400 x 100 x 100 мм'), $position('200 x 100 x 100 мм'), 'По размеру: 200 раньше 400');
-        $this->assertLessThan($position('10 x 10 x 10 мм'), $position('400 x 100 x 100 мм'));
-        // Недоступные тоже по размеру, а «65-750 (…)» в самом конце.
-        $this->assertLessThan($position('11 x 10 x 10 мм'), $position('10 x 10 x 10 мм'));
-        $this->assertLessThan($position('65-750 (302x182x192)'), $position('100 x 100 x 100 мм'));
+        $this->assertStringNotContainsString('data-label="10 x 10 x 10 мм"', $block, 'Недоступные значения скрыты');
+        $this->assertStringNotContainsString('data-label="65-750 (302x182x192)"', $block, 'Недоступные значения скрыты');
     }
 
     public function test_price_filters_and_bounds_use_displayed_prices(): void
@@ -242,14 +240,12 @@ class CatalogFilterTest extends TestCase
         $this->assertFacetCount($response, 'VARTA', 1);
     }
 
-    public function test_value_with_no_results_is_disabled(): void
+    public function test_value_with_no_results_is_hidden(): void
     {
-        $html = $this->get(route('category.manufacturer', [$this->batteries, $this->varta]))->assertOk()->getContent();
+        $block = $this->filterBlock($this->get(route('category.manufacturer', [$this->batteries, $this->varta]))->assertOk());
 
-        $this->assertMatchesRegularExpression(
-            '/value="'.$this->value('Прямая').'"[^>]*\sdisabled/',
-            $html,
-        );
+        $this->assertStringNotContainsString('data-label="Прямая"', $block);
+        $this->assertStringContainsString('data-label="Обратная"', $block);
     }
 
     public function test_count_endpoint_for_mobile_filter_button(): void

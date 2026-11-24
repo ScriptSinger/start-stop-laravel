@@ -118,7 +118,8 @@
         position: sticky; bottom: 0; margin-top: auto;
         display: flex; align-items: center; gap: 15px; padding: 15px 20px; background: #fff;
     }
-    .catalog-filter__submit {flex: 1; padding: 10px}
+    /* Высота задана темой (.btn {height: 32px}): вертикальный padding сдвигал подпись вниз. */
+    .catalog-filter__submit {flex: 1; height: var(--store-control-height, 44px); padding: 0 10px}
 }
 
 /* Над сортировкой на старом сайте стояли баннеры; без них на телефоне от темы
@@ -153,4 +154,10 @@
     .catalog-toolbar .sorts-block__wrapper, .catalog-toolbar .sort-menu {width: 100%}
     .catalog-toolbar__filters {display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; color: #333; font-weight: 600; background: #fff; border: 1px solid #ccc; border-radius: 4px}
     .catalog-toolbar__badge {display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; color: #fff; background: var(--btn-primary-bg); border-radius: 10px; font-size: 12px; font-weight: 700; line-height: 1}
+}
+
+/* Колонка фильтра прилипает под шапкой и листается сама: высота страницы определяется товарами,
+   а не длинным фильтром (при одном-двух товарах справа не остаётся пустого экрана). */
+@media (min-width: 768px) {
+    #product-category #column-left {position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin}
 }
