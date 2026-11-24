@@ -46,6 +46,8 @@
 #goodshare button.share-native {display: none; width: auto; padding: 0 10px}
 #goodshare[data-native] button[data-social]:not(.share-native) {display: none}
 #goodshare[data-native] button.share-native {display: inline-flex; align-items: center; gap: 6px}
+/* В режиме системного меню подпись «Поделиться:» дублирует кнопку «Поделиться» — оставляем одну. */
+#goodshare[data-native] .product-page__share-label {display: none}
 
 /* Плашки преимуществ: заголовок жирным, пояснение мельче; перенос по слогам, а не посреди слова
    (язык страницы ru, hyphens: auto); на телефоне иконка меньше, чтобы тексту хватало ширины. */
