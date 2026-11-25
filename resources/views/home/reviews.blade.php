@@ -13,7 +13,14 @@
         @foreach ($storeReviews as $review)
             <article class="reviews-widget__card">
                 <div class="reviews-widget__card-top">
-                    <span class="reviews-widget__avatar" aria-hidden="true"><i class="far fa-user"></i></span>
+                    <span class="reviews-widget__avatar" aria-hidden="true">
+                        @if ($review->avatar_url)
+                            <img src="{{ $review->avatar_url }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+                            <i class="far fa-user" hidden></i>
+                        @else
+                            <i class="far fa-user"></i>
+                        @endif
+                    </span>
                     <div><strong>{{ $review->author }}</strong>@if ($review->reviewed_at)<span class="reviews-widget__demo">{{ $review->reviewed_at->format('d.m.Y') }}</span>@endif</div>
                     <span class="reviews-widget__source" aria-label="Источник: {{ $review->source->toString() }}">
                         @if ($review->source === \App\Enums\StoreReviewSource::Avito)

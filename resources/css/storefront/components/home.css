@@ -46,6 +46,8 @@
 .reviews-widget__card {display: flex; flex-direction: column; min-height: 200px; padding: 22px; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff}
 .reviews-widget__card-top {display: flex; align-items: center; gap: 12px}
 .reviews-widget__avatar {display: flex; align-items: center; justify-content: center; flex: 0 0 40px; height: 40px; border-radius: 50%; background: #f4f4f4; color: #555}
+.reviews-widget__avatar img {width: 100%; height: 100%; object-fit: cover; border-radius: 50%}
+.reviews-widget__avatar [hidden] {display: none !important}
 .reviews-widget__demo {display: block; color: #777; font-size: 12px}
 .reviews-widget__source {display: inline-flex; align-items: center; gap: 6px; margin-left: auto; color: #555; font-size: 13px; white-space: nowrap}
 .reviews-widget__source svg, .reviews-widget__yandex-icon {width: 24px; height: 24px; flex: 0 0 24px}

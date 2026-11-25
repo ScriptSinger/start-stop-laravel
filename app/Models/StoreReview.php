@@ -14,7 +14,7 @@ class StoreReview extends Model
     /** @use HasFactory<StoreReviewFactory> */
     use HasFactory;
 
-    protected $fillable = ['author', 'source', 'rating', 'body', 'reviewed_at', 'sort_order', 'is_active'];
+    protected $fillable = ['author', 'source', 'rating', 'body', 'reviewed_at', 'sort_order', 'is_active', 'avatar_url'];
 
     protected function casts(): array
     {

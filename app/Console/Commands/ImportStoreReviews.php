@@ -45,6 +45,7 @@ class ImportStoreReviews extends Command
             'reviews.*.rating' => ['required', 'integer', 'between:1,5'],
             'reviews.*.body' => ['required', 'string'],
             'reviews.*.reviewed_at' => ['required', 'date_format:Y-m-d'],
+            'reviews.*.avatar_url' => ['nullable', 'string', 'max:2048', 'url:https', 'regex:~^https://avatars\.mds\.yandex\.net/~i'],
         ]);
         if ($validator->fails()) {
             $this->error($validator->errors()->first());
@@ -54,7 +55,8 @@ class ImportStoreReviews extends Command
 
         $created = 0;
         $skipped = 0;
-        DB::transaction(function () use ($reviews, &$created, &$skipped): void {
+        $updated = 0;
+        DB::transaction(function () use ($reviews, &$created, &$skipped, &$updated): void {
             $seen = [];
             foreach ($reviews as $review) {
                 $attributes = [
@@ -64,25 +66,40 @@ class ImportStoreReviews extends Command
                     'body' => trim($review['body']),
                 ];
                 $key = hash('sha256', json_encode($attributes, JSON_THROW_ON_ERROR));
-                if (isset($seen[$key]) || StoreReview::query()
-                    ->where('source', $attributes['source'])
-                    ->where('author', $attributes['author'])
-                    ->where('body', $attributes['body'])
-                    ->whereDate('reviewed_at', $attributes['reviewed_at'])
-                    ->exists()) {
+                if (isset($seen[$key])) {
                     $skipped++;
 
                     continue;
                 }
                 $seen[$key] = true;
+                $existing = StoreReview::query()
+                    ->where('source', $attributes['source'])
+                    ->where('author', $attributes['author'])
+                    ->where('body', $attributes['body'])
+                    ->whereDate('reviewed_at', $attributes['reviewed_at'])
+                    ->first();
+                $avatarUrl = $review['avatar_url'] ?? null;
+                if ($existing) {
+                    if ($avatarUrl && ! $existing->avatar_url) {
+                        if (! $this->option('dry-run')) {
+                            $existing->update(['avatar_url' => $avatarUrl]);
+                        }
+                        $updated++;
+
+                        continue;
+                    }
+                    $skipped++;
+
+                    continue;
+                }
                 if (! $this->option('dry-run')) {
-                    StoreReview::query()->create([...$attributes, 'rating' => $review['rating'], 'is_active' => false]);
+                    StoreReview::query()->create([...$attributes, 'rating' => $review['rating'], 'is_active' => false, 'avatar_url' => $avatarUrl]);
                 }
                 $created++;
             }
         });
 
-        $this->info(($this->option('dry-run') ? 'Проверка' : 'Импорт').": новых {$created}, пропущено {$skipped}.");
+        $this->info(($this->option('dry-run') ? 'Проверка' : 'Импорт').": новых {$created}, добавлено аватаров {$updated}, пропущено {$skipped}.");
 
         return self::SUCCESS;
     }

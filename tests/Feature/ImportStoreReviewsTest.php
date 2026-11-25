@@ -43,6 +43,28 @@ class ImportStoreReviewsTest extends TestCase
         }
     }
 
+    public function test_import_adds_missing_avatar_without_changing_existing_review(): void
+    {
+        $review = StoreReview::factory()->create(['author' => 'Покупатель', 'source' => 'yandex', 'rating' => 4, 'body' => 'Отзыв', 'reviewed_at' => '2025-01-02', 'is_active' => true, 'sort_order' => 7]);
+        $file = $this->reviewFile([['author' => 'Покупатель', 'source' => 'yandex', 'rating' => 5, 'body' => 'Отзыв', 'reviewed_at' => '2025-01-02', 'avatar_url' => 'https://avatars.mds.yandex.net/get-yapic/example']]);
+        try {
+            $this->artisan('reviews:import', ['file' => $file, '--dry-run' => true])->assertSuccessful();
+            $this->assertNull($review->fresh()->avatar_url);
+            $this->artisan('reviews:import', ['file' => $file])->assertSuccessful();
+            $review->refresh();
+            $this->assertSame('https://avatars.mds.yandex.net/get-yapic/example', $review->avatar_url);
+            $this->assertSame(4, $review->rating);
+            $this->assertSame(7, $review->sort_order);
+            $this->assertTrue($review->is_active);
+            $this->assertDatabaseCount('store_reviews', 1);
+            $this->get(route('home'))->assertSee('https://avatars.mds.yandex.net/get-yapic/example', false);
+            $this->artisan('reviews:import', ['file' => $file])->assertSuccessful();
+            $this->assertDatabaseCount('store_reviews', 1);
+        } finally {
+            unlink($file);
+        }
+    }
+
     private function reviewFile(array $reviews): string
     {
         $file = tempnam(sys_get_temp_dir(), 'store-reviews-');
