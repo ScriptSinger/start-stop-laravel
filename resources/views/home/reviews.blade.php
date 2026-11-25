@@ -2,7 +2,7 @@
     $demoReviews = [
         ['author' => 'Имя автора 1', 'source' => 'Яндекс Карты', 'text' => 'Помогли подобрать аккумулятор и ответили на вопросы по установке.'],
         ['author' => 'Имя автора 2', 'source' => 'Авито', 'text' => 'Заказ оформлен удобно, менеджер уточнил детали доставки.'],
-        ['author' => 'Имя автора 3', 'source' => 'Яндекс Карты', 'text' => 'Проконсультировали по характеристикам и условиям гарантии.'],
+        ['author' => 'Имя автора 3', 'source' => 'Яндекс Карты', 'text' => 'Проконсультировали по характеристикам и условиям гарантии. Рассказали о вариантах для автомобиля, помогли сравнить модели и объяснили, как правильно ухаживать за аккумулятором. Ответили на вопросы о сроке службы, установке и выборе ёмкости. Также рассказали, как работает обмен старого аккумулятора при покупке нового.'],
         ['author' => 'Имя автора 4', 'source' => 'Авито', 'text' => 'Быстро нашёл подходящий вариант для своего автомобиля.'],
         ['author' => 'Имя автора 5', 'source' => 'Яндекс Карты', 'text' => 'Рассказали об обмене старого аккумулятора при покупке нового.'],
     ];
@@ -34,7 +34,22 @@
                     </span>
                 </div>
                 <div class="reviews-widget__stars" aria-label="Пример оценки: 5 из 5">★★★★★</div>
-                <p>{{ $review['text'] }}</p>
+                    <div x-data="{truncated: false, observer: null, init() { this.$nextTick(() => { this.observer = new ResizeObserver(() => { this.truncated = this.$refs.preview.scrollHeight > this.$refs.preview.clientHeight + 1 }); this.observer.observe(this.$refs.preview) }) }, destroy() { this.observer?.disconnect() }}">
+                        <p x-ref="preview" :class="'reviews-widget__preview'">{{ $review['text'] }}</p>
+                        <button class="reviews-widget__expand" type="button" x-cloak x-show="truncated" @click="$el.nextElementSibling.showModal()" aria-haspopup="dialog">Читать полностью</button>
+                        <dialog class="store-dialog reviews-widget__dialog" aria-label="Полный отзыв — {{ $review['author'] }}" @click.self="$el.close()">
+                            <div class="store-dialog__header">
+                                <h3 class="store-dialog__title">Отзыв покупателя</h3>
+                                <form method="dialog"><button class="store-dialog__close" aria-label="Закрыть отзыв"><i class="fas fa-times" aria-hidden="true"></i></button></form>
+                            </div>
+                            <div class="store-dialog__body">
+                                <strong>{{ $review['author'] }}</strong>
+                                <p class="reviews-widget__dialog-source">{{ $review['source'] }} · Тестовые данные</p>
+                                <div class="reviews-widget__stars" aria-label="Пример оценки: 5 из 5">★★★★★</div>
+                                <p>{{ $review['text'] }}</p>
+                            </div>
+                        </dialog>
+                    </div>
             </article>
         @endforeach
     </div>

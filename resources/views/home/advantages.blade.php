@@ -1,6 +1,6 @@
 {{-- Модуль html «Наши преимущества» старого сайта (oc_module 39): HTML и стиль
      перенесены как есть, иконки вынесены из base64 в файлы. --}}
-<div class="html-module">
+<div class="html-module home-advantages">
     <div class="row">
         @foreach ([
             ['advantage-battery.png', 'Диагностика аккумулятора', 'Проверим Ваш аккумулятор и при необходимости подберем новый', null, 180, 136],
