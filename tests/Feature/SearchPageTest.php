@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Manufacturer;
 use App\Models\Page;
 use App\Models\Product;
+use App\Models\StoreReview;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -88,9 +89,10 @@ class SearchPageTest extends TestCase
     {
         $about = Page::query()->create(['title' => 'О компании', 'slug' => 'about_us', 'description' => '<p>Текст</p>', 'status' => true]);
         $terms = Page::query()->create(['title' => 'Условия', 'slug' => 'terms', 'description' => '<p>Текст</p>', 'status' => true]);
+        StoreReview::factory()->create(['body' => 'Подробный отзыв покупателя']);
 
-        $this->get(route('page.show', $about))->assertOk()->assertSee('Отзывы о магазине')->assertSee('отзывы пока тестовые');
-        $this->get(route('page.show', $terms))->assertOk()->assertDontSee('отзывы пока тестовые');
+        $this->get(route('page.show', $about))->assertOk()->assertSee('Отзывы о магазине')->assertSee('Подробный отзыв покупателя');
+        $this->get(route('page.show', $terms))->assertOk()->assertDontSee('Подробный отзыв покупателя');
     }
 
     /**

@@ -30,6 +30,7 @@ use App\MoonShine\Resources\Page\PageResource;
 use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\ServiceOffer\ServiceOfferResource;
 use App\MoonShine\Resources\ServicePrice\ServicePriceResource;
+use App\MoonShine\Resources\StoreReview\StoreReviewResource;
 use App\MoonShine\Resources\Supplier\SupplierResource;
 use App\MoonShine\Resources\TradeIn\TradeInResource;
 use Illuminate\Support\Facades\Vite;
@@ -97,6 +98,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(BannerResource::class, 'Баннеры')->icon('photo'),
                 MenuItem::make(DeliveryZoneResource::class, 'Зоны доставки')->icon('truck'),
                 MenuItem::make(ServiceOfferResource::class, 'Услуги')->icon('wrench-screwdriver'),
+                MenuItem::make(StoreReviewResource::class, 'Отзывы о магазине')->icon('star'),
                 MenuItem::make(ServicePriceResource::class, 'Цены на обслуживание')->icon('banknotes'),
             ])->icon('globe-alt'),
             MenuGroup::make('Система', [

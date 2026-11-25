@@ -9,6 +9,7 @@ use App\View\Composers\FooterComposer;
 use App\View\Composers\HeaderCartComposer;
 use App\View\Composers\HeaderComposer;
 use App\View\Composers\SavedProductsCountComposer;
+use App\View\Composers\StoreReviewComposer;
 use Artesaos\SEOTools\Facades\OpenGraph;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('partials.header', SavedProductsCountComposer::class);
 
         View::composer('partials.battery-filter', BatteryFilterComposer::class);
+        View::composer('home.reviews', StoreReviewComposer::class);
 
         $this->configureSeoDefaults();
     }

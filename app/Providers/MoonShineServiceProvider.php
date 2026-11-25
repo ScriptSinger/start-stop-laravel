@@ -29,6 +29,7 @@ use App\MoonShine\Resources\Product\ProductResource;
 use App\MoonShine\Resources\ProductImage\ProductImageResource;
 use App\MoonShine\Resources\ServiceOffer\ServiceOfferResource;
 use App\MoonShine\Resources\ServicePrice\ServicePriceResource;
+use App\MoonShine\Resources\StoreReview\StoreReviewResource;
 use App\MoonShine\Resources\Supplier\SupplierResource;
 use App\MoonShine\Resources\TradeIn\TradeInResource;
 use Illuminate\Support\ServiceProvider;
@@ -63,6 +64,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 DeliveryZoneResource::class,
                 ServiceOfferResource::class,
                 ServicePriceResource::class,
+                StoreReviewResource::class,
                 ProductImageResource::class,
                 MenuItemResource::class,
                 CustomerRequestResource::class,
