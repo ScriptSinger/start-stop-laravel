@@ -89,8 +89,8 @@ class SearchPageTest extends TestCase
         $about = Page::query()->create(['title' => 'О компании', 'slug' => 'about_us', 'description' => '<p>Текст</p>', 'status' => true]);
         $terms = Page::query()->create(['title' => 'Условия', 'slug' => 'terms', 'description' => '<p>Текст</p>', 'status' => true]);
 
-        $this->get(route('page.show', $about))->assertOk()->assertSee('myReviews__block-widget', false);
-        $this->get(route('page.show', $terms))->assertOk()->assertDontSee('myReviews__block-widget', false);
+        $this->get(route('page.show', $about))->assertOk()->assertSee('Отзывы о магазине')->assertSee('отзывы пока тестовые');
+        $this->get(route('page.show', $terms))->assertOk()->assertDontSee('отзывы пока тестовые');
     }
 
     /**
