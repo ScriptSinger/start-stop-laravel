@@ -66,6 +66,7 @@
 .reviews-widget__photo-button:focus-visible, .reviews-widget__gallery-controls button:focus-visible {outline: 2px solid #bd2b00; outline-offset: 3px}
 .reviews-widget__gallery {margin-top: 16px; padding: 12px; border-radius: 8px; background: #f6f6f6}
 .reviews-widget__gallery > img {display: block; max-width: 100%; max-height: 55vh; margin: auto; object-fit: contain}
+.reviews-widget__full-photo {display: block; margin-top: 8px; color: #bd2b00; text-align: center; font-size: 13px}
 .reviews-widget__gallery-controls {display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 8px}
 .reviews-widget__gallery-controls button {min-width: 44px; min-height: 44px; border: 1px solid #bbb; border-radius: 6px; background: #fff; color: #333; font-size: 20px; cursor: pointer}
 .reviews-widget__gallery-controls button:hover {border-color: #bd2b00; color: #bd2b00}

@@ -32,3 +32,6 @@ Schedule::command('avito:export --disk=avito --path=avito.xlsx')->dailyAt('04:00
 // Ночная резервная копия базы с проверкой и ротацией (config/backup.php).
 Schedule::command('db:backup')->dailyAt('02:30')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
     ->onFailure(fn () => Log::critical('Ночная резервная копия базы не снята — см. вывод db:backup.'));
+
+Schedule::command('reviews:copy-media')->hourly()->withoutOverlapping()
+    ->onFailure(fn () => Log::error('Не удалось скопировать некоторые изображения отзывов в медиа-хранилище.'));

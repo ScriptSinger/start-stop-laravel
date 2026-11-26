@@ -42,6 +42,7 @@ class ImportStoreReviews extends Command
         $validator = Validator::make(['reviews' => $reviews], [
             'reviews.*.author' => ['required', 'string', 'max:100'],
             'reviews.*.source' => ['required', Rule::enum(StoreReviewSource::class)],
+            'reviews.*.source_external_id' => ['nullable', 'string', 'max:255'],
             'reviews.*.rating' => ['required', 'integer', 'between:1,5'],
             'reviews.*.body' => ['required', 'string'],
             'reviews.*.reviewed_at' => ['required', 'date_format:Y-m-d'],
@@ -68,21 +69,32 @@ class ImportStoreReviews extends Command
                     'body' => trim($review['body']),
                 ];
                 $key = hash('sha256', json_encode($attributes, JSON_THROW_ON_ERROR));
-                if (isset($seen[$key])) {
+                $sourceId = $review['source_external_id'] ?? null;
+                $identity = $sourceId ? $attributes['source'].':'.$sourceId : $key;
+                if (isset($seen[$identity])) {
                     $skipped++;
 
                     continue;
                 }
-                $seen[$key] = true;
-                $existing = StoreReview::query()
-                    ->where('source', $attributes['source'])
-                    ->where('author', $attributes['author'])
-                    ->where('body', $attributes['body'])
-                    ->whereDate('reviewed_at', $attributes['reviewed_at'])
-                    ->first();
+                $seen[$identity] = true;
+                $existing = ($sourceId ? StoreReview::query()->where('source', $attributes['source'])->where('source_external_id', $sourceId)->first() : null)
+                    ?? StoreReview::query()->where('import_fingerprint', $key)->when($sourceId, fn ($query) => $query->whereNull('source_external_id'))->first()
+                    ?? StoreReview::query()
+                        ->when($sourceId, fn ($query) => $query->whereNull('source_external_id'))
+                        ->where('source', $attributes['source'])
+                        ->where('author', $attributes['author'])
+                        ->where('body', $attributes['body'])
+                        ->whereDate('reviewed_at', $attributes['reviewed_at'])
+                        ->first();
                 $avatarUrl = $review['avatar_url'] ?? null;
                 if ($existing) {
                     $changes = [];
+                    if (! $existing->import_fingerprint) {
+                        $changes['import_fingerprint'] = $key;
+                    }
+                    if ($sourceId && ! $existing->source_external_id) {
+                        $changes['source_external_id'] = $sourceId;
+                    }
                     if ($avatarUrl && ! $existing->avatar_url) {
                         $changes['avatar_url'] = $avatarUrl;
                     }
@@ -102,7 +114,7 @@ class ImportStoreReviews extends Command
                     continue;
                 }
                 if (! $this->option('dry-run')) {
-                    StoreReview::query()->create([...$attributes, 'rating' => $review['rating'], 'is_active' => false, 'avatar_url' => $avatarUrl, 'photo_urls' => $review['photo_urls'] ?? null]);
+                    StoreReview::query()->create([...$attributes, 'rating' => $review['rating'], 'is_active' => false, 'avatar_url' => $avatarUrl, 'photo_urls' => $review['photo_urls'] ?? null, 'source_external_id' => $sourceId, 'import_fingerprint' => $key]);
                 }
                 $created++;
             }

@@ -3,6 +3,7 @@
 namespace App\MoonShine\Resources\StoreReview\Pages;
 
 use App\Enums\StoreReviewSource;
+use App\MoonShine\Fields\ReviewPhoto;
 use App\MoonShine\Resources\StoreReview\StoreReviewResource;
 use Illuminate\Validation\Rule;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
@@ -27,6 +28,8 @@ class StoreReviewFormPage extends FormPage
             Enum::make('Источник', 'source')->attach(StoreReviewSource::class)->required(),
             Number::make('Оценка от 1 до 5', 'rating')->min(1)->max(5)->default(5)->required(),
             Textarea::make('Текст отзыва', 'body')->required(),
+            ReviewPhoto::make('Аватар автора', 'avatar_path')->nullable(),
+            ReviewPhoto::make('Фотографии к отзыву', 'photo_paths')->multiple()->nullable(),
             Date::make('Дата отзыва', 'reviewed_at')->nullable(),
             Number::make('Порядок', 'sort_order')->min(0)->default(0)->required()
                 ->hint('Сначала выводятся отзывы с меньшим числом. На сайте показываются первые 30 опубликованных отзывов.'),

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Page;
 use App\Models\StoreReview;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use MoonShine\Laravel\Models\MoonshineUser;
 use MoonShine\Laravel\Models\MoonshineUserRole;
 use Tests\TestCase;
@@ -33,6 +35,32 @@ class StoreReviewsTest extends TestCase
         $this->get(route('home'))->assertDontSee('Отзывы о магазине')->assertDontSee('Имя автора 1');
     }
 
+    public function test_storefront_prefers_copied_media_over_source_urls(): void
+    {
+        Storage::fake('media');
+        StoreReview::factory()->create([
+            'avatar_path' => 'media/reviews/avatar.png',
+            'photo_paths' => ['media/reviews/photo.png'],
+            'avatar_url' => 'https://avatars.mds.yandex.net/get-yapic/source',
+            'photo_urls' => ['https://avatars.mds.yandex.net/get-altay/source'],
+        ]);
+
+        $this->get(route('home'))
+            ->assertSee(Storage::disk('media')->url('media/reviews/avatar.png'), false)
+            ->assertSee(Storage::disk('media')->url('media/reviews/photo.png'), false)
+            ->assertDontSee('https://avatars.mds.yandex.net/get-yapic/source', false)
+            ->assertDontSee('https://avatars.mds.yandex.net/get-altay/source', false);
+    }
+
+    public function test_source_photo_uses_preview_in_card_and_original_in_gallery(): void
+    {
+        StoreReview::factory()->create(['photo_urls' => ['https://avatars.mds.yandex.net/get-altay/123/photo/M?referer=lkb']]);
+
+        $this->get(route('home'))
+            ->assertSee('https://avatars.mds.yandex.net/get-altay/123/photo/M?referer=lkb', false)
+            ->assertSee('https://avatars.mds.yandex.net/get-altay/123/photo/orig', false);
+    }
+
     public function test_admin_can_create_edit_and_unpublish_a_review(): void
     {
         $this->actingAsAdmin();
@@ -45,6 +73,40 @@ class StoreReviewsTest extends TestCase
             ->assertRedirect()->assertSessionHasNoErrors();
         $this->get(route('home'))->assertDontSee('Изменённый текст');
         $this->assertSame('Изменённый текст', $review->fresh()->body);
+    }
+
+    public function test_admin_can_upload_review_images(): void
+    {
+        Storage::fake('media');
+        $this->actingAsAdmin();
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lWQAAAAASUVORK5CYII=');
+        $this->post(self::RESOURCE.'/crud', $this->payload([
+            'avatar_path' => UploadedFile::fake()->createWithContent('avatar.png', $png),
+            'photo_paths' => [UploadedFile::fake()->createWithContent('photo.png', $png)],
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+
+        $review = StoreReview::query()->sole();
+        Storage::disk('media')->assertExists($review->avatar_path);
+        Storage::disk('media')->assertExists($review->photo_paths[0]);
+    }
+
+    public function test_removing_media_in_admin_does_not_restore_the_old_source(): void
+    {
+        Storage::fake('media');
+        $this->actingAsAdmin();
+        $review = StoreReview::factory()->create([
+            'avatar_path' => 'media/reviews/avatar.png',
+            'photo_paths' => ['media/reviews/photo.png'],
+            'avatar_url' => 'https://avatars.mds.yandex.net/get-yapic/test',
+            'photo_urls' => ['https://avatars.mds.yandex.net/get-altay/test'],
+        ]);
+
+        $this->put(self::RESOURCE.'/crud/'.$review->id, $this->payload())->assertRedirect()->assertSessionHasNoErrors();
+        $review->refresh();
+        $this->assertNull($review->avatar_path);
+        $this->assertEmpty($review->photo_paths);
+        $this->assertNull($review->avatar_url);
+        $this->assertNull($review->photo_urls);
     }
 
     public function test_admin_cannot_save_invalid_review(): void
