@@ -12,6 +12,7 @@ use App\MoonShine\Resources\Customer\CustomerResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\OrderItem\OrderItemResource;
 use App\MoonShine\Resources\Product\ProductResource;
+use Illuminate\Validation\Rule;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
@@ -101,7 +102,7 @@ class OrderFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return ['status' => ['required', Rule::enum(OrderStatus::class)]];
     }
 
     /**

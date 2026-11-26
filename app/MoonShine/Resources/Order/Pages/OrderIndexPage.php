@@ -15,6 +15,7 @@ use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\QueryTags\QueryTag;
+use MoonShine\Support\Enums\Ability;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
@@ -49,6 +50,7 @@ class OrderIndexPage extends IndexPage
             Phone::make('Телефон', 'customer_phone')->sortable(),
             Enum::make('Статус', 'status')
                 ->attach(OrderStatus::class)
+                ->updateOnPreview(condition: fn (): bool => $this->getResource()->can(Ability::UPDATE))
                 ->sortable(fn (Builder $query, string $column, string $direction): Builder => $this->orderByStatusFlow($query, $direction)),
             Text::make('Получение', 'delivery_method')->sortable(),
             Text::make('Оплата', 'payment_method')->sortable(),

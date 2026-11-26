@@ -13,6 +13,8 @@ use App\Services\Telegram\TelegramBot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use MoonShine\Laravel\Models\MoonshineUser;
+use MoonShine\Laravel\Models\MoonshineUserRole;
 use Tests\TestCase;
 
 class TelegramOrderTest extends TestCase
@@ -81,14 +83,40 @@ class TelegramOrderTest extends TestCase
         $this->assertSame(OrderStatus::Processing, $order->fresh()->status);
     }
 
-    public function test_order_status_changes_in_admin_queue_message_update(): void
+    public function test_order_status_changes_in_admin_list_queue_message_update(): void
     {
         Queue::fake([UpdateOrderTelegramMessage::class]);
         $order = Order::query()->create(['customer_name' => 'Анна', 'customer_phone' => '123', 'status' => OrderStatus::New, 'total' => 100]);
         $order->forceFill(['telegram_message_id' => 77])->save();
-        $order->update(['status' => OrderStatus::Completed]);
+        $admin = MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'admin@example.com', 'name' => 'Admin', 'password' => bcrypt('secret'),
+        ]);
 
+        $this->actingAs($admin, 'moonshine')->put("/admin/update-field/column/order-resource/{$order->id}", ['field' => 'status', 'value' => OrderStatus::Completed->value])->assertNoContent();
+
+        $this->assertSame(OrderStatus::Completed, $order->fresh()->status);
         Queue::assertPushed(UpdateOrderTelegramMessage::class, fn ($job): bool => $job->orderId === $order->id && $job->afterCommit === true);
+    }
+
+    public function test_inline_order_status_rejects_invalid_value(): void
+    {
+        $order = Order::query()->create(['customer_name' => 'Анна', 'customer_phone' => '123', 'status' => OrderStatus::New, 'total' => 100]);
+        $admin = MoonshineUser::query()->create([
+            'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
+            'email' => 'admin@example.com', 'name' => 'Admin', 'password' => bcrypt('secret'),
+        ]);
+
+        $this->actingAs($admin, 'moonshine')->putJson("/admin/update-field/column/order-resource/{$order->id}", ['field' => 'status', 'value' => 'invalid'])->assertUnprocessable();
+        $this->assertSame(OrderStatus::New, $order->fresh()->status);
+    }
+
+    public function test_guest_cannot_change_order_status_in_list(): void
+    {
+        $order = Order::query()->create(['customer_name' => 'Анна', 'customer_phone' => '123', 'status' => OrderStatus::New, 'total' => 100]);
+
+        $this->putJson("/admin/update-field/column/order-resource/{$order->id}", ['field' => 'status', 'value' => OrderStatus::Completed->value])->assertUnauthorized();
+        $this->assertSame(OrderStatus::New, $order->fresh()->status);
     }
 
     public function test_update_job_sends_latest_order_status(): void
