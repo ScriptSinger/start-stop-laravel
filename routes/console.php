@@ -35,3 +35,6 @@ Schedule::command('db:backup')->dailyAt('02:30')->timezone('Asia/Yekaterinburg')
 
 Schedule::command('reviews:copy-media')->hourly()->withoutOverlapping()
     ->onFailure(fn () => Log::error('Не удалось скопировать некоторые изображения отзывов в медиа-хранилище.'));
+
+Schedule::command('media:scan-unused')->dailyAt('04:30')->timezone('Asia/Yekaterinburg')->withoutOverlapping()
+    ->onFailure(fn () => Log::error('Не удалось проверить неиспользуемые медиафайлы.'));
