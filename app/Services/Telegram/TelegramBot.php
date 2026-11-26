@@ -3,6 +3,7 @@
 namespace App\Services\Telegram;
 
 use App\Models\CustomerRequest;
+use App\Models\Order;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -12,11 +13,38 @@ class TelegramBot
 {
     public function sendRequest(CustomerRequest $customerRequest): int
     {
-        $data = [
-            'chat_id' => config('services.telegram.chat_id'),
+        return $this->sendMessage([
             'text' => $this->message($customerRequest),
             'reply_markup' => $this->keyboard($customerRequest),
+        ]);
+    }
+
+    public function sendOrder(Order $order): int
+    {
+        $lines = [
+            'Заказ #'.$order->id,
+            'Статус: '.$order->status->toString(),
+            'Имя: '.Str::limit($order->customer_name, 200),
+            'Телефон: '.Str::limit($order->customer_phone, 100),
+            'Email: '.Str::limit($order->customer_email ?: 'Не указан', 200),
+            'Получение: '.Str::limit($order->delivery_method ?: 'Уточнить', 200),
+            'Оплата: '.Str::limit($order->payment_method ?: 'Уточнить', 200),
+            'Адрес: '.Str::limit($order->shipping_address ?: 'Не указан', 300),
+            'Комментарий: '.Str::limit($order->comment ?: 'Нет', 500),
+            'Итого: '.number_format((float) $order->total, 2, ',', ' ').' ₽',
+            'Товары:',
         ];
+
+        $items = $order->items->map(fn ($item): string => Str::limit($item->name, 150).' — '.$item->quantity.' × '.number_format((float) $item->price, 2, ',', ' ').' ₽')->implode("\n");
+        $prefix = implode("\n", $lines)."\n";
+
+        return $this->sendMessage(['text' => $prefix.Str::limit($items, max(0, 4000 - mb_strlen($prefix)))]);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function sendMessage(array $data): int
+    {
+        $data['chat_id'] = config('services.telegram.chat_id');
 
         $topicId = config('services.telegram.topic_id');
 

@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Jobs\SendOrderToTelegram;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Services\Cart\CartLine;
@@ -50,6 +51,10 @@ class PlaceOrder
                 'quantity' => $line->quantity,
                 'total' => $line->total(),
             ])->all());
+
+            if (filled(config('services.telegram.bot_token')) && filled(config('services.telegram.chat_id'))) {
+                SendOrderToTelegram::dispatch($order->id)->afterCommit();
+            }
 
             return $order;
         });

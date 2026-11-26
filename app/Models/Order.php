@@ -33,6 +33,7 @@ class Order extends Model
         'payment_method_code' => PaymentMethod::class,
         'delivery_method_code' => DeliveryMethod::class,
         'total' => 'decimal:4',
+        'telegram_message_id' => 'integer',
     ];
 
     protected static function booted(): void
