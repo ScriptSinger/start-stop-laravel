@@ -43,6 +43,7 @@ class QuickOrderController extends Controller
                 'comment' => trim('Быстрый заказ. '.$request->validated('comment')),
             ],
             customer: $request->user(),
+            metrikaClientId: $request->validated('metrika_client_id'),
         );
 
         session(['placed_order_id' => $order->id]);

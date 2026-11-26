@@ -91,10 +91,23 @@ class Dashboard extends Page
                 Column::make([Box::make([$this->ordersChart()->withoutWrapper()])->class('h-full')], colSpan: 6, adaptiveColSpan: 12),
                 Column::make([Grid::make([
                     Column::make([$this->attention()->class('h-full')], colSpan: 12),
+                    Column::make([$this->completedOrdersTotal()->class('h-full')], colSpan: 12),
                     Column::make([$this->bestsellers()->class('h-full')], colSpan: 12),
                 ])], colSpan: 6, adaptiveColSpan: 12),
             ])])->open(),
         ];
+    }
+
+    private function completedOrdersTotal(): Box
+    {
+        $total = Order::query()
+            ->where('status', OrderStatus::Completed)
+            ->where('created_at', '>=', now()->startOfDay()->subDays(29))
+            ->sum('total');
+
+        return Box::make('Сумма завершённых заказов, созданных за 30 дней', [
+            Heading::make($this->money((float) $total), h: 6),
+        ]);
     }
 
     private function ordersChart(): OrdersChart
@@ -111,11 +124,12 @@ class Dashboard extends Page
             ->groupByRaw('date(created_at)')
             ->pluck('total', 'day');
 
-        $confirmed = $abandoned = $callbacks = [];
+        $confirmed = $completed = $abandoned = $callbacks = [];
         for ($day = $start->copy(); $day->lte(now()); $day->addDay()) {
             $date = $day->toDateString();
             $dayOrders = $orders->where('day', $date);
             $confirmed[$date] = (int) $dayOrders->filter(fn (Order $order): bool => ! in_array($order->status, [OrderStatus::Abandoned, OrderStatus::Cancelled], true))->sum('total');
+            $completed[$date] = (int) $dayOrders->where('status', OrderStatus::Completed)->sum('total');
             $abandoned[$date] = (int) $dayOrders->where('status', OrderStatus::Abandoned)->sum('total');
             $callbacks[$date] = (int) ($requests[$date] ?? 0);
         }
@@ -127,8 +141,9 @@ class Dashboard extends Page
                 SeriesItem::make('Оформленные заказы', $confirmed),
                 SeriesItem::make('Брошенные оформления', $abandoned),
                 SeriesItem::make('Заявки', $callbacks),
+                SeriesItem::make('Завершённые сделки', $completed),
             ])
-            ->colors(['#2563eb', '#d97706', '#9333ea']);
+            ->colors(['#2563eb', '#d97706', '#9333ea', '#16a34a']);
     }
 
     /** @return array<string, string> */
@@ -213,14 +228,13 @@ class Dashboard extends Page
     }
 
     /**
-     * Пять самых продаваемых товаров за 30 дней (по штукам), без отменённых
-     * и брошенных заказов.
+     * Пять самых продаваемых товаров в завершённых сделках за 30 дней (по штукам).
      */
     private function bestsellers(): Box
     {
         $rows = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereNotIn('orders.status', [OrderStatus::Abandoned->value, OrderStatus::Cancelled->value])
+            ->where('orders.status', OrderStatus::Completed->value)
             ->where('orders.created_at', '>=', now()->subDays(30))
             ->groupBy('order_items.product_id', 'order_items.name')
             ->selectRaw('order_items.name, sum(order_items.quantity) as units, sum(order_items.total) as revenue')

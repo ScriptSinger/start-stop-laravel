@@ -54,6 +54,10 @@ return [
         'production_bot_username' => 'start_stop_akb_bot',
     ],
 
+    'metrika' => [
+        'oauth_token' => env('METRIKA_OAUTH_TOKEN'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

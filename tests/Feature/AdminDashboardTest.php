@@ -65,12 +65,29 @@ class AdminDashboardTest extends TestCase
         $this->assertSame([1, 1], array_slice($series[0]['data'], -2));
         $this->assertSame([0, 1], array_slice($series[1]['data'], -2));
         $this->assertSame([0, 1], array_slice($series[2]['data'], -2));
+        $this->assertSame([0, 0], array_slice($series[3]['data'], -2));
         $this->assertSame(2, array_sum($series[0]['data']));
 
         $abandoned->update(['status' => 'Обработано']);
         $series = $this->ordersChartSeries();
         $this->assertSame(2, end($series[0]['data']));
         $this->assertSame(0, end($series[1]['data']));
+
+        $abandoned->update(['status' => 'Сделка завершена']);
+        $series = $this->ordersChartSeries();
+        $this->assertSame(1, end($series[3]['data']));
+    }
+
+    public function test_completed_order_total_excludes_pending_cancelled_and_old_orders(): void
+    {
+        $this->order('Завершённый', 'Сделка завершена');
+        $this->order('Новый', 'new');
+        $this->order('Отменённый', 'Отменено');
+        $this->order('Старый завершённый', 'Сделка завершена', now()->subDays(31));
+
+        $this->dashboard()
+            ->assertSee('Сумма завершённых заказов, созданных за 30 дней')
+            ->assertSee('6 000 ₽');
     }
 
     /** @return array<int, array{name: string, data: array<int, int>}> */

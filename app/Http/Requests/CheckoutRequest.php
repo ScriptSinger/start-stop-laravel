@@ -37,6 +37,7 @@ class CheckoutRequest extends FormRequest
             'payment' => ['required', Rule::enum(PaymentMethod::class)],
             'comment' => ['nullable', 'string', 'max:1000'],
             'agree' => ['accepted'],
+            'metrika_client_id' => ['nullable', 'string', 'regex:/^[0-9]{1,32}$/D'],
         ];
     }
 

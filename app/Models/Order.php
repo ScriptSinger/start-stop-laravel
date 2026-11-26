@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Jobs\SyncOrderToMetrika;
 use App\Jobs\UpdateOrderTelegramMessage;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,6 +28,7 @@ class Order extends Model
         'total',
         'shipping_address',
         'comment',
+        'metrika_client_id',
     ];
 
     protected $casts = [
@@ -39,9 +41,19 @@ class Order extends Model
 
     protected static function booted(): void
     {
+        static::created(function (Order $order): void {
+            if ($order->metrika_client_id && filled(config('services.metrika.oauth_token'))) {
+                SyncOrderToMetrika::dispatch($order->id)->afterCommit();
+            }
+        });
+
         static::updated(function (Order $order): void {
             if ($order->wasChanged('status') && $order->telegram_message_id !== null) {
                 UpdateOrderTelegramMessage::dispatch($order->id)->afterCommit();
+            }
+
+            if ($order->wasChanged(['status', 'total']) && $order->metrika_client_id && filled(config('services.metrika.oauth_token'))) {
+                SyncOrderToMetrika::dispatch($order->id)->afterCommit();
             }
         });
 

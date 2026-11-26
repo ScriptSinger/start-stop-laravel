@@ -24,6 +24,7 @@ class QuickOrderRequest extends FormRequest
             'quantity' => ['nullable', 'integer', 'min:1', 'max:'.Cart::MAX_QUANTITY],
             'trade_in' => ['nullable', 'boolean'],
             'comment' => ['nullable', 'string', 'max:1000'],
+            'metrika_client_id' => ['nullable', 'string', 'regex:/^[0-9]{1,32}$/D'],
         ];
     }
 

@@ -161,6 +161,28 @@ export function initMetrika() {
         accurateTrackBounce: true,
         trackLinks: true,
     });
+
+    let clientId = null;
+    window.ym(counterId, 'getClientID', (id) => {
+        clientId = /^\d{1,32}$/.test(String(id)) ? String(id) : null;
+    });
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!clientId || !(form instanceof HTMLFormElement)
+            || (!form.matches('[data-checkout]') && form.dataset.metrikaGoal !== 'quick_order')) {
+            return;
+        }
+
+        let input = form.querySelector('[name="metrika_client_id"]');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'metrika_client_id';
+            form.appendChild(input);
+        }
+        input.value = clientId;
+    }, true);
 }
 
 /**

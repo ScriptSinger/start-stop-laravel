@@ -25,11 +25,12 @@ class PlaceOrder
      * Без способа получения и оплаты — быстрый заказ: их уточнит менеджер по телефону.
      * С покупателем — заказ попадёт в его историю заказов в личном кабинете.
      */
-    public function handle(Collection $lines, ?DeliveryMethod $delivery, ?PaymentMethod $payment, array $contact, ?Customer $customer = null): Order
+    public function handle(Collection $lines, ?DeliveryMethod $delivery, ?PaymentMethod $payment, array $contact, ?Customer $customer = null, ?string $metrikaClientId = null): Order
     {
-        return DB::transaction(function () use ($lines, $delivery, $payment, $contact, $customer): Order {
+        return DB::transaction(function () use ($lines, $delivery, $payment, $contact, $customer, $metrikaClientId): Order {
             $order = Order::query()->create([
                 'customer_id' => $customer?->id,
+                'metrika_client_id' => $metrikaClientId,
                 'customer_name' => $contact['name'],
                 'customer_phone' => $contact['phone'],
                 'customer_email' => $contact['email'],
