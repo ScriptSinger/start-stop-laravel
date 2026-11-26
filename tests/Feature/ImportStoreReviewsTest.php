@@ -65,6 +65,23 @@ class ImportStoreReviewsTest extends TestCase
         }
     }
 
+    public function test_import_adds_review_photos_without_overwriting_existing_data(): void
+    {
+        $review = StoreReview::factory()->create(['author' => 'Покупатель', 'source' => 'yandex', 'body' => 'Отзыв', 'reviewed_at' => '2025-01-02', 'is_active' => true]);
+        $photo = 'https://avatars.mds.yandex.net/get-altay/example/M';
+        $file = $this->reviewFile([['author' => 'Покупатель', 'source' => 'yandex', 'rating' => 5, 'body' => 'Отзыв', 'reviewed_at' => '2025-01-02', 'photo_urls' => [$photo]]]);
+        try {
+            $this->artisan('reviews:import', ['file' => $file, '--dry-run' => true])->assertSuccessful();
+            $this->assertNull($review->fresh()->photo_urls);
+            $this->artisan('reviews:import', ['file' => $file])->assertSuccessful();
+            $this->assertSame([$photo], $review->fresh()->photo_urls);
+            $this->assertTrue($review->fresh()->is_active);
+            $this->get(route('home'))->assertSee($photo, false)->assertSee('Смотреть фото');
+        } finally {
+            unlink($file);
+        }
+    }
+
     private function reviewFile(array $reviews): string
     {
         $file = tempnam(sys_get_temp_dir(), 'store-reviews-');

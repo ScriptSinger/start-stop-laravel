@@ -46,6 +46,8 @@ class ImportStoreReviews extends Command
             'reviews.*.body' => ['required', 'string'],
             'reviews.*.reviewed_at' => ['required', 'date_format:Y-m-d'],
             'reviews.*.avatar_url' => ['nullable', 'string', 'max:2048', 'url:https', 'regex:~^https://avatars\.mds\.yandex\.net/~i'],
+            'reviews.*.photo_urls' => ['nullable', 'array', 'max:20'],
+            'reviews.*.photo_urls.*' => ['required', 'string', 'max:2048', 'url:https', 'regex:~^https://avatars\.mds\.yandex\.net/~i'],
         ]);
         if ($validator->fails()) {
             $this->error($validator->errors()->first());
@@ -80,9 +82,16 @@ class ImportStoreReviews extends Command
                     ->first();
                 $avatarUrl = $review['avatar_url'] ?? null;
                 if ($existing) {
+                    $changes = [];
                     if ($avatarUrl && ! $existing->avatar_url) {
+                        $changes['avatar_url'] = $avatarUrl;
+                    }
+                    if (! empty($review['photo_urls']) && empty($existing->photo_urls)) {
+                        $changes['photo_urls'] = $review['photo_urls'];
+                    }
+                    if ($changes !== []) {
                         if (! $this->option('dry-run')) {
-                            $existing->update(['avatar_url' => $avatarUrl]);
+                            $existing->update($changes);
                         }
                         $updated++;
 
@@ -93,13 +102,13 @@ class ImportStoreReviews extends Command
                     continue;
                 }
                 if (! $this->option('dry-run')) {
-                    StoreReview::query()->create([...$attributes, 'rating' => $review['rating'], 'is_active' => false, 'avatar_url' => $avatarUrl]);
+                    StoreReview::query()->create([...$attributes, 'rating' => $review['rating'], 'is_active' => false, 'avatar_url' => $avatarUrl, 'photo_urls' => $review['photo_urls'] ?? null]);
                 }
                 $created++;
             }
         });
 
-        $this->info(($this->option('dry-run') ? 'Проверка' : 'Импорт').": новых {$created}, добавлено аватаров {$updated}, пропущено {$skipped}.");
+        $this->info(($this->option('dry-run') ? 'Проверка' : 'Импорт').": новых {$created}, обновлено отзывов {$updated}, пропущено {$skipped}.");
 
         return self::SUCCESS;
     }

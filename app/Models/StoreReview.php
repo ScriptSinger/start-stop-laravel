@@ -14,11 +14,11 @@ class StoreReview extends Model
     /** @use HasFactory<StoreReviewFactory> */
     use HasFactory;
 
-    protected $fillable = ['author', 'source', 'rating', 'body', 'reviewed_at', 'sort_order', 'is_active', 'avatar_url'];
+    protected $fillable = ['author', 'source', 'rating', 'body', 'reviewed_at', 'sort_order', 'is_active', 'avatar_url', 'photo_urls'];
 
     protected function casts(): array
     {
-        return ['source' => StoreReviewSource::class, 'rating' => 'integer', 'reviewed_at' => 'date', 'sort_order' => 'integer', 'is_active' => 'boolean'];
+        return ['source' => StoreReviewSource::class, 'rating' => 'integer', 'reviewed_at' => 'date', 'sort_order' => 'integer', 'is_active' => 'boolean', 'photo_urls' => 'array'];
     }
 
     #[Scope]
