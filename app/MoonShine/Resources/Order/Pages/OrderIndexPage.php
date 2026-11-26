@@ -7,6 +7,7 @@ namespace App\MoonShine\Resources\Order\Pages;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Models\Order;
 use App\MoonShine\Fields\Money;
 use App\MoonShine\Resources\Concerns\HasTextFilters;
 use App\MoonShine\Resources\Order\OrderResource;
@@ -17,6 +18,7 @@ use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\Enums\Ability;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\Badge;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
@@ -24,6 +26,7 @@ use MoonShine\UI\Fields\DateRange;
 use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Phone;
+use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Range;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
@@ -48,10 +51,14 @@ class OrderIndexPage extends IndexPage
             Date::make('Дата', 'created_at')->format('d.m.Y H:i')->sortable(),
             Text::make('Клиент', 'customer_name')->sortable(),
             Phone::make('Телефон', 'customer_phone')->sortable(),
-            Enum::make('Статус', 'status')
-                ->attach(OrderStatus::class)
-                ->updateOnPreview(condition: fn (): bool => $this->getResource()->can(Ability::UPDATE))
+            Preview::make('Статус', 'status_badge', fn (Order $order): string => (string) Badge::make($order->status->toString(), $order->status->getColor()))
                 ->sortable(fn (Builder $query, string $column, string $direction): Builder => $this->orderByStatusFlow($query, $direction)),
+            Enum::make('Изменить статус', 'status')
+                ->attach(OrderStatus::class)
+                ->updateOnPreview(
+                    condition: fn (): bool => $this->getResource()->can(Ability::UPDATE),
+                    events: [$this->getResource()->getListEventName()],
+                ),
             Text::make('Получение', 'delivery_method')->sortable(),
             Text::make('Оплата', 'payment_method')->sortable(),
             Money::make('Сумма', 'total')->sortable(),

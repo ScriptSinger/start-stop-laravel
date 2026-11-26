@@ -80,7 +80,9 @@ class AdminOrdersTest extends TestCase
         $this->get('/admin/component/order-index-page/order-resource?_component_name=index-table-order-resource')
             ->assertOk()
             ->assertSee('badge-yellow', false)
-            ->assertSee('Ожидание');
+            ->assertSee('Ожидание')
+            ->assertSee('update-field/column/order-resource', false)
+            ->assertSee('Изменить статус');
     }
 
     public function test_orders_filter_by_delivery_and_payment(): void
