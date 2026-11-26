@@ -2,6 +2,7 @@
 
 namespace App\Services\Telegram;
 
+use App\Enums\OrderStatus;
 use App\Models\CustomerRequest;
 use App\Models\Order;
 use Illuminate\Http\Client\ConnectionException;
@@ -21,6 +22,21 @@ class TelegramBot
 
     public function sendOrder(Order $order): int
     {
+        return $this->sendMessage(['text' => $this->orderMessage($order), 'reply_markup' => $this->orderKeyboard($order)]);
+    }
+
+    public function editOrder(Order $order): void
+    {
+        $this->call('editMessageText', [
+            'chat_id' => config('services.telegram.chat_id'),
+            'message_id' => $order->telegram_message_id,
+            'text' => $this->orderMessage($order),
+            'reply_markup' => $this->orderKeyboard($order),
+        ], allowNotModified: true);
+    }
+
+    private function orderMessage(Order $order): string
+    {
         $lines = [
             'Заказ #'.$order->id,
             'Статус: '.$order->status->toString(),
@@ -38,7 +54,20 @@ class TelegramBot
         $items = $order->items->map(fn ($item): string => Str::limit($item->name, 150).' — '.$item->quantity.' × '.number_format((float) $item->price, 2, ',', ' ').' ₽')->implode("\n");
         $prefix = implode("\n", $lines)."\n";
 
-        return $this->sendMessage(['text' => $prefix.Str::limit($items, max(0, 4000 - mb_strlen($prefix)))]);
+        return $prefix.Str::limit($items, max(0, 4000 - mb_strlen($prefix)));
+    }
+
+    /** @return array{inline_keyboard: list<list<array{text: string, callback_data: string}>>} */
+    private function orderKeyboard(Order $order): array
+    {
+        $buttons = [];
+        foreach ([OrderStatus::New, OrderStatus::Pending, OrderStatus::Processing, OrderStatus::Processed, OrderStatus::Completed, OrderStatus::Cancelled] as $status) {
+            if ($status !== $order->status) {
+                $buttons[] = ['text' => $status->toString(), 'callback_data' => 'order:'.$order->id.':'.$order->status->name.':'.$status->name];
+            }
+        }
+
+        return ['inline_keyboard' => array_chunk($buttons, 2)];
     }
 
     /** @param array<string, mixed> $data */

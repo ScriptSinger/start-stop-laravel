@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\CustomerRequest;
+use App\Models\Order;
 use App\Services\Telegram\TelegramBot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +33,7 @@ class TelegramWebhookController extends Controller
 
         if (! is_string($callbackId) || $callbackId === '' || mb_strlen($callbackId) > 255
             || ! is_string($data) || strlen($data) > 64
-            || ! preg_match('/^request:([1-9][0-9]*):(done|reopen)$/D', $data, $matches)
+            || ! preg_match('/^(?:request:[1-9][0-9]*:(?:done|reopen)|order:[1-9][0-9]*:[A-Za-z]+:[A-Za-z]+)$/D', $data)
             || ! is_array($chat) || ! in_array($chat['type'] ?? null, ['group', 'supergroup'], true)
             || (string) ($chat['id'] ?? '') !== (string) config('services.telegram.chat_id')
             || ! is_int($messageId) || $messageId < 1 || ! is_int($userId) || $userId < 1
@@ -39,6 +41,11 @@ class TelegramWebhookController extends Controller
             return response()->json(['ok' => true]);
         }
 
+        if (str_starts_with($data, 'order:')) {
+            return $this->handleOrder($telegram, $data, $callbackId, $messageId, $userId);
+        }
+
+        preg_match('/^request:([1-9][0-9]*):(done|reopen)$/D', $data, $matches);
         $customerRequest = CustomerRequest::query()->with('product')->find((int) $matches[1]);
 
         if (! $customerRequest || $customerRequest->telegram_message_id !== $messageId) {
@@ -61,6 +68,28 @@ class TelegramWebhookController extends Controller
 
         $this->answer($telegram, $callbackId, $changed ? 'Статус заявки обновлён.' : 'Статус уже изменён.');
         $telegram->editRequest($customerRequest->fresh('product'));
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function handleOrder(TelegramBot $telegram, string $data, string $callbackId, int $messageId, int $userId): JsonResponse
+    {
+        [, $id, $from, $to] = explode(':', $data);
+        $statuses = collect(OrderStatus::cases())->keyBy('name');
+        $oldStatus = $statuses->get($from);
+        $newStatus = $statuses->get($to);
+        $order = Order::query()->with('items')->find((int) $id);
+
+        if (! $order || $order->telegram_message_id !== $messageId || ! $oldStatus || ! $newStatus || $newStatus === OrderStatus::Abandoned) {
+            $this->answer($telegram, $callbackId, 'Заказ или статус не найден.');
+        } elseif (! $telegram->isGroupMember($userId)) {
+            $this->answer($telegram, $callbackId, 'Только участник группы может изменить заказ.');
+        } else {
+            $changed = Order::query()->whereKey($order->id)->where('telegram_message_id', $messageId)
+                ->where('status', $oldStatus->value)->update(['status' => $newStatus->value]);
+            $this->answer($telegram, $callbackId, $changed ? 'Статус заказа обновлён.' : 'Статус уже изменён.');
+            $telegram->editOrder($order->fresh('items'));
+        }
 
         return response()->json(['ok' => true]);
     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Jobs\UpdateOrderTelegramMessage;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,12 @@ class Order extends Model
 
     protected static function booted(): void
     {
+        static::updated(function (Order $order): void {
+            if ($order->wasChanged('status') && $order->telegram_message_id !== null) {
+                UpdateOrderTelegramMessage::dispatch($order->id)->afterCommit();
+            }
+        });
+
         static::saving(function (Order $order): void {
             foreach (['payment_method' => PaymentMethod::cases(), 'delivery_method' => DeliveryMethod::cases()] as $field => $methods) {
                 $code = $field.'_code';
