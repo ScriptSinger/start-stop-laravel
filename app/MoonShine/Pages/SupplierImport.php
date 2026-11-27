@@ -588,7 +588,7 @@ class SupplierImport extends Page
                 ->fields([
                     Text::make('Дата', 'uploaded')->sortable(),
                     Text::make('Поставщик', 'supplier')->sortable(),
-                    Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->render())->unescape()->sortable(),
+                    Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->customAttributes(['title' => 'Отчёт'])->render())->unescape()->sortable(),
                     Text::make('Состояние', 'status')->sortable(),
                     Text::make('Кто применил', 'applied_by')->sortable(),
                 ])

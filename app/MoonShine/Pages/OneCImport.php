@@ -383,7 +383,7 @@ class OneCImport extends Page
             ])->all())
                 ->fields([
                     Text::make('Дата', 'uploaded'),
-                    Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->render())->unescape(),
+                    Text::make('Файл', 'name', fn (array $row): string => (string) Link::make($this->getRoute(['import' => $row['id']]), $row['name'])->customAttributes(['title' => 'Отчёт'])->render())->unescape(),
                     Text::make('Состояние', 'status'),
                     Text::make('Кто применил', 'applied_by'),
                 ])
