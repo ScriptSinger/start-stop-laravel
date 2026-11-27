@@ -17,6 +17,7 @@ use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Textarea;
 
 /**
  * @extends FormPage<SupplierResource>
@@ -36,6 +37,9 @@ class SupplierFormPage extends FormPage
                     ->options(SupplierPriceFormat::options())
                     ->required()
                     ->hint('От формата зависит, из каких колонок берутся название, закупочная цена и остаток'),
+                Textarea::make('Информация о загрузке', 'import_description')
+                    ->nullable()
+                    ->hint('Подсказка при выборе поставщика. Текст не меняет правила импорта.'),
                 Number::make('Наценка, %', 'markup_percent')
                     ->min(0)
                     ->step(0.5)
@@ -65,6 +69,7 @@ class SupplierFormPage extends FormPage
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('suppliers', 'name')->ignore($item->getKey())],
             'format' => ['required', Rule::enum(SupplierPriceFormat::class)],
+            'import_description' => ['nullable', 'string', 'max:2000'],
             'markup_percent' => ['required', 'numeric', 'min:0', 'max:1000'],
             'lead_working_days' => ['required', 'integer', 'min:0', 'max:60'],
             'min_quantity' => ['required', 'integer', 'min:0'],

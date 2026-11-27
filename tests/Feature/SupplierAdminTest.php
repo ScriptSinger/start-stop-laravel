@@ -241,6 +241,8 @@ class SupplierAdminTest extends TestCase
     public function test_menu_and_supplier_pages_are_available(): void
     {
         $this->get('/admin')->assertSee('Поставщики')->assertSee('Прайсы поставщиков');
+        $maximumMegabytes = floor(min(20 * 1048576, UploadedFile::getMaxFilesize()) / 1048576 * 100) / 100;
+        $this->get('/admin/page/supplier-import')->assertSee('не более '.$maximumMegabytes.' МБ');
         $this->get('/admin/component/supplier-index-page/supplier-resource?_component_name=index-table-supplier-resource')
             ->assertOk()
             ->assertSee('АКБ Дриллинг')
@@ -250,6 +252,33 @@ class SupplierAdminTest extends TestCase
             ->assertSee('Не учитывать количество')
             ->assertSee('Срок поставки, рабочих дней')
             ->assertSee('Порог остатка, шт.');
+    }
+
+    public function test_supplier_import_description_is_editable_and_available_in_upload_form(): void
+    {
+        $this->get('/admin/resource/supplier-resource/supplier-form-page/'.$this->supplier->id)
+            ->assertSee('name="import_description"', false);
+
+        $this->put('/admin/resource/supplier-resource/crud/'.$this->supplier->id, [
+            'name' => $this->supplier->name,
+            'format' => SupplierPriceFormat::Drilling->value,
+            'import_description' => 'Только актуальный прайс',
+            'markup_percent' => 35,
+            'lead_working_days' => 4,
+            'min_quantity' => 3,
+            'ignore_quantity' => 1,
+            'is_active' => 1,
+        ])->assertRedirect();
+
+        $this->assertSame('Только актуальный прайс', $this->supplier->fresh()->import_description);
+        Supplier::factory()->create(['name' => 'Дарс', 'import_description' => 'Подсказка ДАРС']);
+        $this->get('/admin/page/supplier-import')
+            ->assertSee('Правила загрузки')
+            ->assertSee('Только актуальный прайс')
+            ->assertDontSee('Подсказка ДАРС')
+            ->assertSee('suppliers[selected]?.description', false)
+            ->assertSee('field.addEventListener', false)
+            ->assertSee('исключаются из актуального прайса');
     }
 
     public function test_upload_shows_report_without_changing_products(): void

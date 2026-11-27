@@ -20,6 +20,7 @@ class Supplier extends Model
     protected $fillable = [
         'name',
         'format',
+        'import_description',
         'markup_percent',
         'lead_working_days',
         'min_quantity',

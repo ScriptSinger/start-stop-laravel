@@ -19,6 +19,7 @@ use App\Services\Supplier\SupplierPriceImporter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -32,6 +33,7 @@ use MoonShine\Support\Enums\ToastType;
 use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Alert;
 use MoonShine\UI\Components\Collapse;
+use MoonShine\UI\Components\FlexibleRender;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Heading;
 use MoonShine\UI\Components\Layout\Box;
@@ -56,6 +58,8 @@ class SupplierImport extends Page
 {
     private const MAX_ROWS_SHOWN = 200;
 
+    private const MAX_FILE_KILOBYTES = 20480;
+
     /**
      * @return array<string, string>
      */
@@ -79,7 +83,7 @@ class SupplierImport extends Page
     {
         $request->validate([
             'supplier_id' => ['required', 'exists:suppliers,id'],
-            'file' => ['required', 'file', 'mimes:xlsx,csv,txt', 'max:20480'],
+            'file' => ['required', 'file', 'mimes:xlsx,csv,txt', 'max:'.self::MAX_FILE_KILOBYTES],
         ], [
             'file.mimes' => 'Нужен файл .xlsx или .csv. Старый .xls пересохраните в Excel/Calc как .xlsx.',
         ]);
@@ -224,19 +228,42 @@ class SupplierImport extends Page
         return [$this->uploadForm(), $this->recentUploads($files)];
     }
 
-    private function uploadForm(): Box
+    private function uploadForm(): Grid
     {
-        return Box::make('Загрузить прайс', [
-            Heading::make('Файл .xlsx или .csv поставщика. Сначала покажем, что изменится: данные меняются только после кнопки «Применить». Старый .xls пересохраните как .xlsx.', h: 6),
-            FormBuilder::make()
-                ->asyncMethod('upload')
-                ->fields([
-                    Select::make('Поставщик', 'supplier_id')
-                        ->options(Supplier::query()->orderBy('name')->pluck('name', 'id')->all())
-                        ->required(),
-                    File::make('Файл прайса', 'file')->required(),
-                ])
-                ->submit('Загрузить и проверить'),
+        $maximumMegabytes = floor(min(self::MAX_FILE_KILOBYTES * 1024, UploadedFile::getMaxFilesize()) / 1048576 * 100) / 100;
+        $suppliers = Supplier::query()->orderBy('name')->get();
+        $supplierRules = $suppliers->reject(fn (Supplier $supplier): bool => mb_strtolower(trim($supplier->name)) === 'дарс')
+            ->mapWithKeys(fn (Supplier $supplier): array => [(string) $supplier->id => [
+                'name' => $supplier->name,
+                'format' => $supplier->format->label(),
+                'identity' => $supplier->format === SupplierPriceFormat::AkbAuto ? 'Позиции определяются по коду УТ-…' : 'Позиции определяются по названию; изменение названия может потребовать новой привязки.',
+                'quantity' => $supplier->ignore_quantity ? 'Остаток не учитывается' : 'Остаток от '.$supplier->min_quantity.' шт.',
+                'markup' => (float) $supplier->markup_percent,
+                'days' => $supplier->lead_working_days,
+                'active' => $supplier->is_active,
+                'description' => $supplier->import_description,
+            ]])->all();
+
+        return Grid::make([
+            Column::make([
+                Box::make('Загрузить прайс', [
+                    Heading::make('Файл .xlsx или .csv поставщика, не более '.$maximumMegabytes.' МБ. Сначала покажем, что изменится: данные меняются только после кнопки «Применить». Старый .xls пересохраните как .xlsx.', h: 6),
+                    FormBuilder::make()
+                        ->asyncMethod('upload')
+                        ->fields([
+                            Select::make('Поставщик', 'supplier_id')
+                                ->options($suppliers->pluck('name', 'id')->all())
+                                ->required(),
+                            File::make('Файл прайса', 'file')->required(),
+                        ])
+                        ->submit('Загрузить и проверить'),
+                ])->class('h-full'),
+            ], colSpan: 6, adaptiveColSpan: 12),
+            Column::make([
+                Box::make('Правила загрузки', [
+                    FlexibleRender::make(view('components.supplier-import-rules', ['supplierRules' => $supplierRules])),
+                ])->class('h-full'),
+            ], colSpan: 6, adaptiveColSpan: 12),
         ]);
     }
 
