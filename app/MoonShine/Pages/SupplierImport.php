@@ -274,6 +274,7 @@ class SupplierImport extends Page
         } elseif (! $applied) {
             $summary[] = ActionButton::make('Применить к базе')
                 ->method('apply', params: ['import' => $id])
+                ->async(HttpMethod::POST)
                 ->withConfirm(
                     title: 'Применить прайс?',
                     content: 'Будет создана копия базы, затем обновятся предложения поставщика и товары под заказ.',
@@ -497,6 +498,7 @@ class SupplierImport extends Page
             ]),
             ActionButton::make('Применить все привязки')
                 ->method('applyDraftLinks', params: ['import' => $importId])
+                ->async(HttpMethod::POST)
                 ->withConfirm(title: 'Применить привязки?', content: 'Все пары будут проверены повторно. Если одна из них изменилась, ничего не сохранится.', button: 'Применить все')
                 ->primary(),
         ])];

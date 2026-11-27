@@ -256,7 +256,7 @@ class SupplierAdminTest extends TestCase
     {
         $id = $this->importId($this->upload());
 
-        $this->get("/admin/page/supplier-import?import={$id}")
+        $response = $this->get("/admin/page/supplier-import?import={$id}")
             ->assertOk()
             ->assertSee('Применить к базе')
             ->assertSee('Не применено')
@@ -265,6 +265,8 @@ class SupplierAdminTest extends TestCase
             ->assertDontSee('Загрузить и проверить')
             ->assertDontSee('Последние загрузки')
             ->assertSee('data-resizable', false);
+
+        $this->assertConfirmationUsesPost($response, 'apply');
 
         $this->get('/admin/page/supplier-import')
             ->assertOk()
@@ -364,7 +366,7 @@ class SupplierAdminTest extends TestCase
         ])->assertOk()->assertJsonPath('redirect', url('/admin/page/supplier-import').'?import='.$id);
 
         $this->assertNull($offer->fresh()->product_id);
-        $this->get("/admin/page/supplier-import?import={$id}")
+        $response = $this->get("/admin/page/supplier-import?import={$id}")
             ->assertSee('На проверке (1)')->assertSee('Применить все привязки')
             ->assertSee('Открыть карточку товара')->assertDontSee('Карточка</th>', false)
             ->assertSee('supplier-product-detail-'.$offer->id, false)
@@ -375,6 +377,7 @@ class SupplierAdminTest extends TestCase
             ->assertSee('table-divider', false)
             ->assertSee('Карточка товара')
             ->assertSee(app(ProductResource::class)->getDetailPageUrl($this->product->id, fragment: 'crud-detail'), false);
+        $this->assertConfirmationUsesPost($response, 'applyDraftLinks');
         $this->get(app(ProductResource::class)->getDetailPageUrl($this->product->id, fragment: 'crud-detail'))
             ->assertOk()->assertSee('Аккумулятор TOPLA Energy 60')->assertSee('Характеристики');
         $this->postJson('/admin/method/supplier-import?method=applyDraftLinks', ['import' => $id])->assertOk();
@@ -511,6 +514,16 @@ class SupplierAdminTest extends TestCase
         auth('moonshine')->logout();
         $this->get('/admin/method/supplier-import?method=searchProducts&query=TOPLA')->assertRedirect();
         $this->post('/admin/method/supplier-import?method=linkOffer', [])->assertRedirect();
+    }
+
+    private function assertConfirmationUsesPost(TestResponse $response, string $action): void
+    {
+        $document = new \DOMDocument;
+        @$document->loadHTML($response->getContent());
+        $forms = (new \DOMXPath($document))->query('//form[contains(@action, "method='.$action.'")]');
+
+        $this->assertCount(1, $forms);
+        $this->assertSame('post', strtolower($forms->item(0)->getAttribute('method')));
     }
 
     private function upload(): TestResponse

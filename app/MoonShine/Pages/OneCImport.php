@@ -150,6 +150,7 @@ class OneCImport extends Page
                 Heading::make('Правила: товар ищется по коду 1С; меняются только цена и остаток; пустая цена — цена не меняется; пустой остаток — 0; товары, которых нет в файле, и строки без товара на сайте не трогаются.', h: 6),
                 ...(isset($meta['applied_at']) || $report->rows === 0 ? [] : [ActionButton::make('Применить к базе')
                     ->method('apply', params: ['import' => $id])
+                    ->async(HttpMethod::POST)
                     ->withConfirm(
                         title: 'Применить изменения?',
                         content: "Будет снята копия базы, затем обновлены цена и остаток у товаров: {$report->changes->count()}.",
@@ -366,7 +367,7 @@ class OneCImport extends Page
                 Text::make('Позиция 1С', 'name', fn (array $row): string => $this->rowModal($row, 'draft'))->unescape(),
                 Text::make('Выбранный товар', 'product', fn (array $row): string => $row['product'] ? $this->productModal($row['product']->id, $row['product']->name.' · ID '.$row['product']->id.' · '.($row['product']->status ? 'Активен' : 'Неактивен'), 'draft') : 'Товар удалён')->unescape(),
                 Text::make('Действие', 'remove', fn (array $row): string => (string) ActionButton::make('Убрать')->method('removeDraft', params: ['import' => $id, 'code' => $row['code']])->removeAttribute('data-async-method')->async(HttpMethod::POST)->render())->unescape(),
-            ]), ActionButton::make('Применить все привязки')->method('applyDrafts', params: ['import' => $id])->withConfirm(title: 'Применить привязки?', content: 'Будут записаны код 1С, цена и остаток выбранных товаров. Если пара недоступна, весь пакет будет отменён.', button: 'Применить все')->primary(),
+            ]), ActionButton::make('Применить все привязки')->method('applyDrafts', params: ['import' => $id])->async(HttpMethod::POST)->withConfirm(title: 'Применить привязки?', content: 'Будут записаны код 1С, цена и остаток выбранных товаров. Если пара недоступна, весь пакет будет отменён.', button: 'Применить все')->primary(),
         ])];
     }
 

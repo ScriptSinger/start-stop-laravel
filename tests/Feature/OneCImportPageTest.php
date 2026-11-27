@@ -67,7 +67,7 @@ class OneCImportPageTest extends TestCase
     {
         $id = $this->importId($this->upload($this->priceList()));
 
-        $this->get("/admin/page/one-c-import?import={$id}")
+        $response = $this->get("/admin/page/one-c-import?import={$id}")
             ->assertOk()
             ->assertSee('Найдено на сайте')
             ->assertSee('AKOM 75 Ah О.П.')
@@ -75,6 +75,7 @@ class OneCImportPageTest extends TestCase
             ->assertSee('Новый товар из 1С')
             ->assertSee('Применить к базе')
             ->assertSee('Не применено');
+        $this->assertConfirmationUsesPost($response, 'apply');
     }
 
     public function test_report_flags_suspicious_changes(): void
@@ -159,7 +160,8 @@ class OneCImportPageTest extends TestCase
         $this->assertNull($target->fresh()->external_id);
         $this->assertSame(900.0, (float) $target->fresh()->price);
         $this->app['session']->flush();
-        $this->get('/admin/page/one-c-import?import='.$id)->assertSee('На проверке (1)')->assertSee('Изменить выбор')->assertSee('Позиция 1С')->assertSee('Карточка товара')->assertDontSee('Последние загрузки')->assertDontSee('Загрузить и проверить')->assertDontSee('Применить к базе');
+        $response = $this->get('/admin/page/one-c-import?import='.$id)->assertSee('На проверке (1)')->assertSee('Изменить выбор')->assertSee('Позиция 1С')->assertSee('Карточка товара')->assertDontSee('Последние загрузки')->assertDontSee('Загрузить и проверить')->assertDontSee('Применить к базе');
+        $this->assertConfirmationUsesPost($response, 'applyDrafts');
         $this->postJson('/admin/method/one-c-import?method=applyDrafts', ['import' => $id])->assertOk();
         $this->assertSame('РТ-00000999', $target->fresh()->external_id);
         $this->assertSame(500.0, (float) $target->fresh()->price);
@@ -183,6 +185,16 @@ class OneCImportPageTest extends TestCase
         $this->get('/admin/page/one-c-import?import='.$id)->assertSee('На проверке (1)');
         $this->postJson('/admin/method/one-c-import?method=removeDraft', ['import' => $id, 'code' => 'РТ-00000999'])->assertOk();
         $this->get('/admin/page/one-c-import?import='.$id)->assertDontSee('На проверке (1)');
+    }
+
+    private function assertConfirmationUsesPost(TestResponse $response, string $action): void
+    {
+        $document = new \DOMDocument;
+        @$document->loadHTML($response->getContent());
+        $forms = (new \DOMXPath($document))->query('//form[contains(@action, "method='.$action.'")]');
+
+        $this->assertCount(1, $forms);
+        $this->assertSame('post', strtolower($forms->item(0)->getAttribute('method')));
     }
 
     private function priceList(string $name = 'price_list.csv'): UploadedFile
