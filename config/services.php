@@ -62,6 +62,10 @@ return [
         'project_id' => env('CLARITY_PROJECT_ID', 'zkoq0wqj9z'),
     ],
 
+    'google_tag_manager' => [
+        'container_id' => env('GOOGLE_TAG_MANAGER_ID', 'GTM-NJ6NBMLH'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

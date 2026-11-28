@@ -18,6 +18,14 @@
     @if (config('shop.metrika_counter_id'))
         <meta name="metrika-counter" content="{{ config('shop.metrika_counter_id') }}" />
     @endif
+    @if (app()->environment('production') && is_string(config('services.google_tag_manager.container_id')) && preg_match('/\AGTM-[A-Z0-9]{4,20}\z/', config('services.google_tag_manager.container_id')) && ! request()->routeIs('account', 'account.*', 'login', 'register', 'password.*', 'verification.*') && ! request()->is('auth/*'))
+        <script async src="https://www.googletagmanager.com/gtm.js?id={{ config('services.google_tag_manager.container_id') }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            gtag('js', new Date());
+        </script>
+    @endif
     @if (app()->environment('production') && is_string(config('services.clarity.project_id')) && preg_match('/\A[a-zA-Z0-9]+\z/', config('services.clarity.project_id')) && ! request()->routeIs('account', 'account.*', 'checkout.*', 'login', 'register', 'password.*', 'verification.*') && ! request()->is('auth/*'))
         <script>
             (function (c, l, a, r, i, t, y) {
