@@ -18,7 +18,7 @@
     @if (config('shop.metrika_counter_id'))
         <meta name="metrika-counter" content="{{ config('shop.metrika_counter_id') }}" />
     @endif
-    @if (app()->environment('production') && is_string(config('services.clarity.project_id')) && preg_match('/\A[a-zA-Z0-9]+\z/', config('services.clarity.project_id')) && ! request()->routeIs('account', 'account.*', 'checkout.*', 'login', 'register', 'password.*', 'verification.*') && ! request()->is('auth/*'))
+    @if (app()->environment('production') && is_string(config('services.clarity.project_id')) && preg_match('/\A[a-zA-Z0-9]+\z/', config('services.clarity.project_id')) && ! request()->routeIs('account', 'account.*', 'cart.index', 'checkout.*', 'login', 'register', 'password.*', 'verification.*') && ! request()->is('auth/*'))
         <script>
             (function (c, l, a, r, i, t, y) {
                 c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };

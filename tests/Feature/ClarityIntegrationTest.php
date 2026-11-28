@@ -37,6 +37,7 @@ class ClarityIntegrationTest extends TestCase
         $this->get(route('login'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->get(route('register'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->get(route('password.request'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
+        $this->get(route('cart.index'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->get(route('checkout.create'))->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->actingAs(Customer::factory()->create())->get(route('account'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
     }
