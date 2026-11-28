@@ -29,7 +29,7 @@ class ClarityIntegrationTest extends TestCase
         $this->get(route('home'))->assertDontSee('https://www.clarity.ms/tag/', false)->assertDontSee('<script>alert(1)</script>', false);
     }
 
-    public function test_script_is_not_loaded_on_authentication_and_checkout_pages(): void
+    public function test_script_is_not_loaded_on_authentication_and_private_pages(): void
     {
         $this->app['env'] = 'production';
         config(['services.clarity.project_id' => 'test123']);
@@ -37,8 +37,14 @@ class ClarityIntegrationTest extends TestCase
         $this->get(route('login'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->get(route('register'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->get(route('password.request'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
-        $this->get(route('cart.index'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->get(route('checkout.create'))->assertDontSee('https://www.clarity.ms/tag/', false);
         $this->actingAs(Customer::factory()->create())->get(route('account'))->assertOk()->assertDontSee('https://www.clarity.ms/tag/', false);
+    }
+
+    public function test_script_is_loaded_on_cart_page(): void
+    {
+        $this->app['env'] = 'production';
+        config(['services.clarity.project_id' => 'test123']);
+        $this->get(route('cart.index'))->assertOk()->assertSee('https://www.clarity.ms/tag/', false);
     }
 }
