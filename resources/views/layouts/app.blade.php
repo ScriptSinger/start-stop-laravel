@@ -18,6 +18,15 @@
     @if (config('shop.metrika_counter_id'))
         <meta name="metrika-counter" content="{{ config('shop.metrika_counter_id') }}" />
     @endif
+    @if (app()->environment('production') && is_string(config('services.clarity.project_id')) && preg_match('/\A[a-zA-Z0-9]+\z/', config('services.clarity.project_id')) && ! request()->routeIs('account', 'account.*', 'checkout.*', 'login', 'register', 'password.*', 'verification.*') && ! request()->is('auth/*'))
+        <script>
+            (function (c, l, a, r, i, t, y) {
+                c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+                t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;
+                y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+            })(window, document, 'clarity', 'script', @js(config('services.clarity.project_id')));
+        </script>
+    @endif
 
     {{-- Стили в порядке старого сайта: тема (base), стили блоков страницы
          (каждая страница добавляет свои в page-styles), общие стили и наши

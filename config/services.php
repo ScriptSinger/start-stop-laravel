@@ -58,6 +58,10 @@ return [
         'oauth_token' => env('METRIKA_OAUTH_TOKEN'),
     ],
 
+    'clarity' => [
+        'project_id' => env('CLARITY_PROJECT_ID', 'zkoq0wqj9z'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
